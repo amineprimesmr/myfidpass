@@ -17,7 +17,7 @@ import { buildIpHash, buildDeviceHash } from "../../services/engagement-proof.js
 import { parseFlyerPrefsCustomLogoDataUrl } from "../../lib/resolve-flyer-prefs-custom-logo.js";
 import { getApiBase, getIdempotencyKey } from "./shared.js";
 import { normalizePointsRewardTiersForClient } from "../../lib/points-reward-tiers.js";
-import { getDb } from "../../db/connection.js";
+import { resolveSignupRewardLabelForBusiness } from "../../lib/signup-reward-label.js";
 
 /** @param {string} v */
 function isHex6(v) {
@@ -28,20 +28,7 @@ export function publicInfo(req, res) {
   const business = req.business;
   const apiBase = getApiBase(req);
   const slug = req.params.slug;
-  let signup_reward_label = "";
-  try {
-    const db = getDb();
-    const gift = db
-      .prepare(
-        `SELECT gr.label FROM game_rewards gr
-         INNER JOIN business_games bg ON bg.game_id = gr.game_id AND bg.business_id = gr.business_id
-         INNER JOIN games g ON g.id = gr.game_id AND g.code = 'roulette'
-         WHERE gr.business_id = ? AND gr.code = 'cadeau' AND gr.active = 1
-         LIMIT 1`,
-      )
-      .get(business.id);
-    if (gift?.label) signup_reward_label = String(gift.label).trim();
-  } catch (_) {}
+  const signup_reward_label = resolveSignupRewardLabelForBusiness(business.id);
 
   const points_reward_tiers = normalizePointsRewardTiersForClient(
     business.points_reward_tiers,

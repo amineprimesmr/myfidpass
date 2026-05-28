@@ -9,7 +9,7 @@ import {
   mergeBusinessAssetsForPass,
 } from "../db.js";
 import { generatePass } from "../pass.js";
-import { pushPassKitUpdateForMember } from "../lib/passkit-member-push.js";
+import { pushPassKitAfterMemberBalanceChange } from "../lib/wallet-reward-tier-notify.js";
 import { syncGoogleWalletObjectForMember } from "../google-wallet.js";
 import { randomUUID } from "crypto";
 
@@ -70,11 +70,26 @@ router.post("/:memberId/points", async (req, res) => {
   if (!Number.isInteger(points) || points < 0) {
     return res.status(400).json({ error: "points doit être un entier positif" });
   }
+  const before = getMember(req.params.memberId);
+  if (!before) {
+    return res.status(404).json({ error: "Membre introuvable" });
+  }
+  const previousPoints = Math.max(0, Math.floor(Number(before.points) || 0));
   const member = addPoints(req.params.memberId, points);
   if (!member) {
     return res.status(404).json({ error: "Membre introuvable" });
   }
-  await pushPassKitUpdateForMember(member.business_id, member.id, "legacy_points_add");
+  if (member.business_id) {
+    const business = mergeBusinessAssetsForPass(getBusinessById(member.business_id));
+    if (business) {
+      await pushPassKitAfterMemberBalanceChange({
+        business,
+        memberId: member.id,
+        previousBalance: previousPoints,
+        reason: "legacy_points_add",
+      });
+    }
+  }
   if (member.business_id) {
     const business = mergeBusinessAssetsForPass(getBusinessById(member.business_id));
     if (business) {

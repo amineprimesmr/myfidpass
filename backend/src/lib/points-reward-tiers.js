@@ -44,3 +44,38 @@ export function normalizePointsRewardTiersForClient(rawTiers, signupLabel = "") 
   const label = String(signupLabel || "").trim() || "Récompense de bienvenue";
   return [{ points: SIGNUP_REWARD_POINTS, label }, ...parsed].sort((a, b) => a.points - b.points);
 }
+
+/**
+ * Libellé du palier le plus élevé déjà atteint (affichage / notif Wallet).
+ * @param {{ points: number; label: string }[]} tiers — triés par points croissant
+ * @param {number} balance
+ * @returns {string|null}
+ */
+export function highestPointsTierReachedLabel(tiers, balance) {
+  if (!tiers?.length) return null;
+  const bal = Math.max(0, Math.floor(Number(balance) || 0));
+  let best = null;
+  for (const t of tiers) {
+    if (t.points <= bal) best = t;
+  }
+  const lab = best?.label != null ? String(best.label).trim() : "";
+  return lab || null;
+}
+
+/**
+ * Paliers franchis entre deux soldes (exclusif ancien, inclusif nouveau).
+ * @param {{ points: number; label: string }[]} tiers
+ * @param {number} previousBalance
+ * @param {number} newBalance
+ * @returns {{ points: number; label: string }[]}
+ */
+export function findNewlyUnlockedPointsTiers(tiers, previousBalance, newBalance) {
+  if (!tiers?.length) return [];
+  const prev = Math.max(0, Math.floor(Number(previousBalance) || 0));
+  const next = Math.max(0, Math.floor(Number(newBalance) || 0));
+  if (next <= prev) return [];
+  return tiers.filter((t) => t.points > prev && t.points <= next);
+}
+
+/** Message écran verrouillé Wallet quand un palier points est franchi (%@ = libellé récompense). */
+export const WALLET_TIER_UNLOCK_CHANGE_MESSAGE = "Nouvelle récompense : %@";

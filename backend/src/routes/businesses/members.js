@@ -30,6 +30,7 @@ import {
 import { grantWelcomeBonusIfEligible } from "../../db/welcome-bonus.js";
 import { devPaymentBypass } from "../../lib/dev-payment-bypass.js";
 import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
+import { pushPassKitAfterMemberBalanceChange } from "../../lib/wallet-reward-tier-notify.js";
 import { generatePass } from "../../pass.js";
 import {
   ensureGoogleWalletClassForBusiness,
@@ -438,6 +439,8 @@ router.post("/:memberId/points", async (req, res) => {
       ? Math.floor(Number(business.required_stamps))
       : 10;
   let updated;
+  /** Solde avant crédit (mode points) — détection palier Wallet. */
+  let previousPoints = null;
   let metaMerged = secured.capped ? { ...(meta || {}), points_capped: true, requested_points: secured.originalPoints } : meta;
   if (programType === "stamps") {
     const r = addStampsWithCycleRollover(member.id, points, stampCycleN);
@@ -454,6 +457,7 @@ router.post("/:memberId/points", async (req, res) => {
       };
     }
   } else {
+    previousPoints = Math.max(0, Math.floor(Number(member.points) || 0));
     updated = addPoints(member.id, points);
   }
   createTransaction({
@@ -465,7 +469,16 @@ router.post("/:memberId/points", async (req, res) => {
     idempotencyKey: idempotencyKey || null,
     actorUserId: req.user?.id,
   });
-  await pushPassKitUpdateForMember(business.id, member.id, "points_add");
+  if (programType === "stamps") {
+    await pushPassKitUpdateForMember(business.id, member.id, "points_add");
+  } else {
+    await pushPassKitAfterMemberBalanceChange({
+      business,
+      memberId: member.id,
+      previousBalance: previousPoints,
+      reason: "points_add",
+    });
+  }
   await syncGoogleWalletAfterMemberMutation(updated, business, req, "points_add");
   res.json({
     id: updated.id,

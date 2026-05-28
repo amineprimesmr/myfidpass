@@ -1723,4 +1723,16 @@ export function runMigrations(db) {
     });
     markMigrationApplied(db, 42, "restore_signup_tier_10_points");
   }
+
+  // v43 : flag PassKit « palier débloqué » (notif Wallet au scan)
+  const m43 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 43").get();
+  if (!m43) {
+    const memberCols = db.prepare("PRAGMA table_info(members)").all().map((c) => c.name);
+    if (!memberCols.includes("wallet_tier_unlock_pending")) {
+      safeRun(db, () =>
+        db.exec("ALTER TABLE members ADD COLUMN wallet_tier_unlock_pending INTEGER NOT NULL DEFAULT 0"),
+      );
+    }
+    markMigrationApplied(db, 43, "members_wallet_tier_unlock_pending");
+  }
 }

@@ -13,6 +13,7 @@ import {
   mergeBusinessAssetsForPass,
 } from "../../db.js";
 import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
+import { pushPassKitAfterMemberBalanceChange } from "../../lib/wallet-reward-tier-notify.js";
 import { syncGoogleWalletObjectForMember } from "../../google-wallet.js";
 import { ensureOperationalSubscription, getApiBase, normalizeBarcodeToMemberId } from "./shared.js";
 import {
@@ -170,7 +171,38 @@ router.post("/scan", async (req, res) => {
       metaBase.required_stamps = stampCycleN;
     }
   } else {
+    const previousPoints = Math.max(0, Math.floor(Number(member.points) || 0));
     updated = addPoints(member.id, points);
+    createTransaction({
+      businessId: business.id,
+      memberId: member.id,
+      type: "points_add",
+      points,
+      metadata: metaBase,
+      actorUserId: req.user?.id,
+    });
+    await pushPassKitAfterMemberBalanceChange({
+      business,
+      memberId: member.id,
+      previousBalance: previousPoints,
+      reason: "integration_scan",
+    });
+    await syncGoogleWalletAfterMemberMutation(updated, business, req, "integration_scan");
+    res.json({
+      member: {
+        id: updated.id,
+        name: member.name,
+        email: member.email,
+        points: updated.points,
+      },
+      points_added: points,
+      new_balance: updated.points,
+      points_capped: secured.capped === true,
+      points_requested: secured.capped ? secured.originalPoints : undefined,
+      stamp_cycle_completed: programType === "stamps" ? stampCycleCompleted : undefined,
+      stamp_cycles_completed: programType === "stamps" && stampCyclesCompleted > 0 ? stampCyclesCompleted : undefined,
+    });
+    return;
   }
   createTransaction({
     businessId: business.id,

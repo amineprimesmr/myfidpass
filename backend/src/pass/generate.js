@@ -17,6 +17,12 @@ import {
 } from "./images-logo.js";
 import { getBusinessAssetData } from "../db/business-assets.js";
 import { businessAllowsWalletCustomerAlerts } from "../lib/notification-icon-gate.js";
+import {
+  highestPointsTierReachedLabel,
+  normalizePointsRewardTiersForClient,
+  WALLET_TIER_UNLOCK_CHANGE_MESSAGE,
+} from "../lib/points-reward-tiers.js";
+import { resolveSignupRewardLabelForBusiness } from "../lib/signup-reward-label.js";
 import { createStripBuffer, buildPassLocations, createDefaultIconBuffer } from "./images-strip.js";
 import { drawStampsOnStrip } from "./images-stamps.js";
 import { buildBuffers } from "./build-buffers.js";
@@ -397,14 +403,30 @@ export async function generatePass(member, business = null, options = {}) {
   } else {
     const ptsInt = Math.max(0, Math.floor(Number(member.points) || 0));
     const pointsValue = String(ptsInt);
+    const signupLabel = business?.id ? resolveSignupRewardLabelForBusiness(String(business.id)) : "";
+    const pointsTiers = normalizePointsRewardTiersForClient(business?.points_reward_tiers, signupLabel);
+    const rewardFaceLabel = highestPointsTierReachedLabel(pointsTiers, ptsInt);
+    const rewardFaceValue = rewardFaceLabel ? String(rewardFaceLabel).slice(0, 64) : "—";
+    const tierUnlockPending = Number(member?.wallet_tier_unlock_pending) === 1;
+
     pass.secondaryFields.push({
       key: "points",
       label: "Points",
       value: pointsValue,
       textAlignment: "PKTextAlignmentLeft",
-      ...(walletAlerts ? { changeMessage: "Tu as maintenant %@ points !" } : {}),
+      ...(walletAlerts && !tierUnlockPending ? { changeMessage: "Tu as maintenant %@ points !" } : {}),
     });
-    /* Pas de champ « Récompense » sur la face (paliers : verso « Paliers & avantages »). */
+    if (pointsTiers.length > 0) {
+      pass.auxiliaryFields.push({
+        key: "unlockedReward",
+        label: "Récompense",
+        value: rewardFaceValue,
+        textAlignment: "PKTextAlignmentLeft",
+        ...(walletAlerts && tierUnlockPending && rewardFaceValue !== "—"
+          ? { changeMessage: WALLET_TIER_UNLOCK_CHANGE_MESSAGE }
+          : {}),
+      });
+    }
     pass.auxiliaryFields.push({
       key: "member",
       label: labelMember,

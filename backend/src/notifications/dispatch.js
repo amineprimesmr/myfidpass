@@ -27,6 +27,7 @@ import { sendPassKitPushWaves } from "../passkit-push-waves.js";
 import {
   sendMerchantAppAlert,
   isLikelyInvalidMerchantPushTokenError,
+  isLikelyInvalidDeviceTokenApnsError,
 } from "../merchant-app-push.js";
 import { addGoogleWalletNotificationMessageForMember } from "../google-wallet.js";
 import { syncNotificationTextsForCampaign } from "../lib/sync-notification-texts-for-campaign.js";

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { normalizePointsRewardTiersForClient, SIGNUP_REWARD_POINTS } from "./points-reward-tiers.js";
+import {
+  findNewlyUnlockedPointsTiers,
+  highestPointsTierReachedLabel,
+  normalizePointsRewardTiersForClient,
+  SIGNUP_REWARD_POINTS,
+} from "./points-reward-tiers.js";
 
 describe("normalizePointsRewardTiersForClient", () => {
   it("réinjecte le palier 10 pts si absent", () => {
@@ -18,5 +23,15 @@ describe("normalizePointsRewardTiersForClient", () => {
   it("ne duplique pas si 10 pts déjà présent", () => {
     const raw = [{ points: 10, label: "Boisson" }, { points: 50, label: "Dessert" }];
     expect(normalizePointsRewardTiersForClient(raw)).toEqual(raw);
+  });
+
+  it("findNewlyUnlockedPointsTiers détecte le franchissement 80→120 avec palier 100", () => {
+    const tiers = [
+      { points: 10, label: "Boisson" },
+      { points: 100, label: "Menu offert" },
+    ];
+    expect(findNewlyUnlockedPointsTiers(tiers, 80, 120).map((t) => t.points)).toEqual([100]);
+    expect(highestPointsTierReachedLabel(tiers, 80)).toBe("Boisson");
+    expect(highestPointsTierReachedLabel(tiers, 120)).toBe("Menu offert");
   });
 });
