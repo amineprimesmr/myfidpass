@@ -15,7 +15,9 @@ import {
 import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
 import { pushPassKitAfterMemberBalanceChange } from "../../lib/wallet-reward-tier-notify.js";
 import { syncGoogleWalletObjectForMember } from "../../google-wallet.js";
-import { ensureOperationalSubscription, getApiBase, normalizeBarcodeToMemberId } from "./shared.js";
+import { ensureOperationalSubscription, getApiBase } from "./shared.js";
+import { parseMerchantScanCode } from "../../lib/reward-redeem-qr.js";
+import { executeMemberRewardRedeem } from "../../lib/member-reward-redeem.js";
 import {
   computeRawPointsForCredit,
   enforceScanSecurityLimits,
@@ -26,6 +28,47 @@ import {
 } from "../../lib/receipt-validation-jwt.js";
 
 const router = Router();
+
+function resolveRewardRedeemPreview(business, member, rewardRedeem) {
+  if (!rewardRedeem) return null;
+  const programType = (business.program_type || "").toLowerCase();
+  if (rewardRedeem.mode === "stamps" || programType === "stamps") {
+    const requiredStamps =
+      business.required_stamps != null && Number(business.required_stamps) > 0
+        ? Math.floor(Number(business.required_stamps))
+        : 10;
+    const balance = Number(member.points) || 0;
+    const label = (business.stamp_reward_label || "Récompense tampons").trim();
+    return {
+      mode: "stamps",
+      label,
+      points_required: requiredStamps,
+      points_balance: balance,
+      eligible: balance >= requiredStamps,
+    };
+  }
+  let tiers = business.points_reward_tiers;
+  if (typeof tiers === "string" && tiers.trim()) {
+    try {
+      tiers = JSON.parse(tiers);
+    } catch {
+      tiers = [];
+    }
+  }
+  const tierIndex = rewardRedeem.tierIndex ?? 0;
+  const tier = Array.isArray(tiers) ? tiers[tierIndex] : null;
+  const pointsRequired = Number(tier?.points) || Number(rewardRedeem.points) || 0;
+  const label = String(tier?.label || "").trim() || `Récompense ${pointsRequired} pts`;
+  const balance = Number(member.points) || 0;
+  return {
+    mode: "points",
+    tier_index: tierIndex,
+    label,
+    points_required: pointsRequired,
+    points_balance: balance,
+    eligible: balance >= pointsRequired && pointsRequired > 0,
+  };
+}
 
 async function syncGoogleWalletAfterMemberMutation(member, business, req, context) {
   const walletBusiness = mergeBusinessAssetsForPass(business);
@@ -55,8 +98,8 @@ router.get("/lookup", (req, res) => {
   if (!ensureOperationalSubscription(req, res, business)) return;
   const raw = (req.query.barcode || "").trim();
   if (!raw) return res.status(400).json({ error: "Paramètre barcode requis" });
-  const barcode = normalizeBarcodeToMemberId(raw);
-  const member = getMemberForBusiness(barcode, business.id);
+  const parsed = parseMerchantScanCode(raw);
+  const member = getMemberForBusiness(parsed.memberId, business.id);
   if (!member) {
     return res.status(404).json({
       error: "Code non reconnu pour ce commerce. Scannez le QR affiché sur la carte dans le Wallet du client (pas le lien « Ajouter à Wallet »).",
@@ -72,6 +115,7 @@ router.get("/lookup", (req, res) => {
         : 10;
     pointsOut = normalizeStampBalance(member.points, N);
   }
+  const rewardRedeem = resolveRewardRedeemPreview(business, member, parsed.rewardRedeem);
   res.json({
     member: {
       id: member.id,
@@ -79,6 +123,78 @@ router.get("/lookup", (req, res) => {
       email: member.email,
       points: pointsOut,
       last_visit_at: member.last_visit_at || null,
+    },
+    reward_redeem: rewardRedeem,
+  });
+});
+
+/** Scan QR récompense client → débit du palier + libellé pour la caisse. */
+router.post("/reward-redeem", async (req, res) => {
+  const business = req.business;
+  if (!ensureOperationalSubscription(req, res, business)) return;
+  const raw = (req.body?.barcode || "").trim();
+  if (!raw) {
+    return res.status(400).json({ error: "Champ barcode requis", code: "BARCODE_MISSING" });
+  }
+  const parsed = parseMerchantScanCode(raw);
+  const member = getMemberForBusiness(parsed.memberId, business.id);
+  if (!member) {
+    return res.status(404).json({
+      error: "Code non reconnu. Utilisez le QR « Utiliser la récompense » affiché par le client.",
+      code: "MEMBER_NOT_FOUND",
+    });
+  }
+  const programType = (business.program_type || "").toLowerCase();
+  const redeemIntent = parsed.rewardRedeem || {
+    mode: programType === "stamps" ? "stamps" : "points",
+    tierIndex: req.body?.tier_index != null ? Number(req.body.tier_index) : undefined,
+    points: req.body?.points != null ? Number(req.body.points) : undefined,
+  };
+  const result = executeMemberRewardRedeem(business, member, {
+    mode: redeemIntent.mode === "stamps" ? "stamps" : "points",
+    tierIndex: redeemIntent.tierIndex,
+    points: redeemIntent.points,
+    actorUserId: req.user?.id,
+    source: "integration_reward_redeem",
+  });
+  if (!result.ok) {
+    return res.status(result.status).json({
+      error: result.error,
+      code: result.code,
+      points_required: result.points_required,
+      points_balance: result.points_balance,
+    });
+  }
+  const previousPoints = result.previous_points;
+  await pushPassKitUpdateForMember(business.id, member.id, "reward_redeem");
+  if (result.type === "points") {
+    await pushPassKitAfterMemberBalanceChange({
+      business,
+      memberId: member.id,
+      previousBalance: previousPoints,
+      reason: "reward_redeem_points",
+    });
+  }
+  await syncGoogleWalletAfterMemberMutation(
+    { ...member, points: result.new_points },
+    business,
+    req,
+    "reward_redeem",
+  );
+  return res.json({
+    ok: true,
+    type: result.type,
+    reward_label: result.reward_label,
+    points_deducted: result.points_deducted,
+    previous_points: result.previous_points,
+    new_points: result.new_points,
+    tier_index: result.tier_index,
+    message: result.message,
+    member: {
+      id: member.id,
+      name: member.name,
+      email: member.email,
+      points: result.new_points,
     },
   });
 });
@@ -90,8 +206,8 @@ router.post("/scan", async (req, res) => {
   if (!raw) {
     return res.status(400).json({ error: "Champ barcode requis", code: "BARCODE_MISSING" });
   }
-  const barcode = normalizeBarcodeToMemberId(raw);
-  const member = getMemberForBusiness(barcode, business.id);
+  const parsed = parseMerchantScanCode(raw);
+  const member = getMemberForBusiness(parsed.memberId, business.id);
   if (!member) {
     return res.status(404).json({
       error: "Code non reconnu pour ce commerce. Scannez le QR de la carte dans le Wallet du client.",

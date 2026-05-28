@@ -1,4 +1,4 @@
-import { memberIdToQrDataUrl } from "./lib/member-qr-dataurl.js";
+import { rewardRedeemQrDataUrl } from "./lib/member-qr-dataurl.js";
 
 const closeMap = new WeakMap();
 const openUnlockedMap = new WeakMap();
@@ -58,14 +58,15 @@ export function bindRewardRedeemUi({ rootEl, getState, signal }) {
 
   closeMap.set(rootEl, closeModal);
 
-  async function openUnlocked({ label, costLine }) {
+  async function openUnlocked({ label, costLine, tierIndex, points }) {
     if (!unlockedEl || !lockedEl || !heading || !fineEl || !qrImg || !qrSkel) return;
     const state = getState();
     const memberId = state?.member?.id;
+    const programType = String(state?.business?.program_type || "points").toLowerCase();
     unlockedEl.classList.remove("hidden");
     lockedEl.classList.add("hidden");
     heading.textContent = label;
-    fineEl.textContent = `Récompense affichée : ${label} · ${costLine}. Le solde est mis à jour par le commerce après validation.`;
+    fineEl.textContent = `Présentez ce QR en caisse : le commerce valide « ${label} » (${costLine}) et votre solde est débité automatiquement.`;
     modal.classList.remove("hidden");
     modal.setAttribute("aria-hidden", "false");
     modal.setAttribute("aria-labelledby", "fidelity-reward-redeem-heading");
@@ -79,8 +80,13 @@ export function bindRewardRedeemUi({ rootEl, getState, signal }) {
     qrSkel.classList.remove("hidden");
     qrImg.classList.add("hidden");
     try {
-      qrImg.src = await memberIdToQrDataUrl(String(memberId));
-      qrImg.alt = "Code à présenter en caisse";
+      qrImg.src = await rewardRedeemQrDataUrl({
+        memberId: String(memberId),
+        programType,
+        tierIndex,
+        points,
+      });
+      qrImg.alt = `QR récompense : ${label}`;
       qrImg.classList.remove("hidden");
       qrSkel.classList.add("hidden");
     } catch {
@@ -136,8 +142,14 @@ export function bindRewardRedeemUi({ rootEl, getState, signal }) {
     const unitPhrase =
       programType === "stamps" ? (need === 1 ? "tampon" : "tampons") : need === 1 ? "point" : "points";
 
+    const tierIndex = Math.max(0, parseInt(String(btn.dataset.rewardTierIndex || "0"), 10) || 0);
+    const points = Math.max(
+      0,
+      parseInt(String(btn.dataset.rewardPoints || btn.dataset.rewardThreshold || "0"), 10) || 0,
+    );
+
     if (unlocked) {
-      void openUnlocked({ label, costLine });
+      void openUnlocked({ label, costLine, tierIndex, points });
     } else {
       openLocked({ label, need, unitPhrase });
     }

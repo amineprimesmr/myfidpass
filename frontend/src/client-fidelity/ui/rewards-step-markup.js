@@ -26,7 +26,7 @@ function unlockedIconSvg() {
  * @param {(s: string) => string} esc
  * @param {string} displayImageUrl URL finale (perso ou gift1…5)
  */
-function renderRewardCard(t, unlocked, costLine, esc, displayImageUrl) {
+function renderRewardCard(t, unlocked, costLine, esc, displayImageUrl, tierIndex) {
   const aria = unlocked
     ? `${t.label}, ${costLine}, palier atteint, ouvrir pour utiliser`
     : `${t.label}, ${costLine}, à débloquer`;
@@ -39,6 +39,8 @@ function renderRewardCard(t, unlocked, costLine, esc, displayImageUrl) {
   return `          <li class="fid-reward-card ${mod}" role="listitem">
             <button type="button" class="fid-reward-card__surface" data-fid-reward-trigger
               data-reward-unlocked="${unlocked ? "1" : "0"}"
+              data-reward-tier-index="${String(tierIndex)}"
+              data-reward-points="${String(t.threshold)}"
               data-reward-threshold="${String(t.threshold)}"
               data-reward-label="${labelEnc}"
               data-reward-costline="${costEnc}"
@@ -91,7 +93,7 @@ ${tiers
     const costLine = isStamps ? `${costNum} ${unitEsc}` : `${costNum} points`;
     const tier = /** @type {{ threshold: number; label: string; imageUrl?: string }} */ (t);
     const displayImageUrl = tier.imageUrl || defaultGiftImageUrl(tierIndex);
-    return renderRewardCard(tier, unlocked, costLine, esc, displayImageUrl);
+    return renderRewardCard(tier, unlocked, costLine, esc, displayImageUrl, tierIndex);
   })
   .join("\n")}
         </ul>`;
