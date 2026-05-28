@@ -160,6 +160,7 @@ function authSubscriptionPayload(userId) {
       return {
         subscription: ownerSubPayload,
         has_active_subscription: ownerAccess,
+        has_paid_merchant_subscription: ownerPaying,
         entitlements: {
           ...ownerEntitlements,
           can_create_business: false,
@@ -176,6 +177,7 @@ function authSubscriptionPayload(userId) {
   return {
     subscription: subPayload,
     has_active_subscription: hasOperationalMerchantAccess(userId),
+    has_paid_merchant_subscription: paying,
     entitlements,
     merchant_trial_ends_at: paying ? null : getMerchantTrialEndsAtIso(userId),
   };
@@ -1045,6 +1047,7 @@ router.get("/me", (req, res, next) => {
       requires_business_setup: businesses.length === 0,
       subscription: subPayload.subscription,
       has_active_subscription: subPayload.has_active_subscription,
+      has_paid_merchant_subscription: subPayload.has_paid_merchant_subscription,
       entitlements: subPayload.entitlements,
       merchant_trial_ends_at: subPayload.merchant_trial_ends_at,
     });
