@@ -26,6 +26,7 @@ import {
   renderMissionsSheetMarkup,
 } from "./missions-sheet-markup.js";
 import { balanceUnitShort, stampsStepSectionTitle } from "../lib/program-copy.js";
+import { parsePointTiers, SIGNUP_REWARD_POINTS } from "../lib/tier-progress.js";
 import { renderDeliveryReceiptFabAndModalMarkup } from "./delivery-receipt-intro-markup.js";
 import { renderRewardRedeemModalMarkup } from "./reward-redeem-modal-markup.js";
 import { renderRewardCelebrationModalMarkup } from "./reward-celebration-modal-markup.js";
@@ -201,6 +202,59 @@ export function renderClientPage(root, state, options = {}) {
         </div>`
       : "";
 
+  const visitorLogoUrl = !hasMember ? resolveClientLogoImgSrc(state.business, slugForAssets, apiBase) : "";
+  const visitorWalletLogoFallback =
+    !hasMember && businessHasFlyerCustomLogo(state.business)
+      ? resolveClientWalletLogoImgSrc(state.business, slugForAssets, apiBase)
+      : "";
+  const visitorLogoOnErr = visitorWalletLogoFallback
+    ? `this.onerror=null;this.src='${visitorWalletLogoFallback.replace(/'/g, "\\'")}';`
+    : "this.onerror=null;this.classList.add('fidelity-qr-logo--hidden');this.removeAttribute('src')";
+  const visitorHeroLogoHtml =
+    visitorLogoUrl
+      ? `<div class="fidelity-v2-hero-brand">
+          <img class="fidelity-qr-logo" src="${esc(visitorLogoUrl)}" alt="${businessName}" decoding="async" onerror="${visitorLogoOnErr}" />
+        </div>`
+      : "";
+  const visitorTiers =
+    !hasMember && (programType === "points" || programType === "stamps") ? parsePointTiers(state.business) : [];
+  const visitorFirstTier = visitorTiers[0];
+  const visitorWelcomePts = Math.max(
+    0,
+    Math.floor(Number(state.business?.welcome_bonus_amount ?? state.business?.welcomeBonusAmount ?? SIGNUP_REWARD_POINTS)),
+  );
+  const visitorHeroTitle = visitorFirstTier?.label
+    ? esc(visitorFirstTier.label)
+    : businessName;
+  const visitorHeroSubtitle =
+    programType === "stamps"
+      ? `Inscris-toi pour cumuler tes tampons chez <strong>${esc(businessName)}</strong>.`
+      : visitorFirstTier
+        ? `Inscris-toi : <strong>${visitorWelcomePts} ${esc(headerBalanceUnit)}</strong> offerts, puis débloque tes récompenses.`
+        : `Rejoins le programme fidélité de <strong>${esc(businessName)}</strong>.`;
+  const visitorRewardsPreviewHtml =
+    !hasMember && visitorTiers.length
+      ? `
+      <section class="fidelity-v2-step fidelity-v2-step--rewards fidelity-v2-rewards-shell fidelity-v2-rewards-shell--visitor" id="fidelity-v2-rewards-preview" aria-label="Aperçu des récompenses">
+        <header class="fidelity-v2-step-header">
+          <div class="fidelity-v2-step-head-text">
+            <h2 class="fidelity-v2-card-title fidelity-v2-step-title">Tes récompenses</h2>
+            <p class="fidelity-v2-card-desc fidelity-v2-step-desc">Aperçu du programme — inscris-toi pour les débloquer.</p>
+          </div>
+        </header>
+        <div class="fidelity-v2-step-body fidelity-v2-rewards-shell__body">
+          <div class="fidelity-v2-step-body-inner fidelity-v2-rewards-shell__inner">
+            ${renderRewardsStepMarkup(esc, {
+              business: state.business,
+              member: { points: 0 },
+              programType,
+              balanceUnit: headerBalanceUnit,
+            })}
+          </div>
+        </div>
+      </section>`
+      : "";
+
   root.innerHTML = `
     ${
       nextRewardBannerHtml
@@ -246,11 +300,22 @@ export function renderClientPage(root, state, options = {}) {
           </div>
         </section>
       ` : `
-        <!-- HERO nouveau visiteur (bénéfices client : pas la « carte » en soi) -->
-        <section class="fidelity-v2-hero fidelity-v2-hero-new">
-          <div class="fidelity-v2-hero-icon">🎁</div>
-          <h1 class="fidelity-v2-hero-title">Découvrez votre cadeau</h1>
-          <p class="fidelity-v2-hero-subtitle">Chez <strong>${esc(businessName)}</strong>, un instant suffit.</p>
+        <section class="fidelity-v2-hero fidelity-v2-hero-new fidelity-v2-hero-visitor">
+          ${visitorHeroLogoHtml}
+          <h1 class="fidelity-v2-hero-title">${visitorHeroTitle}</h1>
+          <p class="fidelity-v2-hero-subtitle">${visitorHeroSubtitle}</p>
+          ${
+            programType === "points" && visitorTiers.length
+              ? renderHeroBalanceProgressMarkup(
+                  esc,
+                  buildHeroBalanceProgressState({
+                    memberPoints: 0,
+                    programType,
+                    business: state.business,
+                  }),
+                )
+              : ""
+          }
         </section>
       `}
 
@@ -277,6 +342,8 @@ export function renderClientPage(root, state, options = {}) {
           Tes données sont sécurisées et ne sont jamais revendues.
         </p>
       </section>
+
+      ${visitorRewardsPreviewHtml}
 
       <div class="fidelity-v2-steps ${hasMember ? "" : "hidden"}" aria-label="${esc(memberSectionsAriaLabel)}">
         ${

@@ -616,6 +616,34 @@ body.fidpass-fidelity-route:has(main.fidelity-qr-game) {
   animation: fidelity-card-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
+.fidelity-v2-hero-visitor .fidelity-v2-hero-brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.fidelity-v2-hero-visitor .fidelity-qr-logo {
+  max-height: 72px;
+  max-width: min(220px, 70vw);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.fidelity-v2-hero-visitor .fidelity-hero-progress {
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.fidelity-v2-rewards-shell--visitor {
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.fidelity-v2-rewards-shell--visitor .fid-reward-card--locked {
+  opacity: 0.92;
+}
+
 .fidelity-v2-hero-icon {
   font-size: 3.5rem;
   margin-bottom: 0.75rem;
