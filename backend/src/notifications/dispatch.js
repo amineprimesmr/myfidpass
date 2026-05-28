@@ -14,7 +14,6 @@ import {
   createNotificationBatch,
   updateNotificationBatchSummary,
   deleteWebPushSubscriptionByEndpoint,
-  touchMemberLastVisit as dbTouchMemberLastVisit,
   setLastBroadcastMessage,
   bumpBusinessPassRefreshTimestamp,
   getMerchantDeviceTokensForUser,
@@ -23,7 +22,7 @@ import {
   mergeBusinessAssetsForPass,
 } from "../db.js";
 import { sendWebPush } from "../notifications.js";
-import { sendPassKitPushWaves } from "../passkit-push-waves.js";
+import { sendPassKitPushWaves, schedulePassKitBroadcastRetries } from "../passkit-push-waves.js";
 import {
   sendMerchantAppAlert,
   isLikelyInvalidMerchantPushTokenError,
@@ -153,6 +152,7 @@ export async function deliverCustomerBroadcast({
   sendMerchantReceipt = true,
   touchMemberLastVisit = true,
 }) {
+  void touchMemberLastVisit;
   if (!businessHasCustomNotificationIcon(business)) {
     logger.warn(
       { businessId: business.id, slug, triggerName },
@@ -264,7 +264,58 @@ export async function deliverCustomerBroadcast({
   };
   const errors = [];
 
-  // Ordre validé en prod : Web Push d’abord, puis last_broadcast + bump, puis PassKit.
+  // Pass AVANT les pushes : lastMessage + bump en base, puis PassKit en priorité (Wallet refetch).
+  setLastBroadcastMessage(business.id, bodyMessage);
+  bumpBusinessPassRefreshTimestamp(business.id);
+  const businessAfterBump = getBusinessById(business.id) || businessFresh;
+  const passMs = Number(businessAfterBump?.pass_last_modified_ms) || Date.now();
+  const broadcastCollapseId = `bcast-${passMs}`.slice(0, 64);
+
+  let sentPassKit = 0;
+  if (passKitTokens.length > 0) {
+    logger.info(
+      { businessId: business.id, batchId, passMs, passKitCount: passKitTokens.length },
+      "[dispatch] push PassKit campagne"
+    );
+    const waveResults = await sendPassKitPushWaves(passKitTokens, { collapseId: broadcastCollapseId });
+    schedulePassKitBroadcastRetries(passKitTokens, broadcastCollapseId, business.id);
+    for (const { row, result } of waveResults) {
+      if (result.sent) {
+        sentPassKit++;
+        logNotification({
+          businessId: business.id,
+          memberId: row.serial_number,
+          title: payloadTitle,
+          body: bodyMessage,
+          type: logTypePasskit,
+          batchId,
+          channel: "passkit",
+          triggerName,
+          countsForMemberCooldown: 1,
+          status: "sent",
+        });
+      } else if (result.error) {
+        errors.push({ type: "passkit", memberId: row.serial_number, error: result.error });
+        logNotification({
+          businessId: business.id,
+          memberId: row.serial_number,
+          title: payloadTitle,
+          body: bodyMessage,
+          type: logTypePasskit,
+          batchId,
+          channel: "passkit",
+          triggerName,
+          countsForMemberCooldown: 1,
+          status: "failed",
+          errorDetail: result.error,
+        });
+        if (isLikelyInvalidDeviceTokenApnsError({ message: result.error })) {
+          deletePassRegistrationsByPushToken(row.push_token);
+        }
+      }
+    }
+  }
+
   const webPushResults = await Promise.all(
     webSubscriptions.map(async (sub) => {
       try {
@@ -307,65 +358,6 @@ export async function deliverCustomerBroadcast({
     })
   );
   const sentWebPush = webPushResults.filter((r) => r.ok).length;
-
-  setLastBroadcastMessage(business.id, bodyMessage);
-  bumpBusinessPassRefreshTimestamp(business.id);
-  const businessAfterBump = getBusinessById(business.id) || businessFresh;
-  const passMs = Number(businessAfterBump?.pass_last_modified_ms) || Date.now();
-  const broadcastCollapseId = `bcast-${passMs}`.slice(0, 64);
-
-  let sentPassKit = 0;
-  if (passKitTokens.length > 0) {
-    if (touchMemberLastVisit) {
-      const touchedMembers = new Set();
-      for (const row of passKitTokens) {
-        if (row.serial_number && !touchedMembers.has(row.serial_number)) {
-          dbTouchMemberLastVisit(row.serial_number);
-          touchedMembers.add(row.serial_number);
-        }
-      }
-    }
-    logger.info(
-      { businessId: business.id, batchId, passMs, passKitCount: passKitTokens.length },
-      "[dispatch] push PassKit campagne"
-    );
-    const waveResults = await sendPassKitPushWaves(passKitTokens, { collapseId: broadcastCollapseId });
-    for (const { row, result } of waveResults) {
-      if (result.sent) {
-        sentPassKit++;
-        logNotification({
-          businessId: business.id,
-          memberId: row.serial_number,
-          title: payloadTitle,
-          body: bodyMessage,
-          type: logTypePasskit,
-          batchId,
-          channel: "passkit",
-          triggerName,
-          countsForMemberCooldown: 1,
-          status: "sent",
-        });
-      } else if (result.error) {
-        errors.push({ type: "passkit", memberId: row.serial_number, error: result.error });
-        logNotification({
-          businessId: business.id,
-          memberId: row.serial_number,
-          title: payloadTitle,
-          body: bodyMessage,
-          type: logTypePasskit,
-          batchId,
-          channel: "passkit",
-          triggerName,
-          countsForMemberCooldown: 1,
-          status: "failed",
-          errorDetail: result.error,
-        });
-        if (isLikelyInvalidDeviceTokenApnsError({ message: result.error })) {
-          deletePassRegistrationsByPushToken(row.push_token);
-        }
-      }
-    }
-  }
 
   let sentGoogleWallet = 0;
   let skippedGoogleWallet = 0;

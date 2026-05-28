@@ -5,12 +5,13 @@
  * (plus de boucle séquentielle ni pause 2,5 s fixe). Deux salves restent optionnelles
  * pour limiter le batching APNs (apns-id unique par appel dans sendPassKitUpdate).
  *
- * PASSKIT_WAVE_GAP_MS — ms entre salve 1 et 2 (défaut 0 = une seule salve). Ex. 400 pour l’ancien double envoi.
+ * PASSKIT_WAVE_GAP_MS — ms entre salve 1 et 2 (défaut 1800). Mettre 0 pour une seule salve.
  */
 import { sendPassKitUpdate } from "./apns.js";
+import logger from "./lib/logger.js";
 
-/** Par défaut une seule salve (évite doubles notifications Wallet). Mettre PASSKIT_WAVE_GAP_MS=400 pour l’ancien comportement. */
-const PASSKIT_WAVE_GAP_MS = Math.min(30_000, Math.max(0, Number(process.env.PASSKIT_WAVE_GAP_MS ?? 0)));
+/** Double salve par défaut : iOS throttle souvent la 1ʳᵉ push background Wallet. */
+const PASSKIT_WAVE_GAP_MS = Math.min(30_000, Math.max(0, Number(process.env.PASSKIT_WAVE_GAP_MS ?? 1800)));
 
 /**
  * Parallélisme borné : évite des centaines d’APNs simultanés (saturation connexions / timeouts HTTP côté hébergeur).
@@ -70,4 +71,33 @@ export async function sendPassKitPushWaves(passKitRows, opts = {}) {
 
 export function passKitWaveGapMsForDiagnostics() {
   return PASSKIT_WAVE_GAP_MS;
+}
+
+/** Retries additionnels après les 2 salves — même pattern que PATCH icône (dashboard.js). */
+const PASSKIT_BROADCAST_EXTRA_RETRY_MS = [4500, 9000];
+
+/**
+ * Planifie des pushes PassKit différés (best-effort) pour campagnes manuelles.
+ * iOS peut ignorer le 1er silent push background ; un 2e/3e avec collapse-id distinct
+ * déclenche souvent le refetch Wallet sans ouvrir la carte.
+ *
+ * @param {Array<{ push_token: string }>} passKitRows
+ * @param {string} baseCollapseId
+ * @param {string} [businessId]
+ */
+export function schedulePassKitBroadcastRetries(passKitRows, baseCollapseId, businessId = "") {
+  const rows = (passKitRows || []).filter((r) => r.push_token);
+  if (rows.length === 0) return;
+  const base = String(baseCollapseId || "bcast").slice(0, 48);
+  for (const delayMs of PASSKIT_BROADCAST_EXTRA_RETRY_MS) {
+    setTimeout(() => {
+      const collapseId = `${base}~d${delayMs}`.slice(0, 64);
+      sendPassKitChunked(rows, { collapseId }).catch((err) => {
+        logger.warn(
+          { err, businessId, delayMs, collapseId },
+          "[passkit-waves] retry campagne différé"
+        );
+      });
+    }, delayMs);
+  }
 }

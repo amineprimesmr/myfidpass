@@ -194,7 +194,6 @@ router.post("/send", async (req, res) => {
   // Synchronise les textes de notification AVANT de créer le job, pour que le pass
   // refetché par les iPhones contienne déjà le bon changeMessage.
   syncNotificationTextsForCampaign(business.id, title, body);
-  const isBehavioralSegment = segment && CAMPAIGN_SEGMENT_KEYS.includes(segment);
 
   /**
    * Envoi persistant via la file de travaux SQLite.
@@ -216,7 +215,7 @@ router.post("/send", async (req, res) => {
     body,
     triggerName,
     merchantUserId: req.user?.id ?? null,
-    touchMemberLastVisit: !isBehavioralSegment,
+    touchMemberLastVisit: false,
   });
 
   res.status(202).json({
