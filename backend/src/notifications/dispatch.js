@@ -29,7 +29,7 @@ import {
   isLikelyInvalidMerchantPushTokenError,
   isLikelyInvalidDeviceTokenApnsError,
 } from "../merchant-app-push.js";
-import { addGoogleWalletNotificationMessageForMember } from "../google-wallet.js";
+import { addGoogleWalletNotificationMessageForMember, isGoogleWalletConfigured } from "../google-wallet.js";
 import { syncNotificationTextsForCampaign } from "../lib/sync-notification-texts-for-campaign.js";
 import { businessHasCustomNotificationIcon } from "../lib/notification-icon-gate.js";
 import logger from "../lib/logger.js";
@@ -64,6 +64,49 @@ function targetedGoogleWalletMembers(businessId, memberIds) {
   }
   const { members } = getMembersForBusiness(businessId, { limit: 100000, offset: 0, sort: "created_desc" });
   return members;
+}
+
+/**
+ * Canaux réellement ciblés avant envoi (Web Push + PassKit + GW si configuré).
+ * Ne compte pas « tous les membres » comme des appareils — évite un `total` trompeur en HTTP 202.
+ */
+export function countPreSendNotificationTargets(businessId, memberIds) {
+  if (memberIds !== null && memberIds.length === 0) {
+    return { webPush: 0, passKit: 0, googleWallet: 0, total: 0 };
+  }
+
+  const webSubscriptionsRaw =
+    memberIds !== null && memberIds.length > 0
+      ? getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(businessId, memberIds)
+      : getWebPushSubscriptionsByBusinessExcludingPassKitOwners(businessId);
+  const passKitTokensRaw =
+    memberIds !== null && memberIds.length > 0
+      ? getPassKitPushTokensForBusinessFiltered(businessId, memberIds)
+      : getPassKitPushTokensForBusiness(businessId);
+
+  const passKitMemberKeys = new Set(
+    passKitTokensRaw.map((r) => String(r.serial_number ?? "").trim().toLowerCase()).filter(Boolean)
+  );
+  const webSubscriptions = webSubscriptionsRaw.filter((w) => {
+    const mid = String(w.member_id ?? "").trim().toLowerCase();
+    return !passKitMemberKeys.has(mid);
+  });
+
+  const pushTokenSeen = new Set();
+  const passKitTokens = passKitTokensRaw.filter((r) => {
+    const t = String(r.push_token ?? "").trim();
+    if (!t || pushTokenSeen.has(t)) return false;
+    pushTokenSeen.add(t);
+    return true;
+  });
+
+  const googleWallet = isGoogleWalletConfigured()
+    ? targetedGoogleWalletMembers(businessId, memberIds).length
+    : 0;
+
+  const webPush = webSubscriptions.length;
+  const passKit = passKitTokens.length;
+  return { webPush, passKit, googleWallet, total: webPush + passKit + googleWallet };
 }
 
 async function mapWithConcurrency(items, limit, mapper) {
