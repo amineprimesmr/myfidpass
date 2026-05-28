@@ -158,48 +158,69 @@ function maybeShowFlyerCreditsSuccessBanner() {
 
 let fidpassCachedUserEmail = "";
 
+/** @param {string} isoEnd */
+function formatMerchantTrialEndingHeadline(isoEnd) {
+  const endMs = Date.parse(isoEnd);
+  if (!Number.isFinite(endMs)) return "L’essai se termine bientôt";
+  const secs = (endMs - Date.now()) / 1000;
+  if (secs <= 0) return "L’essai est terminé";
+  if (secs < 60) return "L’essai se termine dans moins d’1 min";
+  if (secs < 3600) {
+    const m = Math.floor(secs / 60);
+    return `L’essai se termine dans ${m <= 1 ? "1 min" : `${m} min`}`;
+  }
+  if (secs < 86400) {
+    const h = Math.floor(secs / 3600);
+    return `L’essai se termine dans ${h <= 1 ? "1 heure" : `${h} heures`}`;
+  }
+  const d = Math.floor(secs / 86400);
+  return `L’essai se termine dans ${d <= 1 ? "1 jour" : `${d} jours`}`;
+}
+
 function updateMerchantTrialSubscribePillFromDetail(d) {
   const sidebarCard = document.getElementById("app-sidebar-trial-subscribe-card");
   const sidebarRemainEl = document.getElementById("app-sidebar-trial-subscribe-remaining");
-  const hasPaid =
-    !!(d.has_paid_merchant_subscription ?? d.hasPaidMerchantSubscription) ||
-    !!(d.has_active_subscription ?? d.hasActiveSubscription);
+  const stripStatus = document.getElementById("app-saas-frc-strip-status");
+  const hasSubscription = !!(d.has_active_subscription ?? d.hasActiveSubscription);
   const user = d?.user || {};
   const isAdmin = !!(user.is_admin ?? user.isAdmin);
+  const trialEndRaw = d?.merchant_trial_ends_at ?? d?.merchantTrialEndsAt ?? null;
 
   const fallbackTitle = "Configurez votre espace Myfidpass";
   const fallbackSubtitle = "Indiquez votre commerce, puis créez votre carte et votre flyer QR.";
-  const subscribeLine = "Abonnement MyFidpass Pro — 1 € le premier mois";
 
   if (typeof window !== "undefined") {
     window.__fidpassLastAuthMeDetail = d;
-    if (window.__fidpassTrialPillTimer) {
-      clearInterval(window.__fidpassTrialPillTimer);
-      window.__fidpassTrialPillTimer = null;
-    }
   }
 
+  if (typeof window !== "undefined" && window.__fidpassTrialPillTimer) {
+    clearInterval(window.__fidpassTrialPillTimer);
+    window.__fidpassTrialPillTimer = null;
+  }
+
+  /** @param {boolean} sidebarVisible */
   const syncSidebar = (sidebarVisible) => {
     if (sidebarCard) {
       sidebarCard.classList.toggle("hidden", !sidebarVisible);
       sidebarCard.setAttribute("aria-hidden", sidebarVisible ? "false" : "true");
     }
-    if (sidebarRemainEl) sidebarRemainEl.textContent = subscribeLine;
   };
 
+  /** Abonnement actif ou compte équipe : masque toute monetization */
   const clearSubscribeChrome = () => {
     syncSidebar(false);
     applySaaSFrcMessaging({
       paid: true,
       trialHero: false,
       showSubscribeStrip: false,
-      trialEndRaw: null,
+      trialEndRaw: trialEndRaw ?? null,
+      formatEndingHeadline: formatMerchantTrialEndingHeadline,
       fallbackTitle,
       fallbackSubtitle,
     });
   };
 
-  if (isAdmin || hasPaid) {
+  if (isAdmin || hasSubscription) {
     clearSubscribeChrome();
     return;
   }
@@ -214,21 +235,74 @@ function updateMerchantTrialSubscribePillFromDetail(d) {
       showSubscribeStrip: false,
       hideTrialChrome: true,
       trialEndRaw: null,
+      formatEndingHeadline: formatMerchantTrialEndingHeadline,
       fallbackTitle,
       fallbackSubtitle,
     });
     return;
   }
 
+  const trialEndMs = trialEndRaw ? Date.parse(trialEndRaw) : NaN;
+  const trialActive = !!(Number.isFinite(trialEndMs) && Date.now() < trialEndMs);
+
   syncSidebar(true);
+
   applySaaSFrcMessaging({
     paid: false,
-    trialHero: false,
-    showSubscribeStrip: true,
-    trialEndRaw: null,
+    trialHero: trialActive,
+    // Premier affichage: bloc héros complet, puis passage en bandeau compact au scroll.
+    showSubscribeStrip: false,
+    trialEndRaw: trialActive ? trialEndRaw : null,
+    formatEndingHeadline: formatMerchantTrialEndingHeadline,
     fallbackTitle,
     fallbackSubtitle,
   });
+
+  const subscriptionLineFallback = () => "L’essai se termine bientôt";
+
+  const tick = () => {
+    if (!trialEndRaw) {
+      const line = subscriptionLineFallback();
+      if (sidebarRemainEl) sidebarRemainEl.textContent = line;
+      if (stripStatus) stripStatus.textContent = line;
+      return;
+    }
+    const end = Date.parse(trialEndRaw);
+    if (!Number.isFinite(end)) {
+      const line = subscriptionLineFallback();
+      if (sidebarRemainEl) sidebarRemainEl.textContent = line;
+      if (stripStatus) stripStatus.textContent = line;
+      return;
+    }
+    const headline = formatMerchantTrialEndingHeadline(trialEndRaw);
+    if (sidebarRemainEl) sidebarRemainEl.textContent = headline;
+    if (stripStatus) stripStatus.textContent = headline;
+
+    if (Date.now() >= end) {
+      const blocking =
+        typeof window !== "undefined" && window.__fidpassMerchantSetupComplete === false;
+      applySaaSFrcMessaging({
+        paid: false,
+        trialHero: false,
+        showSubscribeStrip: !blocking,
+        hideTrialChrome: blocking,
+        trialEndRaw: null,
+        formatEndingHeadline: formatMerchantTrialEndingHeadline,
+        fallbackTitle,
+        fallbackSubtitle,
+      });
+      if (stripStatus) stripStatus.textContent = headline;
+      if (typeof window !== "undefined" && window.__fidpassTrialPillTimer) {
+        clearInterval(window.__fidpassTrialPillTimer);
+        window.__fidpassTrialPillTimer = null;
+      }
+    }
+  };
+
+  tick();
+  if (typeof window !== "undefined") {
+    window.__fidpassTrialPillTimer = setInterval(tick, 30000);
+  }
 }
 
 let fidpassAuthMeListenerMounted = false;
@@ -512,9 +586,8 @@ function initAppPage() {
         return;
       }
       const user = data.user;
-      const hasSubscription =
-        !!(data.has_paid_merchant_subscription ?? data.hasPaidMerchantSubscription) ||
-        !!(data.has_active_subscription ?? data.hasActiveSubscription);
+      const merchantTrialEndsAt = data.merchant_trial_ends_at ?? data.merchantTrialEndsAt ?? null;
+      const hasSubscription = !!(data.has_active_subscription ?? data.hasActiveSubscription);
       const businesses = data.businesses || [];
       const entitlements = data.entitlements || null;
       if (userEmailEl) userEmailEl.textContent = user?.email || "";
@@ -542,8 +615,7 @@ function initAppPage() {
             active_business_slug: null,
               subscription: data.subscription || null,
               hasActiveSubscription: data.has_active_subscription ?? hasSubscription,
-              hasPaidMerchantSubscription:
-                data.has_paid_merchant_subscription ?? data.hasPaidMerchantSubscription ?? hasSubscription,
+              merchant_trial_ends_at: merchantTrialEndsAt,
             entitlements,
               awaitingFirstBusiness: true,
             },
@@ -586,8 +658,7 @@ function initAppPage() {
             active_business_slug: business?.slug || null,
             subscription: data.subscription || null,
             hasActiveSubscription: data.has_active_subscription ?? hasSubscription,
-            hasPaidMerchantSubscription:
-              data.has_paid_merchant_subscription ?? data.hasPaidMerchantSubscription ?? hasSubscription,
+            merchant_trial_ends_at: merchantTrialEndsAt,
             entitlements,
           },
         })
