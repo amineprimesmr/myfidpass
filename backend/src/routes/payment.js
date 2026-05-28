@@ -32,6 +32,7 @@ import {
   hasAppleBackedActiveSubscription,
   isAppStoreServerApiConfigured,
 } from "../lib/apple-iap.js";
+import { isDevSimulatedSubscriptionRow } from "../db/subscriptions.js";
 
 const router = Router();
 const stripe =
@@ -107,12 +108,6 @@ function subscriptionIdOf(row) {
 
 function customerIdOf(row) {
   return row?.stripe_customer_id ? String(row.stripe_customer_id).trim() : "";
-}
-
-function isDevSimulatedSubscriptionRow(row) {
-  const sid = subscriptionIdOf(row).toLowerCase();
-  const cid = customerIdOf(row).toLowerCase();
-  return sid === "dev_simulated" || sid.startsWith("dev_simulated_") || cid === "cus_dev_simulated";
 }
 
 /**

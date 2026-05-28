@@ -304,6 +304,22 @@ export function hasStripeBackedActiveSubscription(userId) {
   return /^sub_[A-Za-z0-9]+$/.test(sid);
 }
 
+/** Ligne créée par POST `/dashboard/dev-simulate-payment` (test sans Stripe / App Store). */
+export function isDevSimulatedSubscriptionRow(row) {
+  if (!row) return false;
+  const sid = row.stripe_subscription_id ? String(row.stripe_subscription_id).trim().toLowerCase() : "";
+  const cid = row.stripe_customer_id ? String(row.stripe_customer_id).trim().toLowerCase() : "";
+  return sid === "dev_simulated" || sid.startsWith("dev_simulated_") || cid === "cus_dev_simulated";
+}
+
+/** Abonnement simulé actif (bouton test paywall / réglages SaaS). */
+export function hasDevSimulatedActiveSubscription(userId) {
+  const sub = getSubscriptionByUserId(userId);
+  if (!sub || !isDevSimulatedSubscriptionRow(sub)) return false;
+  const st = String(sub.status || "").trim().toLowerCase();
+  return st === "active" || st === "trialing" || st === "past_due";
+}
+
 /** Abonnement App Store actif (`apple_iap:<originalTransactionId>`). */
 export function hasAppleBackedActiveSubscription(userId) {
   const sub = getSubscriptionByUserId(userId);
@@ -316,9 +332,13 @@ export function hasAppleBackedActiveSubscription(userId) {
   return sid.startsWith(APPLE_IAP_SUBSCRIPTION_PREFIX);
 }
 
-/** Abonnement encaissé (Stripe ou App Store), hors seule période d’essai application. */
+/** Abonnement encaissé (Stripe, App Store ou simulation dev active). */
 export function hasPaidMerchantSubscription(userId) {
-  return hasStripeBackedActiveSubscription(userId) || hasAppleBackedActiveSubscription(userId);
+  return (
+    hasStripeBackedActiveSubscription(userId) ||
+    hasAppleBackedActiveSubscription(userId) ||
+    hasDevSimulatedActiveSubscription(userId)
+  );
 }
 
 /**

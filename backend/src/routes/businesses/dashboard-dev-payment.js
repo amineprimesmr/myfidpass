@@ -6,7 +6,12 @@
 import { Router } from "express";
 import { checkDashboardIdentity } from "./shared.js";
 import { getBusinessBySlug } from "../../db.js";
-import { createOrUpdateSubscription, getSubscriptionByUserId } from "../../db/subscriptions.js";
+import {
+  createOrUpdateSubscription,
+  getDefaultAllowedBusinessesFromLegacyPlan,
+  getSubscriptionByUserId,
+  upsertMerchantEntitlement,
+} from "../../db/subscriptions.js";
 import { getDb } from "../../db/connection.js";
 
 const router = Router({ mergeParams: true });
@@ -40,17 +45,25 @@ router.post("/", (req, res) => {
   const ctx = ensureOwner(req, res);
   if (!ctx) return;
 
+  const planId = "starter";
   createOrUpdateSubscription({
     userId: ctx.userId,
     stripeCustomerId: "cus_dev_simulated",
     stripeSubscriptionId: DEV_SUB_ID,
-    planId: "starter",
+    planId,
     status: "active",
     currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
   });
+  upsertMerchantEntitlement({
+    userId: ctx.userId,
+    allowedBusinesses: getDefaultAllowedBusinessesFromLegacyPlan(planId),
+    billingProvider: "stripe",
+    status: "active",
+    source: "dev_simulate",
+  });
 
   const sub = getSubscriptionByUserId(ctx.userId);
-  return res.json({ ok: true, status: sub?.status, simulated: true });
+  return res.json({ ok: true, status: sub?.status, simulated: true, has_active_subscription: true });
 });
 
 router.delete("/", (req, res) => {
