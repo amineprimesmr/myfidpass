@@ -25,9 +25,12 @@ import {
   businessUsesTicketBonuses,
   mergeBusinessAssetsForPass,
   hasMemberCompletedEngagementAction,
+  isGuestPlaceholderEmail,
 } from "../../db.js";
+import { grantWelcomeBonusIfEligible } from "../../db/welcome-bonus.js";
 import { devPaymentBypass } from "../../lib/dev-payment-bypass.js";
 import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
+import { pushPassKitAfterMemberBalanceChange } from "../../lib/wallet-reward-tier-notify.js";
 import { generatePass } from "../../pass.js";
 import {
   ensureGoogleWalletClassForBusiness,
@@ -103,15 +106,21 @@ router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res
   }
   const existing = getMemberByEmailForBusiness(business.id, normEmail);
   if (existing) {
+    let welcome_bonus_granted = null;
+    if (!isGuestPlaceholderEmail(existing.email)) {
+      welcome_bonus_granted = grantWelcomeBonusIfEligible(business, existing.id, { source: "web_signup" });
+    }
+    const fresh = getMemberForBusiness(existing.id, business.id) || existing;
     return res.status(200).json({
-      memberId: existing.id,
+      memberId: fresh.id,
       member: {
-        id: existing.id,
-        email: existing.email,
-        name: existing.name,
-        points: existing.points,
+        id: fresh.id,
+        email: fresh.email,
+        name: fresh.name,
+        points: fresh.points,
       },
       reused: true,
+      welcome_bonus_granted: welcome_bonus_granted ?? undefined,
     });
   }
 
@@ -123,6 +132,12 @@ router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res
       name: normName,
     });
 
+    let welcome_bonus_granted = null;
+    if (!isGuestPlaceholderEmail(normEmail)) {
+      welcome_bonus_granted = grantWelcomeBonusIfEligible(business, member.id, { source: "web_signup" });
+    }
+    const fresh = getMemberForBusiness(member.id, business.id) || member;
+
     try {
       scheduleCampaignEventJobsForMember({ business, memberId: member.id });
     } catch (e) {
@@ -131,13 +146,14 @@ router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res
     scheduleMerchantDashboardSyncForBusiness(business.id, "member_created");
 
     res.status(201).json({
-      memberId: member.id,
+      memberId: fresh.id,
       member: {
-        id: member.id,
-        email: member.email,
-        name: member.name,
-        points: member.points,
+        id: fresh.id,
+        email: fresh.email,
+        name: fresh.name,
+        points: fresh.points,
       },
+      welcome_bonus_granted: welcome_bonus_granted ?? undefined,
     });
   } catch (e) {
     console.error(e);
@@ -423,6 +439,8 @@ router.post("/:memberId/points", async (req, res) => {
       ? Math.floor(Number(business.required_stamps))
       : 10;
   let updated;
+  /** Solde avant crédit (mode points) — détection palier Wallet. */
+  let previousPoints = null;
   let metaMerged = secured.capped ? { ...(meta || {}), points_capped: true, requested_points: secured.originalPoints } : meta;
   if (programType === "stamps") {
     const r = addStampsWithCycleRollover(member.id, points, stampCycleN);
@@ -439,6 +457,7 @@ router.post("/:memberId/points", async (req, res) => {
       };
     }
   } else {
+    previousPoints = Math.max(0, Math.floor(Number(member.points) || 0));
     updated = addPoints(member.id, points);
   }
   createTransaction({
@@ -450,7 +469,16 @@ router.post("/:memberId/points", async (req, res) => {
     idempotencyKey: idempotencyKey || null,
     actorUserId: req.user?.id,
   });
-  await pushPassKitUpdateForMember(business.id, member.id, "points_add");
+  if (programType === "stamps") {
+    await pushPassKitUpdateForMember(business.id, member.id, "points_add");
+  } else {
+    await pushPassKitAfterMemberBalanceChange({
+      business,
+      memberId: member.id,
+      previousBalance: previousPoints,
+      reason: "points_add",
+    });
+  }
   await syncGoogleWalletAfterMemberMutation(updated, business, req, "points_add");
   res.json({
     id: updated.id,

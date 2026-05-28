@@ -138,14 +138,29 @@ export function unregisterPassDevice(deviceLibraryIdentifier, passTypeIdentifier
   ).run(deviceLibraryIdentifier, passTypeIdentifier, serialNumber);
 }
 
-import {
-  effectivePassKitRowUpdateTs,
-  filterPassKitRegistrationRows,
-  parsePassUpdatedAt,
-  passesUpdatedSinceCutoffMs,
-} from "./passes-passkit-since-filter.js";
+function parsePassUpdatedAt(str) {
+  if (!str || typeof str !== "string") return 0;
+  const s = str.trim();
+  const iso = s.replace(" ", "T").replace(/Z?$/, "Z");
+  const t = Date.parse(iso);
+  return Number.isNaN(t) ? 0 : t;
+}
 
-export { effectivePassKitRowUpdateTs, parsePassUpdatedAt, passesUpdatedSinceCutoffMs };
+/**
+ * Instant « pass mis à jour » côté PassKit : visite en caisse, dernière diffusion, création du membre,
+ * ou mise à jour des textes pass (sans confondre avec une nouvelle diffusion — voir notification_pass_layout_at).
+ */
+export function effectivePassKitRowUpdateTs(row) {
+  const passMs = Number(row.pass_last_modified_ms);
+  const passMsOk = Number.isFinite(passMs) && passMs > 0 ? passMs : 0;
+  return Math.max(
+    parsePassUpdatedAt(row.last_visit_at),
+    parsePassUpdatedAt(row.last_broadcast_at),
+    parsePassUpdatedAt(row.created_at),
+    parsePassUpdatedAt(row.notification_pass_layout_at),
+    passMsOk
+  );
+}
 
 export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passesUpdatedSince = null) {
   const base = db.prepare(
@@ -155,15 +170,15 @@ export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passe
      INNER JOIN businesses b ON b.id = m.business_id
      WHERE pr.device_library_identifier = ? AND pr.pass_type_identifier = ?`
   ).all(deviceId, passTypeId);
-  const list = filterPassKitRegistrationRows(base, passesUpdatedSince);
+  let list = base;
+  if (passesUpdatedSince && String(passesUpdatedSince).trim()) {
+    const sinceTs = parsePassUpdatedAt(String(passesUpdatedSince));
+    list = base.filter((r) => effectivePassKitRowUpdateTs(r) > sinceTs);
+  }
   const serialNumbers = list.map((r) => r.serial_number);
   let lastUpdated = formatUtcSqlWithMs(new Date());
   if (list.length > 0) {
-    const maxTs = list.reduce((acc, r) => {
-      const passMs = Number(r.pass_last_modified_ms);
-      const passMsOk = Number.isFinite(passMs) && passMs > 0 ? passMs : 0;
-      return Math.max(acc, passMsOk, effectivePassKitRowUpdateTs(r));
-    }, 0);
+    const maxTs = list.reduce((acc, r) => Math.max(acc, effectivePassKitRowUpdateTs(r)), 0);
     if (maxTs > 0) {
       lastUpdated = formatUtcSqlWithMs(maxTs);
     }

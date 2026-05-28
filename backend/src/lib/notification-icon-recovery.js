@@ -1,11 +1,9 @@
 /**
- * Après ajout d’une icône de notification : relancer jobs/campagnes bloqués sans icône
- * et planifier les bienvenues `member_created` manquées.
+ * Après ajout d’une icône de notification : relancer jobs/campagnes bloqués sans icône.
  */
 import { getDb } from "../db/connection.js";
 import { getBusinessById } from "../db/businesses.js";
 import { businessHasCustomNotificationIcon } from "./notification-icon-gate.js";
-import { scheduleCampaignEventJobsForMember } from "./campaign-event-jobs.js";
 import logger from "./logger.js";
 
 const db = getDb();
@@ -41,26 +39,12 @@ export function recoverNotificationsAfterIconUpload(businessId) {
     )
     .run(businessId, `%${ICON_JOB_ERROR}%`);
 
-  const members = db.prepare("SELECT id FROM members WHERE business_id = ?").all(businessId);
-  let scheduledWelcome = 0;
-  for (const m of members) {
-    try {
-      scheduledWelcome += scheduleCampaignEventJobsForMember({ business, memberId: m.id });
-    } catch (e) {
-      logger.warn(
-        { businessId, memberId: m.id, err: e },
-        "[notification-icon-recovery] schedule member_created failed"
-      );
-    }
-  }
-
-  if ((reopenedEvents.changes ?? 0) > 0 || (reopenedJobs.changes ?? 0) > 0 || scheduledWelcome > 0) {
+  if ((reopenedEvents.changes ?? 0) > 0 || (reopenedJobs.changes ?? 0) > 0) {
     logger.info(
       {
         businessId,
         reopenedEventJobs: reopenedEvents.changes ?? 0,
         reopenedNotificationJobs: reopenedJobs.changes ?? 0,
-        welcomeJobsScheduled: scheduledWelcome,
       },
       "[notification-icon-recovery] relance après icône notif"
     );

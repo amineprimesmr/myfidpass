@@ -39,23 +39,6 @@ import logger from "./logger.js";
 
 const db = getDb();
 
-/** Une campagne PassKit à la fois par commerce (évite courses entre 2 POST /send rapprochés). */
-const dispatchChainByBusiness = new Map();
-
-function runDispatchSerializedByBusiness(businessId, fn) {
-  const prev = dispatchChainByBusiness.get(businessId) ?? Promise.resolve();
-  const next = prev.then(fn, fn);
-  dispatchChainByBusiness.set(
-    businessId,
-    next.finally(() => {
-      if (dispatchChainByBusiness.get(businessId) === next) {
-        dispatchChainByBusiness.delete(businessId);
-      }
-    })
-  );
-  return next;
-}
-
 // ── Constantes ──────────────────────────────────────────────────────────────
 
 /** Nombre max de tentatives avant d'abandonner un job (passe en `dead`). */
@@ -375,21 +358,19 @@ async function runJob(job) {
       try { memberIds = JSON.parse(job.member_ids); } catch (_) { memberIds = null; }
     }
 
-    const result = await runDispatchSerializedByBusiness(job.business_id, () =>
-      deliverCustomerBroadcast({
-        business,
-        slug: job.slug,
-        apiBase: job.api_base,
-        memberIds,
-        title: job.title ?? null,
-        bodyMessage: job.body,
-        triggerName: job.trigger_name,
-        logTypePasskit: "passkit",
-        merchantUserId: job.merchant_user_id ?? null,
-        sendMerchantReceipt: true,
-        touchMemberLastVisit: job.touch_member_last_visit === 1,
-      })
-    );
+    const result = await deliverCustomerBroadcast({
+      business,
+      slug: job.slug,
+      apiBase: job.api_base,
+      memberIds,
+      title: job.title ?? null,
+      bodyMessage: job.body,
+      triggerName: job.trigger_name,
+      logTypePasskit: "passkit",
+      merchantUserId: job.merchant_user_id ?? null,
+      sendMerchantReceipt: true,
+      touchMemberLastVisit: job.touch_member_last_visit === 1,
+    });
 
     clearInterval(heartbeatInterval);
     markJobDone(job.id, result.batchId ?? null);

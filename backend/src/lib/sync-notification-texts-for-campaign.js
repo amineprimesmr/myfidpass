@@ -7,20 +7,14 @@
  * Si le modèle changeMessage change à chaque envoi, Wallet / APNs peuvent livrer les alertes de façon
  * erratique (retard, silence) alors que le premier message semble « parfait ».
  *
- * Le commerçant peut laisser le gabarit par défaut `%@` (texte de l’alerte = corps de campagne seul).
- * Seule la valeur du champ `lastMessage` change à chaque envoi → alertes répétées fiables.
+ * Le commerçant règle un modèle stable dans le SaaS / app (ex. « Nouveau message : %@ ») ; seule la
+ * valeur du champ change à chaque campagne → comportement fiable comme au premier envoi.
  *
  * Si `notification_change_message` ne contient pas `%@`, ce n’est pas un gabarit PassKit valide
  * (souvent texte périmètre ou ancien corps recopié). À l’envoi on le remet à null pour que le pass
  * utilise `%@` seul — évite « vieux préfixe + nouveau corps » (ex. « Allo » + « L’app est prête »).
  */
-import { getBusinessById, updateBusiness } from "../db.js";
-import {
-  DEFAULT_PASSKIT_CHANGE_MESSAGE,
-  normalizePassKitChangeMessageStored,
-} from "./passkit-change-message-template.js";
-
-export { DEFAULT_PASSKIT_CHANGE_MESSAGE, normalizePassKitChangeMessageStored };
+import { getBusinessById, updateBusiness, bumpBusinessPassRefreshTimestamp } from "../db.js";
 
 export function syncNotificationTextsForCampaign(businessId, title, messageBody) {
   void messageBody;
@@ -30,8 +24,7 @@ export function syncNotificationTextsForCampaign(businessId, title, messageBody)
   const shouldClearStaleTemplate = cur.length > 0 && !cur.includes("%@");
 
   const updates = {};
-  const curTitle = (business?.notification_title_override ?? "").trim();
-  if (trimmedTitle && trimmedTitle !== curTitle) {
+  if (trimmedTitle) {
     updates.notification_title_override = trimmedTitle.slice(0, 80);
   }
   if (shouldClearStaleTemplate) {
@@ -40,19 +33,7 @@ export function syncNotificationTextsForCampaign(businessId, title, messageBody)
 
   if (Object.keys(updates).length > 0) {
     updateBusiness(businessId, updates);
+    bumpBusinessPassRefreshTimestamp(businessId);
   }
-  return getBusinessById(businessId);
-}
-
-/**
- * Garantit un modèle `changeMessage` valide (doit contenir `%@`) avant push PassKit campagne.
- * Le corps de la campagne vit dans `last_broadcast_message`, pas dans ce champ.
- */
-export function ensurePassKitChangeMessageTemplate(businessId) {
-  const business = getBusinessById(businessId);
-  const cur = (business?.notification_change_message ?? "").trim();
-  const normalized = normalizePassKitChangeMessageStored(cur) ?? DEFAULT_PASSKIT_CHANGE_MESSAGE;
-  if (cur === normalized) return business;
-  updateBusiness(businessId, { notification_change_message: normalized });
   return getBusinessById(businessId);
 }

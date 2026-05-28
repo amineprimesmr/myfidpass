@@ -7,8 +7,8 @@ import { createHmac, randomInt, timingSafeEqual } from "crypto";
 import { getUserIdByReferralCode, recordReferral } from "../db/referrals.js";
 import {
   createUser,
-  createUserWithEmailOtp,
   createUserWithPhone,
+  createUserWithEmailOtp,
   getUserByEmail,
   getUserByPhoneE164,
   getUserById,
@@ -24,11 +24,11 @@ import {
   hasStripeBackedActiveSubscription,
   hasPaidMerchantSubscription,
   hasOperationalMerchantAccess,
-  getMerchantTrialEndsAtIso,
   setPasswordResetToken,
   getPasswordResetByToken,
   deletePasswordResetToken,
   updateUserPassword,
+  updateUserName,
   deleteUserAccount,
   isUserAdmin,
   createBusiness,
@@ -67,6 +67,7 @@ import { sendMail, isEmailConfigured } from "../email.js";
 import { validate, schemas } from "../lib/validate.js";
 import { fetchGooglePlaceBusinessEnrichment } from "../lib/google-place-business-enrichment.js";
 import { refreshGooglePlacesSnapshotFromPlaceId } from "../services/social-metrics-service.js";
+import { cancelPaidSubscriptionsBeforeAccountDeletion } from "../lib/account-deletion-billing.js";
 
 const router = Router();
 
@@ -161,8 +162,8 @@ function authSubscriptionPayload(userId) {
       const ownerIdStr = String(ownerId).trim();
       const ownerSubRow = getSubscriptionByUserId(ownerIdStr);
       const ownerSubPayload = subscriptionPayloadForAuth(ownerIdStr, ownerSubRow);
-      const ownerAccess = hasOperationalMerchantAccess(ownerIdStr);
       const ownerPaying = hasPaidMerchantSubscription(ownerIdStr);
+      const ownerAccess = hasOperationalMerchantAccess(ownerIdStr);
       const ownerEntitlements = getMerchantBusinessEntitlements(ownerIdStr);
       return {
         subscription: ownerSubPayload,
@@ -172,11 +173,7 @@ function authSubscriptionPayload(userId) {
           ...ownerEntitlements,
           can_create_business: false,
         },
-        merchant_trial_ends_at: ownerAccess
-          ? null
-          : ownerPaying
-            ? null
-            : getMerchantTrialEndsAtIso(ownerIdStr) ?? getMerchantTrialEndsAtIso(userId),
+        merchant_trial_ends_at: null,
       };
     }
   }
@@ -186,7 +183,7 @@ function authSubscriptionPayload(userId) {
     has_active_subscription: hasOperationalMerchantAccess(userId),
     has_paid_merchant_subscription: paying,
     entitlements,
-    merchant_trial_ends_at: paying ? null : getMerchantTrialEndsAtIso(userId),
+    merchant_trial_ends_at: null,
   };
 }
 
@@ -947,7 +944,6 @@ router.get("/apple-exchange", (req, res) => {
       : {
           subscription: null,
           has_active_subscription: false,
-          has_paid_merchant_subscription: false,
           entitlements: {
             allowed_businesses: 1,
             used_businesses: 0,
@@ -1071,6 +1067,26 @@ router.get("/me", (req, res, next) => {
 });
 
 /**
+ * PATCH /api/auth/me
+ * Body: { name } — prénom commerçant après inscription OTP.
+ */
+router.patch("/me", requireAuth, validate(schemas.authMePatch), (req, res) => {
+  try {
+    const name = String(req.body?.name || "").trim();
+    const ok = updateUserName(req.user.id, name);
+    if (!ok) {
+      return res.status(400).json({ error: "Prénom invalide.", code: "name_invalid" });
+    }
+    invalidateAuthUserCache(req.user.id);
+    const user = getUserById(req.user.id);
+    return res.json({ ok: true, user: authUserPayload(user) });
+  } catch (e) {
+    console.error("PATCH /api/auth/me:", e);
+    return res.status(500).json({ error: "Impossible de mettre à jour le profil." });
+  }
+});
+
+/**
  * GET /api/me/businesses
  * Alias pour garder une API cohérente (liste des commerces de l'utilisateur).
  */
@@ -1083,15 +1099,23 @@ router.get("/me/businesses", requireAuth, (req, res) => {
  * DELETE /api/auth/account
  * Supprime définitivement le compte de l'utilisateur connecté (RGPD, exigence App Store).
  */
-router.delete("/account", requireAuth, (req, res) => {
+router.delete("/account", requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
+    const billing = await cancelPaidSubscriptionsBeforeAccountDeletion(userId);
     const deleted = deleteUserAccount(userId);
     invalidateAuthUserCache(userId);
     if (!deleted) {
       return res.status(404).json({ error: "Compte déjà supprimé.", code: "account_already_deleted" });
     }
-    return res.json({ ok: true, message: "Compte supprimé", deleted_user_id: userId });
+    return res.json({
+      ok: true,
+      message: "Compte supprimé",
+      deleted_user_id: userId,
+      stripe_subscriptions_canceled: billing.stripeCanceled,
+      /** L’abonnement App Store reste sur l’Apple ID ; l’utilisateur doit l’annuler dans Réglages si besoin. */
+      apple_subscription_remains_on_apple_id: billing.hadAppleIap,
+    });
   } catch (e) {
     console.error("Delete account error:", e);
     return res.status(500).json({ error: "Erreur lors de la suppression du compte." });

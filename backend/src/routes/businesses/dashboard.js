@@ -3,6 +3,7 @@
  * Dérogation limite 400 lignes (REFONTE-REGLES) : découpage prévu en sous-fichiers — 2025-03.
  */
 import { Router } from "express";
+import { normalizePassKitChangeMessageStored } from "../../lib/passkit-change-message-template.js";
 import {
   updateBusiness,
   getBusinessById,
@@ -174,7 +175,7 @@ router.get("/settings", (req, res) => {
     stamp_mid_reward_label: business.stamp_mid_reward_label ?? undefined,
     points_per_euro: business.points_per_euro != null ? Number(business.points_per_euro) : undefined,
     points_per_visit: business.points_per_visit != null ? Number(business.points_per_visit) : undefined,
-    program_type: business.program_type ?? undefined,
+    program_type: resolveBusinessProgramType(business),
     loyalty_mode: business.loyalty_mode ?? "points_cash",
     points_per_ticket: business.points_per_ticket != null ? Number(business.points_per_ticket) : 10,
     points_min_amount_eur: business.points_min_amount_eur != null ? Number(business.points_min_amount_eur) : undefined,
@@ -184,6 +185,10 @@ router.get("/settings", (req, res) => {
         ? Math.round(Number(business.baseline_avg_basket_eur) * 100) / 100
         : undefined,
     points_reward_tiers: points_reward_tiers ?? undefined,
+    /** 0/1 (pas booléen) — contrat iOS/Android `welcomeBonusEnabled: Int?`. */
+    welcome_bonus_enabled: Number(business.welcome_bonus_enabled) === 1 ? 1 : 0,
+    welcome_bonus_amount:
+      business.welcome_bonus_amount != null ? Number(business.welcome_bonus_amount) : 10,
     sector: business.sector ?? undefined,
     logo_url:
       Number(business.asset_logo_present) === 1
@@ -326,6 +331,8 @@ router.patch("/settings", async (req, res) => {
   const points_per_ticket = body.points_per_ticket ?? body.pointsPerTicket;
   const points_min_amount_eur = body.points_min_amount_eur ?? body.pointsMinAmountEur;
   const points_reward_tiers = body.points_reward_tiers ?? body.pointsRewardTiers;
+  const welcome_bonus_enabled = body.welcome_bonus_enabled ?? body.welcomeBonusEnabled;
+  const welcome_bonus_amount = body.welcome_bonus_amount ?? body.welcomeBonusAmount;
   const sector = body.sector;
   const logo_base64 = body.logo_base64 ?? body.logoBase64;
   const logo_icon_base64 = body.logo_icon_base64 ?? body.logoIconBase64;
@@ -419,6 +426,18 @@ router.patch("/settings", async (req, res) => {
         updates.points_reward_tiers = null;
       }
     }
+  }
+  if (welcome_bonus_enabled !== undefined) {
+    const on =
+      welcome_bonus_enabled === true ||
+      welcome_bonus_enabled === 1 ||
+      String(welcome_bonus_enabled).toLowerCase() === "true" ||
+      String(welcome_bonus_enabled) === "1";
+    updates.welcome_bonus_enabled = on ? 1 : 0;
+  }
+  if (welcome_bonus_amount !== undefined) {
+    const n = welcome_bonus_amount === null || welcome_bonus_amount === "" ? null : Number(welcome_bonus_amount);
+    updates.welcome_bonus_amount = Number.isInteger(n) && n > 0 ? n : 10;
   }
   if (sector !== undefined) updates.sector = sector ? String(sector).trim().slice(0, 64) : null;
   if (required_stamps !== undefined) {
@@ -567,11 +586,20 @@ router.patch("/settings", async (req, res) => {
   }
   const notification_title_override = body.notification_title_override ?? body.notificationTitleOverride;
   if (notification_title_override !== undefined) {
-    updates.notification_title_override = notification_title_override == null ? null : String(notification_title_override).trim().slice(0, 80);
+    const newTitle =
+      notification_title_override == null ? null : String(notification_title_override).trim().slice(0, 80);
+    const curTitle = (business.notification_title_override ?? "").trim();
+    const newNorm = newTitle == null ? "" : newTitle;
+    if (newNorm !== curTitle) {
+      updates.notification_title_override = newTitle;
+    }
   }
   const notification_change_message = body.notification_change_message ?? body.notificationChangeMessage;
   if (notification_change_message !== undefined) {
-    updates.notification_change_message = notification_change_message == null ? null : String(notification_change_message).trim().slice(0, 200);
+    updates.notification_change_message =
+      notification_change_message == null
+        ? null
+        : normalizePassKitChangeMessageStored(notification_change_message);
   }
   const engagement_rewards = body.engagement_rewards ?? body.engagementRewards;
   const campaign_automation_in = body.campaign_automation ?? body.campaignAutomation;
@@ -760,6 +788,40 @@ router.patch("/settings", async (req, res) => {
   if (Object.keys(updates).length === 0) {
     return res.status(204).send();
   }
+
+  // Changement Points ↔ Tampons : nettoyer les champs du mode opposé si le client ne les envoie pas.
+  if (updates.program_type !== undefined) {
+    const prevType = resolveBusinessProgramType(business);
+    const nextRaw = updates.program_type;
+    const nextType =
+      nextRaw === "stamps" || nextRaw === "points"
+        ? nextRaw
+        : resolveBusinessProgramType({ ...business, program_type: nextRaw });
+    if (prevType !== nextType) {
+      if (nextType === "stamps") {
+        if (updates.points_reward_tiers === undefined) {
+          updates.points_reward_tiers = null;
+        }
+        updates.loyalty_mode = "points_cash";
+        if (updates.required_stamps === undefined) {
+          const rs = Number(business.required_stamps);
+          updates.required_stamps = Number.isInteger(rs) && rs > 0 ? rs : 10;
+        }
+        // Conserver card_background en base : le commerçant peut repasser en mode points sans re-téléverser.
+      } else {
+        updates.loyalty_mode = "points_cash";
+        if (updates.points_per_euro === undefined) {
+          const pe = Number(business.points_per_euro);
+          updates.points_per_euro = Number.isFinite(pe) && pe >= 0 ? String(pe) : "1";
+        }
+        if (updates.points_per_visit === undefined) {
+          const pv = Number(business.points_per_visit);
+          updates.points_per_visit = Number.isFinite(pv) && pv >= 0 ? String(pv) : "0";
+        }
+      }
+    }
+  }
+
   const locationKeys = ["location_lat", "location_lng", "location_radius_meters", "location_relevant_text"];
   const locationUpdated = locationKeys.some((k) => updates[k] !== undefined);
   const passWalletGeometryUpdated =
@@ -1052,7 +1114,7 @@ router.post("/campaign-automation/parse", async (req, res) => {
   const v = parsed.value;
   const eventTypeNorm =
     normalizeEventTypeToken(v.eventType) ||
-    (String(v.eventType || "").startsWith("custom:") ? String(v.eventType) : "member_created");
+    (String(v.eventType || "").startsWith("custom:") ? String(v.eventType) : "daily_at:10:00");
   return res.json({
     mode: "event",
     title: String(v.title || "Automatisation"),

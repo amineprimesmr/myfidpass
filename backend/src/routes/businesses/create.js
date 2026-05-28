@@ -480,6 +480,20 @@ export async function updateHandler(req, res) {
       try { JSON.parse(pointsRewardTiers); updates.points_reward_tiers = pointsRewardTiers; } catch (_) { updates.points_reward_tiers = null; }
     }
   }
+  const welcomeBonusEnabled = body.welcomeBonusEnabled ?? body.welcome_bonus_enabled;
+  const welcomeBonusAmount = body.welcomeBonusAmount ?? body.welcome_bonus_amount;
+  if (welcomeBonusEnabled !== undefined) {
+    const on =
+      welcomeBonusEnabled === true ||
+      welcomeBonusEnabled === 1 ||
+      String(welcomeBonusEnabled).toLowerCase() === "true" ||
+      String(welcomeBonusEnabled) === "1";
+    updates.welcome_bonus_enabled = on ? 1 : 0;
+  }
+  if (welcomeBonusAmount !== undefined) {
+    const n = welcomeBonusAmount === null || welcomeBonusAmount === "" ? null : Number(welcomeBonusAmount);
+    updates.welcome_bonus_amount = Number.isInteger(n) && n > 0 ? n : 10;
+  }
   if (loyaltyMode !== undefined) {
     const mode = String(loyaltyMode || "").trim().toLowerCase();
     updates.loyalty_mode = mode === "points_game_tickets" ? "points_game_tickets" : "points_cash";

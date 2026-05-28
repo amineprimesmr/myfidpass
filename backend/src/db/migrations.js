@@ -1635,6 +1635,65 @@ export function runMigrations(db) {
     markMigrationApplied(db, 40, "email_auth_otp");
   }
 
+  // ── v41 : reset comptes commerçants (passage OTP e-mail — une fois) ──
+  const m41 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 41").get();
+  if (!m41) {
+    safeRun(db, () => {
+      console.log("[migration v41] reset comptes commerçants (OTP e-mail) — début");
+      db.pragma("foreign_keys = OFF");
+      const tables = [
+        "match_prediction_entries",
+        "business_team_members",
+        "phone_otp_challenges",
+        "email_otp_challenges",
+        "notification_batches",
+        "campaign_event_jobs",
+        "notification_log",
+        "reward_grants",
+        "game_spins",
+        "game_rewards",
+        "ticket_ledger",
+        "member_ticket_wallets",
+        "business_games",
+        "engagement_proofs",
+        "engagement_completions",
+        "transactions",
+        "web_push_subscriptions",
+        "pass_registrations",
+        "merchant_push_devices",
+        "merchant_device_tokens",
+        "member_category_assignments",
+        "member_categories",
+        "members",
+        "business_assets",
+        "social_metric_snapshots",
+        "social_oauth_connections",
+        "google_business_reviews",
+        "google_business_posts",
+        "google_business_questions",
+        "google_business_insights_cache",
+        "google_business_location_cache",
+        "google_business_media",
+        "receipt_delivery_claims",
+        "businesses",
+        "password_reset_tokens",
+        "refresh_tokens",
+        "merchant_business_subscriptions",
+        "merchant_entitlements",
+        "subscriptions",
+        "merchant_referrals",
+        "users",
+      ];
+      for (const t of tables) {
+        const exists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name = ?").get(t);
+        if (exists) safeRun(db, () => db.exec(`DELETE FROM ${t}`));
+      }
+      db.pragma("foreign_keys = ON");
+      console.log("[migration v41] reset comptes commerçants — terminé");
+    });
+    markMigrationApplied(db, 41, "reset_accounts_for_email_otp");
+  }
+
   // v42 : rétablit le palier 10 pts (récompense inscription) retiré par la migration v26
   const m42 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 42").get();
   if (!m42) {
@@ -1663,5 +1722,17 @@ export function runMigrations(db) {
       }
     });
     markMigrationApplied(db, 42, "restore_signup_tier_10_points");
+  }
+
+  // v43 : flag PassKit « palier débloqué » (notif Wallet au scan)
+  const m43 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 43").get();
+  if (!m43) {
+    const memberCols = db.prepare("PRAGMA table_info(members)").all().map((c) => c.name);
+    if (!memberCols.includes("wallet_tier_unlock_pending")) {
+      safeRun(db, () =>
+        db.exec("ALTER TABLE members ADD COLUMN wallet_tier_unlock_pending INTEGER NOT NULL DEFAULT 0"),
+      );
+    }
+    markMigrationApplied(db, 43, "members_wallet_tier_unlock_pending");
   }
 }

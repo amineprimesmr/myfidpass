@@ -208,6 +208,15 @@ export const schemas = {
       .max(200),
   }),
 
+  /** PATCH /auth/me — prénom / nom affiché */
+  authMePatch: z.object({
+    name: z
+      .string({ required_error: "Prénom requis" })
+      .trim()
+      .min(2, "Au moins 2 caractères")
+      .max(100),
+  }),
+
   /** POST /auth/email/verify */
   emailVerify: z.object({
     email: z
@@ -227,22 +236,27 @@ export const schemas = {
     establishments: establishmentsArraySchema,
   }),
 
-  /** POST /businesses/:slug/dashboard/team/staff-accounts — compte employé (identifiant + mot de passe, sans e-mail). */
+  /** POST /businesses/:slug/dashboard/team/staff-accounts — employé invité par e-mail (connexion OTP). */
   teamStaffAccount: z.object({
-    staff_login: z
-      .string({ required_error: "Identifiant requis" })
+    email: z
+      .string({ required_error: "E-mail requis" })
       .trim()
       .toLowerCase()
-      .min(3, "Au moins 3 caractères")
-      .max(32, "32 caractères max")
-      .regex(/^[a-z0-9][a-z0-9_-]{1,30}[a-z0-9]$/, "Lettres, chiffres, _ et - (3 à 32 caractères)"),
-    password: z
-      .string({ required_error: "Mot de passe requis" })
-      .min(3, "Le mot de passe doit contenir au moins 3 caractères")
-      .max(128, "Mot de passe trop long (128 caractères max)"),
+      .email("E-mail invalide")
+      .max(200),
     name: z.string().trim().max(100).optional().nullable(),
     role: z.enum(["staff", "manager"]).optional(),
   }),
+
+  /** PATCH /businesses/:slug/dashboard/team/members/:id */
+  teamMemberPatch: z
+    .object({
+      name: z.string().trim().min(1).max(100).optional().nullable(),
+      role: z.enum(["staff", "manager"]).optional(),
+    })
+    .refine((v) => v.name != null || v.role != null, {
+      message: "Au moins un champ (name ou role) requis",
+    }),
 
   // POST /businesses (création)
   createBusiness: z.object({

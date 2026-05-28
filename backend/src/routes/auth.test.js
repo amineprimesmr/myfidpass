@@ -210,4 +210,44 @@ describe("Auth API", () => {
     expect(verify.status).toBe(400);
     expect(verify.body.code).toBe("missing_establishment");
   });
+
+  it("POST /api/auth/email/send-code then verify creates session (OTP test = 123456)", async () => {
+    const email = `otp-${Date.now()}@example.com`;
+    const est = {
+      google_place_id: `place-email-${Date.now()}`,
+      establishment_name: "Boutique E-mail Test",
+    };
+
+    const send = await request(app)
+      .post("/api/auth/email/send-code")
+      .set("Content-Type", "application/json")
+      .send({ email });
+    expect(send.status).toBe(200);
+    expect(send.body.ok).toBe(true);
+
+    const verify = await request(app)
+      .post("/api/auth/email/verify")
+      .set("Content-Type", "application/json")
+      .send({ email, code: "123456", ...est });
+    expect(verify.status).toBe(201);
+    expect(verify.body.token).toBeDefined();
+    expect(verify.body.user?.email).toBe(email);
+    expect(verify.body.requires_business_setup).toBe(false);
+  });
+
+  it("POST /api/auth/email/verify without establishment returns 400 for new account", async () => {
+    const email = `otp-new-${Date.now()}@example.com`;
+    const send = await request(app)
+      .post("/api/auth/email/send-code")
+      .set("Content-Type", "application/json")
+      .send({ email });
+    expect(send.status).toBe(200);
+
+    const verify = await request(app)
+      .post("/api/auth/email/verify")
+      .set("Content-Type", "application/json")
+      .send({ email, code: "123456" });
+    expect(verify.status).toBe(400);
+    expect(verify.body.code).toBe("missing_establishment");
+  });
 });

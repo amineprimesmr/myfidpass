@@ -19,11 +19,12 @@ import {
   getNotificationLogRecentForBusiness,
 } from "../../db.js";
 import { passKitWaveGapMsForDiagnostics } from "../../passkit-push-waves.js";
-import { countPreSendNotificationTargets, deliverCustomerBroadcast } from "../../notifications/dispatch.js";
+import { deliverCustomerBroadcast } from "../../notifications/dispatch.js";
 import { getMerchantApnsUnavailableReason } from "../../apns.js";
 import { assertOperationalSubscription, ensureDashboardAccess, blockStaffDashboardWrites, getApiBase } from "./shared.js";
 import logger from "../../lib/logger.js";
 import { syncNotificationTextsForCampaign } from "../../lib/sync-notification-texts-for-campaign.js";
+import { enqueueNotificationJob } from "../../lib/notification-job-queue.js";
 import {
   assertCustomNotificationIconForBroadcast,
   notificationIconRequiredHttpBody,
@@ -100,7 +101,19 @@ export async function notifyHandler(req, res) {
   const apiBase = getApiBase(req);
   const slug = req.params.slug ?? business.slug;
 
-  const { total: totalDevices } = countPreSendNotificationTargets(business.id, memberIds);
+  const webSubscriptions =
+    memberIds !== null
+      ? getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(business.id, memberIds)
+      : getWebPushSubscriptionsByBusinessExcludingPassKitOwners(business.id);
+  const passKitTokens =
+    memberIds !== null
+      ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
+      : getPassKitPushTokensForBusiness(business.id);
+  const googleWalletCandidates =
+    memberIds !== null
+      ? memberIds.length
+      : (getMembersForBusiness(business.id, { limit: 1 })?.total ?? 0);
+  const totalDevices = webSubscriptions.length + passKitTokens.length + googleWalletCandidates;
   if (totalDevices === 0) {
     return res.status(200).json({ ok: true, sent: 0, sentWebPush: 0, sentPassKit: 0, sentGoogleWallet: 0, sentMerchantApp: 0, batch_id: null });
   }
@@ -167,8 +180,19 @@ router.post("/send", async (req, res) => {
   }
   const apiBase = getApiBase(req);
   const slug = req.params.slug ?? business.slug;
-  const preSend = countPreSendNotificationTargets(business.id, memberIds);
-  const totalDevices = preSend.total;
+  const webSubscriptions =
+    memberIds !== null
+      ? getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(business.id, memberIds)
+      : getWebPushSubscriptionsByBusinessExcludingPassKitOwners(business.id);
+  const passKitTokens =
+    memberIds !== null
+      ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
+      : getPassKitPushTokensForBusiness(business.id);
+  const googleWalletCandidates =
+    memberIds !== null
+      ? memberIds.length
+      : (getMembersForBusiness(business.id, { limit: 1 })?.total ?? 0);
+  const totalDevices = webSubscriptions.length + passKitTokens.length + googleWalletCandidates;
   if (totalDevices === 0) {
     return res.json({
       ok: true,
@@ -178,8 +202,7 @@ router.post("/send", async (req, res) => {
       sentGoogleWallet: 0,
       sentMerchantApp: 0,
       batch_id: null,
-      message:
-        "Aucun appareil joignable pour ce segment (Apple Wallet, navigateur ou Google Wallet). Demandez aux clients de ré-ajouter la carte depuis le lien « Partager », puis réessayez.",
+      message: "Aucun client ciblé. Les clients qui ajoutent la carte (Apple Wallet, Google Wallet ou navigateur) pourront recevoir les notifications.",
     });
   }
 
@@ -190,35 +213,47 @@ router.post("/send", async (req, res) => {
         ? "campaign_manual_categories"
         : "campaign_manual";
 
+  // Synchronise les textes de notification AVANT de créer le job, pour que le pass
+  // refetché par les iPhones contienne déjà le bon changeMessage.
   syncNotificationTextsForCampaign(business.id, title, body);
+  const isBehavioralSegment = segment && CAMPAIGN_SEGMENT_KEYS.includes(segment);
 
-  const result = await deliverDashboardBroadcast(
-    business,
+  /**
+   * Envoi persistant via la file de travaux SQLite.
+   *
+   * POURQUOI : `setImmediate()` seul perdait la campagne si Railway redémarrait le
+   * conteneur entre le 202 et l’exécution de la microtask (déploiement, OOM, crash).
+   * Désormais, le job est écrit en base AVANT le 202 ; même sans setImmediate,
+   * le worker de notification-job-queue.js le reprend au prochain démarrage.
+   *
+   * job_id retourné dans la réponse : le client peut l’utiliser pour tracker l’envoi
+   * via GET /notifications/batches (le batch_id sera mis à jour une fois l’envoi terminé).
+   */
+  const jobId = enqueueNotificationJob({
+    businessId: business.id,
     slug,
     apiBase,
     memberIds,
-    title ?? null,
+    title: title ?? null,
     body,
-    "passkit",
-    {
-      triggerName,
-      merchantUserId: req.user?.id ?? null,
-      sendMerchantReceipt: true,
-      touchMemberLastVisit: false,
-    }
-  );
+    triggerName,
+    merchantUserId: req.user?.id ?? null,
+    touchMemberLastVisit: !isBehavioralSegment,
+  });
 
-  res.status(200).json({
+  res.status(202).json({
     ok: true,
-    sent: result.sent,
-    sentWebPush: result.sentWebPush,
-    sentPassKit: result.sentPassKit,
-    sentGoogleWallet: result.sentGoogleWallet ?? 0,
-    sentMerchantApp: result.sentMerchantApp ?? 0,
-    batch_id: result.batchId,
-    failed: result.failed ?? 0,
-    errors: result.errors,
+    accepted: true,
+    async_delivery: true,
+    sent: null,
+    sent_web_push: null,
+    sent_pass_kit: null,
+    sent_google_wallet: null,
+    sent_merchant_app: null,
+    job_id: jobId,
+    batch_id: null, // sera disponible dans /notifications/batches une fois terminé
     total: totalDevices,
+    message: `Envoi lancé vers ${totalDevices} appareil(s). Vous pouvez fermer l’écran : la campagne continue sur le serveur. Consultez l’historique des campagnes pour le résultat (job_id: ${jobId}).`,
   });
   } catch (err) {
     logger.error({ err, businessId: req.business?.id }, "[notifications] POST /send error");

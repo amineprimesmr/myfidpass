@@ -17,7 +17,7 @@ import { buildIpHash, buildDeviceHash } from "../../services/engagement-proof.js
 import { parseFlyerPrefsCustomLogoDataUrl } from "../../lib/resolve-flyer-prefs-custom-logo.js";
 import { getApiBase, getIdempotencyKey } from "./shared.js";
 import { normalizePointsRewardTiersForClient } from "../../lib/points-reward-tiers.js";
-import { getDb } from "../../db/connection.js";
+import { resolveSignupRewardLabelForBusiness } from "../../lib/signup-reward-label.js";
 
 /** @param {string} v */
 function isHex6(v) {
@@ -28,20 +28,7 @@ export function publicInfo(req, res) {
   const business = req.business;
   const apiBase = getApiBase(req);
   const slug = req.params.slug;
-  let signup_reward_label = "";
-  try {
-    const db = getDb();
-    const gift = db
-      .prepare(
-        `SELECT gr.label FROM game_rewards gr
-         INNER JOIN business_games bg ON bg.game_id = gr.game_id AND bg.business_id = gr.business_id
-         INNER JOIN games g ON g.id = gr.game_id AND g.code = 'roulette'
-         WHERE gr.business_id = ? AND gr.code = 'cadeau' AND gr.active = 1
-         LIMIT 1`,
-      )
-      .get(business.id);
-    if (gift?.label) signup_reward_label = String(gift.label).trim();
-  } catch (_) {}
+  const signup_reward_label = resolveSignupRewardLabelForBusiness(business.id);
 
   const points_reward_tiers = normalizePointsRewardTiersForClient(
     business.points_reward_tiers,
@@ -125,7 +112,7 @@ export function publicInfo(req, res) {
       business.delivery_receipt_max_age_days != null ? Number(business.delivery_receipt_max_age_days) : 14,
     /** Lien avis Google (page jeu QR / 1er spin) — absent si non configuré côté commerce. */
     google_review_write_url: google_review_write_url ?? undefined,
-    welcome_bonus_enabled: Number(business.welcome_bonus_enabled) === 1,
+    welcome_bonus_enabled: Number(business.welcome_bonus_enabled) === 1 ? 1 : 0,
     welcome_bonus_amount:
       business.welcome_bonus_amount != null ? Number(business.welcome_bonus_amount) : 10,
   });

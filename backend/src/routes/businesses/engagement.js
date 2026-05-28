@@ -9,6 +9,7 @@ import {
   getEngagementRewards,
   businessUsesTicketBonuses,
   createEngagementCompletion,
+  hasMemberCompletedEngagementAction,
   createEngagementProof,
   getEngagementProofByTokenHash,
   markEngagementProofReturned,
@@ -29,8 +30,9 @@ import { getApiBase, checkStartRateLimit } from "./shared.js";
 
 export function engagementActionsHandler(req, res) {
   const business = req.business;
+  const memberId = String(req.query.member_id || req.query.memberId || "").trim();
   const rewards = getEngagementRewards(business.id);
-  const actions = [];
+  let actions = [];
   /** Pas de mission « avis Google » ici : l’avis est demandé au premier tour de roue (page jeu invité). */
   if (businessUsesTicketBonuses(business.id)) {
     actions.unshift({
@@ -64,15 +66,41 @@ export function engagementActionsHandler(req, res) {
         trustpilot_review: "Laisser un avis Trustpilot",
         tripadvisor_review: "Laisser un avis TripAdvisor",
       };
+      const pts = Math.max(1, Math.min(200, Math.floor(Number(c.points) || 1)));
       actions.push({
         action_type: key,
         label: labels[key] || key,
-        points: 1,
+        points: pts,
         url: String(c.url).trim(),
       });
     }
   });
+  if (memberId) {
+    const member = getMemberForBusiness(memberId, business.id);
+    if (member) {
+      actions = actions.filter(
+        (a) => !hasMemberCompletedEngagementAction(business.id, memberId, a.action_type),
+      );
+    }
+  }
   res.json({ actions });
+}
+
+function buildEngagementClaimMessage(result) {
+  const n = Math.max(1, Math.floor(Number(result?.rewardAmount) || 1));
+  const tickets = Number(result?.ticketsGranted) || 0;
+  const stamps = Number(result?.stampsGranted) || 0;
+  const points = Number(result?.pointsGranted) || 0;
+  if (tickets > 0) {
+    return `${tickets} ticket${tickets > 1 ? "s" : ""} ajouté${tickets > 1 ? "s" : ""} à ta carte.`;
+  }
+  if (stamps > 0 || result?.programType === "stamps") {
+    return `${n} tampon${n > 1 ? "s" : ""} ajouté${n > 1 ? "s" : ""} à ta carte.`;
+  }
+  if (points > 0) {
+    return `${n} point${n > 1 ? "s" : ""} ajouté${n > 1 ? "s" : ""} à ta carte.`;
+  }
+  return "C'est enregistré.";
 }
 
 const engagementRouter = Router({ mergeParams: true });
@@ -243,17 +271,16 @@ engagementRouter.post("/claim-auto", (req, res) => {
     claimDeviceHash,
   });
 
-  const ticketsGranted = completionResult.ticketsGranted ?? 0;
+  const message = buildEngagementClaimMessage(completionResult);
   return res.status(201).json({
     completion_id: completionResult.completion.id,
     status: completionResult.status,
     points_granted: completionResult.pointsGranted ?? 0,
-    tickets_granted: ticketsGranted,
+    tickets_granted: completionResult.ticketsGranted ?? 0,
+    stamps_granted: completionResult.stampsGranted ?? 0,
+    reward_amount: completionResult.rewardAmount ?? 0,
     score: scored.score,
-    message:
-      ticketsGranted > 0
-        ? `${ticketsGranted} ticket${ticketsGranted > 1 ? "s" : ""} ajouté${ticketsGranted > 1 ? "s" : ""} automatiquement.`
-        : "C'est enregistré.",
+    message,
   });
 });
 
@@ -272,16 +299,14 @@ engagementRouter.post("/claim", (req, res) => {
   if (result.error === "already_done") {
     return res.status(400).json({ error: "Vous avez déjà effectué cette action.", code: "already_done" });
   }
-  const ticketsGranted = result.ticketsGranted ?? 0;
   res.status(201).json({
     completion_id: result.completion.id,
     status: result.status,
     points_granted: result.pointsGranted ?? 0,
-    tickets_granted: ticketsGranted,
-    message:
-      ticketsGranted > 0
-        ? `${ticketsGranted} ticket${ticketsGranted > 1 ? "s" : ""} ajouté${ticketsGranted > 1 ? "s" : ""} à ta carte.`
-        : "C'est enregistré.",
+    tickets_granted: result.ticketsGranted ?? 0,
+    stamps_granted: result.stampsGranted ?? 0,
+    reward_amount: result.rewardAmount ?? 0,
+    message: buildEngagementClaimMessage(result),
   });
 });
 
