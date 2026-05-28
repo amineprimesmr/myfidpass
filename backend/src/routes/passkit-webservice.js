@@ -22,7 +22,6 @@ import { scheduleCampaignEventJobsForMember } from "../lib/campaign-event-jobs.j
 import { getPassAuthenticationToken } from "../pass.js";
 import { generatePass } from "../pass.js";
 import { grantWelcomeBonusIfEligible } from "../db/welcome-bonus.js";
-import { clearWalletTierUnlockPending } from "../lib/wallet-reward-tier-notify.js";
 
 const router = Router();
 
@@ -270,9 +269,6 @@ const getPassHandler = async (req, res) => {
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
     res.setHeader("Pragma", "no-cache");
     res.send(buffer);
-    if (Number(member.wallet_tier_unlock_pending) === 1) {
-      clearWalletTierUnlockPending(member.id);
-    }
   } catch (err) {
     console.error("[PassKit] GET pass: erreur", err?.message || err);
     if (!res.headersSent) res.status(500).json({ error: "Failed to generate pass" });

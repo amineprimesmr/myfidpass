@@ -1,6 +1,7 @@
 /**
  * Assets publics (sans auth) : logo / fond pour la page fidélité client.
- * `/public/flyer-qr-logo` : logo Flyer IA (prefs) si présent, sinon logo carte fidélité Wallet (`/public/logo`).
+ * `/public/flyer-qr-logo` : **uniquement** le logo importé dans Flyer IA (prefs) — pas de repli Wallet
+ * (évite logo texte vert « bandeau » et mélange avec l’icône notifications).
  */
 import { Router } from "express";
 import {
@@ -26,9 +27,6 @@ router.get("/flyer-qr-logo", async (req, res) => {
       } else {
         resolved = { buffer: fromPrefs.buffer, contentType: fromPrefs.contentType || "image/png" };
       }
-    }
-    if (!resolved?.buffer?.length) {
-      resolved = await resolvePublicWalletLogoPng(business);
     }
     if (!resolved?.buffer?.length) return res.status(404).send();
     res.setHeader("Access-Control-Allow-Origin", "*");

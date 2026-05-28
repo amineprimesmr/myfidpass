@@ -9,12 +9,6 @@ import {
   getSubscriptionByUserId,
   getMerchantEntitlementByUserId,
 } from "../db/subscriptions.js";
-import {
-  subscriptionStatusFromApplePayload,
-  expiresMsFromApplePayload,
-} from "./apple-iap-status.js";
-
-export { subscriptionStatusFromApplePayload, expiresMsFromApplePayload } from "./apple-iap-status.js";
 
 export const APPLE_IAP_SUBSCRIPTION_PREFIX = "apple_iap:";
 
@@ -115,6 +109,25 @@ export function decodeStoreKitJwsPayload(signedPayload) {
   }
 }
 
+function msFromAppleTimestamp(value) {
+  if (value == null || value === "") return null;
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return n < 1e12 ? n * 1000 : n;
+}
+
+function subscriptionStatusFromApplePayload(payload) {
+  const now = Date.now();
+  const expiresMs = msFromAppleTimestamp(payload?.expiresDate);
+  const graceMs = msFromAppleTimestamp(payload?.gracePeriodExpiresDate);
+  const revokeMs = msFromAppleTimestamp(payload?.revocationDate);
+  if (revokeMs != null && revokeMs <= now) return "canceled";
+  if (expiresMs != null && expiresMs > now) return "active";
+  if (graceMs != null && graceMs > now) return "past_due";
+  if (expiresMs != null) return "canceled";
+  return "active";
+}
+
 function planIdFromProductId(productId) {
   const pid = String(productId || "").trim();
   if (appleIapAnnualProductIds().includes(pid)) return "pro";
@@ -187,7 +200,7 @@ export async function applyAppleTransactionToUser(userId, payload) {
     throw err;
   }
   const status = subscriptionStatusFromApplePayload(payload);
-  const expiresMs = expiresMsFromApplePayload(payload);
+  const expiresMs = msFromAppleTimestamp(payload.expiresDate);
   const currentPeriodEnd = expiresMs != null ? new Date(expiresMs).toISOString() : null;
   const sub = createOrUpdateSubscription({
     userId,
@@ -211,12 +224,9 @@ export async function applyAppleTransactionToUser(userId, payload) {
       effectiveTo: currentPeriodEnd,
     });
   }
-  const paying = status === "active" || status === "trialing" || status === "past_due";
   return {
     subscription: sub,
-    /** Aligné `hasPaidMerchantSubscription` — pas l’essai gratuit application (`hasOperationalMerchantAccess`). */
-    has_active_subscription: paying,
-    has_paid_merchant_subscription: paying,
+    has_active_subscription: status === "active" || status === "trialing" || status === "past_due",
     subscription_status: status,
     original_transaction_id: originalId,
   };

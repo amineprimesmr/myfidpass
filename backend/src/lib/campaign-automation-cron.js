@@ -10,24 +10,12 @@ import {
 } from "../db.js";
 import { deliverDashboardBroadcast, CAMPAIGN_SEGMENT_KEYS } from "../routes/businesses/notifications.js";
 import { normalizeEventTypeToken } from "../services/campaign-automation-ai.js";
-
-/** Hub « bienvenue » + événements `member_created` — retirés du produit. */
-export function purgeRetiredWelcomeAutomationRules(rules) {
-  if (!rules || typeof rules !== "object") return;
-  delete rules.welcome_pass;
-  for (const key of Object.keys(rules)) {
-    if (!key.startsWith("event_")) continue;
-    const r = rules[key];
-    if (!r || typeof r !== "object") continue;
-    const raw = r.eventType ?? r.event_type;
-    if (normalizeEventTypeToken(raw) === "member_created") delete rules[key];
-  }
-}
 import { businessHasCustomNotificationIcon } from "./notification-icon-gate.js";
 
 const db = getDb();
 
 const RULE_TO_SEGMENT = {
+  welcome_pass: "welcomeNew",
   inactive_14: "inactive14",
   reward_ready: "points50",
   points_near: "pointsNear50",
@@ -35,6 +23,7 @@ const RULE_TO_SEGMENT = {
 };
 
 const DEFAULT_MESSAGES = {
+  welcome_pass: "Bienvenue ! Profitez d’une offre de bienvenue sur votre prochaine visite.",
   inactive_14:
     "Ça fait un moment... Revenez nous voir aujourd'hui et profitez de -10 %.",
   reward_ready: "Votre récompense est prête — passez en magasin pour en profiter.",
@@ -71,7 +60,6 @@ export function mergeCampaignAutomationJson(raw) {
     delete merged.rules.loyal_boost;
     /** « Nouveaux 7 j » retiré du produit : ne plus exécuter. */
     delete merged.rules.new_week;
-    purgeRetiredWelcomeAutomationRules(merged.rules);
     /** Règles `custom_<uuid>` : ciblage libre (segment API) + message + titre d’affichage. */
     for (const key of Object.keys(merged.rules)) {
       if (!key.startsWith("custom_")) continue;

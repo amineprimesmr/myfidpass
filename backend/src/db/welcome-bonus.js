@@ -14,12 +14,7 @@ const db = getDb();
  * - Aucune transaction `welcome_bonus` n'existe déjà pour ce membre × commerce
  * @returns {{ type: "points"|"stamps", amount: number } | null}
  */
-/**
- * @param {object} business
- * @param {string} memberId
- * @param {{ source?: string }} [opts] — ex. `web_signup`, `wallet_register`
- */
-export function grantWelcomeBonusIfEligible(business, memberId, opts = {}) {
+export function grantWelcomeBonusIfEligible(business, memberId) {
   if (!business?.id || !memberId) return null;
   if (Number(business.welcome_bonus_enabled) !== 1) return null;
 
@@ -47,7 +42,7 @@ export function grantWelcomeBonusIfEligible(business, memberId, opts = {}) {
       memberId,
       type: "welcome_bonus",
       points: r.rawAdded,
-      metadata: { source: opts.source || "wallet_register", mode: "stamps", amount_granted: r.rawAdded },
+      metadata: { source: "wallet_register", mode: "stamps", amount_granted: r.rawAdded },
     });
     return { type: "stamps", amount: r.rawAdded };
   }
@@ -59,7 +54,7 @@ export function grantWelcomeBonusIfEligible(business, memberId, opts = {}) {
     memberId,
     type: "welcome_bonus",
     points: configuredAmount,
-    metadata: { source: opts.source || "wallet_register", mode: "points", amount_granted: configuredAmount },
+    metadata: { source: "wallet_register", mode: "points", amount_granted: configuredAmount },
   });
   return { type: "points", amount: configuredAmount };
 }

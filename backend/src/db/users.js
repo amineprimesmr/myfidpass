@@ -14,38 +14,6 @@ export function createUser({ id: uid, email, passwordHash, name }) {
   return getUserById(id);
 }
 
-/** Compte créé via OTP e-mail : mot de passe aléatoire (non utilisé pour la connexion). */
-export function createUserWithEmailOtp({ email, name }) {
-  const norm = String(email ?? "")
-    .trim()
-    .toLowerCase();
-  if (!norm || !norm.includes("@")) {
-    const err = new Error("EMAIL_INVALID");
-    err.code = "EMAIL_INVALID";
-    throw err;
-  }
-  if (isReservedStaffEmailOnly(norm)) {
-    const err = new Error("EMAIL_RESERVED");
-    err.code = "EMAIL_RESERVED";
-    throw err;
-  }
-  if (getUserByEmail(norm)) {
-    const err = new Error("EMAIL_TAKEN");
-    err.code = "EMAIL_TAKEN";
-    throw err;
-  }
-  const id = randomUUID();
-  const randomPwd = randomUUID() + randomUUID();
-  const passwordHash = bcrypt.hashSync(randomPwd, 10);
-  db.prepare("INSERT INTO users (id, email, password_hash, name) VALUES (?, ?, ?, ?)").run(
-    id,
-    norm,
-    passwordHash,
-    name ? String(name).trim() : null,
-  );
-  return getUserById(id);
-}
-
 export function getUserByEmail(email) {
   const norm = String(email ?? "").trim().toLowerCase();
   if (!norm) return null;
@@ -160,13 +128,6 @@ export function getUserById(id) {
 export function updateUserPassword(userId, passwordHash) {
   if (!userId || !passwordHash) return false;
   const info = db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(passwordHash, userId);
-  return info.changes > 0;
-}
-
-export function updateUserName(userId, name) {
-  const n = String(name || "").trim();
-  if (n.length < 2) return false;
-  const info = db.prepare("UPDATE users SET name = ? WHERE id = ?").run(n.slice(0, 100), userId);
   return info.changes > 0;
 }
 

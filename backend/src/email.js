@@ -15,44 +15,17 @@ const MAIL_FROM_DEFAULT = "noreply@myfidpass.fr";
 /** Expéditeur Resend si aucune variable : domaine de test (domaine perso = vérifier myfidpass.fr sur Resend + MAIL_FROM). */
 const RESEND_FROM_FALLBACK = "Myfidpass <onboarding@resend.dev>";
 
-function cleanEnvValue(v) {
-  return String(v ?? "")
-    .replace(/\r?\n/g, "")
-    .replace(/^\uFEFF/, "")
-    .trim();
-}
-
-/** Normalise RESEND_FROM / MAIL_FROM (guillemets, retours ligne, e-mail nu). */
-function normalizeResendFrom(raw) {
-  let s = cleanEnvValue(raw);
-  if (!s) return RESEND_FROM_FALLBACK;
-  if (
-    (s.startsWith('"') && s.endsWith('"')) ||
-    (s.startsWith("'") && s.endsWith("'"))
-  ) {
-    s = s.slice(1, -1).trim();
-  }
-  if (/^[^<]*<[^>@]+@[^>]+>\s*$/.test(s)) return s;
-  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return `Myfidpass <${s}>`;
-  return s;
-}
-
 function mailFrom() {
-  return normalizeResendFrom(process.env.MAIL_FROM || process.env.SMTP_USER || MAIL_FROM_DEFAULT);
+  return (process.env.MAIL_FROM || process.env.SMTP_USER || MAIL_FROM_DEFAULT).trim();
 }
 
-/** Expédiateur pour l’API Resend uniquement (ne pas réutiliser le défaut SMTP si non vérifié chez Resend). */
+/** Expéditeur pour l’API Resend uniquement (ne pas réutiliser le défaut SMTP si non vérifié chez Resend). */
 function fromForResend() {
-  const rf = cleanEnvValue(process.env.RESEND_FROM);
-  if (rf) return normalizeResendFrom(rf);
-  const mf = cleanEnvValue(process.env.MAIL_FROM);
-  if (mf) return normalizeResendFrom(mf);
+  const rf = (process.env.RESEND_FROM || "").trim();
+  if (rf) return rf;
+  const mf = (process.env.MAIL_FROM || "").trim();
+  if (mf) return mf;
   return RESEND_FROM_FALLBACK;
-}
-
-function hasProductionFromDomain() {
-  const from = fromForResend();
-  return from.includes("@myfidpass.fr") && from !== RESEND_FROM_FALLBACK;
 }
 
 function getResendKey() {
@@ -94,7 +67,7 @@ async function sendViaResend(p) {
   const key = getResendKey();
   if (!key) return { sent: false };
   const { to, subject, text, html, from } = p;
-  const fromHeader = normalizeResendFrom(from || fromForResend());
+  const fromHeader = (from || fromForResend()).trim();
   const destinations = Array.isArray(to) ? to : [to];
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -162,27 +135,16 @@ export async function sendMail({ to, subject, text, html }) {
     try {
       const primaryFrom = fromForResend();
       let r = await sendViaResend({ ...opts, from: primaryFrom });
-      if (r.sent) return { sent: true, resendId: r.resendId, provider: "resend", from: primaryFrom };
+      if (r.sent) return { sent: true, resendId: r.resendId, provider: "resend" };
 
-      // Ne pas basculer sur onboarding@resend.dev si un domaine prod est configuré :
-      // cet expédiateur de test ne livre qu'à l'e-mail du compte Resend.
-      const allowTestFromFallback = !hasProductionFromDomain();
-      if (allowTestFromFallback && primaryFrom !== RESEND_FROM_FALLBACK) {
+      if (primaryFrom !== RESEND_FROM_FALLBACK) {
         console.warn(
           "[Email] Resend a échoué avec l’expéditeur configuré ; nouvel essai avec",
           RESEND_FROM_FALLBACK,
           "(voir docs/EMAIL-TRANSACTIONNEL.md — domaine vérifié ?)",
         );
         r = await sendViaResend({ ...opts, from: RESEND_FROM_FALLBACK });
-        if (r.sent) return { sent: true, resendId: r.resendId, provider: "resend", from: RESEND_FROM_FALLBACK };
-      } else if (!allowTestFromFallback) {
-        console.error(
-          "[Email] Resend refusé avec expéditeur prod",
-          primaryFrom,
-          "→",
-          r.error || "unknown",
-          "(pas de fallback onboarding@resend.dev — domaine myfidpass.fr requis)",
-        );
+        if (r.sent) return { sent: true, resendId: r.resendId, provider: "resend" };
       }
 
       if (smtpConfigured()) {

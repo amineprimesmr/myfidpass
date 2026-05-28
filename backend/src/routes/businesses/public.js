@@ -14,10 +14,7 @@ import {
   spinGameForMember,
 } from "../../db.js";
 import { buildIpHash, buildDeviceHash } from "../../services/engagement-proof.js";
-import { parseFlyerPrefsCustomLogoDataUrl } from "../../lib/resolve-flyer-prefs-custom-logo.js";
 import { getApiBase, getIdempotencyKey } from "./shared.js";
-import { normalizePointsRewardTiersForClient } from "../../lib/points-reward-tiers.js";
-import { resolveSignupRewardLabelForBusiness } from "../../lib/signup-reward-label.js";
 
 /** @param {string} v */
 function isHex6(v) {
@@ -28,16 +25,16 @@ export function publicInfo(req, res) {
   const business = req.business;
   const apiBase = getApiBase(req);
   const slug = req.params.slug;
-  const signup_reward_label = resolveSignupRewardLabelForBusiness(business.id);
-
-  const points_reward_tiers = normalizePointsRewardTiersForClient(
-    business.points_reward_tiers,
-    signup_reward_label,
-  );
-  /** Logo parcours client : flyer IA si importé, sinon logo carte fidélité (`/public/logo`). */
-  const hasFlyerCustomLogo = !!parseFlyerPrefsCustomLogoDataUrl(business.flyer_prefs_json);
-  const logoAssetPath = hasFlyerCustomLogo ? "flyer-qr-logo" : "logo";
-  const logoUrl = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/public/${logoAssetPath}`;
+  let points_reward_tiers = business.points_reward_tiers;
+  if (typeof points_reward_tiers === "string" && points_reward_tiers?.trim()) {
+    try {
+      points_reward_tiers = JSON.parse(points_reward_tiers);
+    } catch (_) {
+      points_reward_tiers = undefined;
+    }
+  }
+  /** Logo hero page jeu QR : **uniquement** logo importé Flyer IA (`/public/flyer-qr-logo`) — pas d’icône notif / Wallet. */
+  const logoUrl = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/public/flyer-qr-logo`;
   /** Icône push / aperçu campagne — uniquement si import dédié (sinon le client utilise son placeholder). */
   const notificationIconUrl =
     Number(business.asset_notification_icon_present) === 1
@@ -81,7 +78,6 @@ export function publicInfo(req, res) {
     /** Secteur d’activité (ex. fastfood, boulangerie) — pour préremplissage SaaS / flyer IA. */
     sector: business.sector?.trim() || undefined,
     logoUrl,
-    has_flyer_custom_logo: hasFlyerCustomLogo,
     notificationIconUrl,
     logo_updated_at: business.logo_updated_at ?? undefined,
     logo_icon_updated_at: business.logo_icon_updated_at ?? undefined,
@@ -99,8 +95,7 @@ export function publicInfo(req, res) {
     stamp_mid_reward_label: business.stamp_mid_reward_label ?? undefined,
     label_restants: business.label_restants?.trim() || undefined,
     stamp_emoji: business.stamp_emoji?.trim() || undefined,
-    points_reward_tiers: points_reward_tiers.length ? points_reward_tiers : undefined,
-    signup_reward_label: signup_reward_label || undefined,
+    points_reward_tiers: points_reward_tiers ?? undefined,
     /** Couleurs flyer pour theming page publique fidélité (roue + boutons). Fond toujours blanc. */
     flyerColors: flyerColors ?? undefined,
     /** Texte du titre principal sur la page jeu QR ; absent ou vide = défaut applicatif. */
@@ -112,9 +107,6 @@ export function publicInfo(req, res) {
       business.delivery_receipt_max_age_days != null ? Number(business.delivery_receipt_max_age_days) : 14,
     /** Lien avis Google (page jeu QR / 1er spin) — absent si non configuré côté commerce. */
     google_review_write_url: google_review_write_url ?? undefined,
-    welcome_bonus_enabled: Number(business.welcome_bonus_enabled) === 1 ? 1 : 0,
-    welcome_bonus_amount:
-      business.welcome_bonus_amount != null ? Number(business.welcome_bonus_amount) : 10,
   });
 }
 

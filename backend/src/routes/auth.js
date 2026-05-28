@@ -8,7 +8,6 @@ import { getUserIdByReferralCode, recordReferral } from "../db/referrals.js";
 import {
   createUser,
   createUserWithPhone,
-  createUserWithEmailOtp,
   getUserByEmail,
   getUserByPhoneE164,
   getUserById,
@@ -23,11 +22,12 @@ import {
   getSubscriptionByUserId,
   hasStripeBackedActiveSubscription,
   hasPaidMerchantSubscription,
+  hasOperationalMerchantAccess,
+  getMerchantTrialEndsAtIso,
   setPasswordResetToken,
   getPasswordResetByToken,
   deletePasswordResetToken,
   updateUserPassword,
-  updateUserName,
   deleteUserAccount,
   isUserAdmin,
   createBusiness,
@@ -53,12 +53,6 @@ import {
   deletePhoneOtpChallenge,
   incrementPhoneOtpAttempts,
 } from "../db/phone-otp.js";
-import {
-  upsertEmailOtpChallenge,
-  getEmailOtpChallenge,
-  deleteEmailOtpChallenge,
-  incrementEmailOtpAttempts,
-} from "../db/email-otp.js";
 import { normalizePhoneE164 } from "../lib/phone-e164.js";
 import { sendSmsViaTwilio, isTwilioConfigured, friendlyTwilioSendError } from "../lib/sms-twilio.js";
 import { requireAuth, getJwtSecret, invalidateAuthUserCache } from "../middleware/auth.js";
@@ -66,7 +60,6 @@ import { sendMail, isEmailConfigured } from "../email.js";
 import { validate, schemas } from "../lib/validate.js";
 import { fetchGooglePlaceBusinessEnrichment } from "../lib/google-place-business-enrichment.js";
 import { refreshGooglePlacesSnapshotFromPlaceId } from "../services/social-metrics-service.js";
-import { cancelPaidSubscriptionsBeforeAccountDeletion } from "../lib/account-deletion-billing.js";
 
 const router = Router();
 
@@ -161,27 +154,30 @@ function authSubscriptionPayload(userId) {
       const ownerIdStr = String(ownerId).trim();
       const ownerSubRow = getSubscriptionByUserId(ownerIdStr);
       const ownerSubPayload = subscriptionPayloadForAuth(ownerIdStr, ownerSubRow);
+      const ownerAccess = hasOperationalMerchantAccess(ownerIdStr);
       const ownerPaying = hasPaidMerchantSubscription(ownerIdStr);
       const ownerEntitlements = getMerchantBusinessEntitlements(ownerIdStr);
       return {
         subscription: ownerSubPayload,
-        has_active_subscription: ownerPaying,
-        has_paid_merchant_subscription: ownerPaying,
+        has_active_subscription: ownerAccess,
         entitlements: {
           ...ownerEntitlements,
           can_create_business: false,
         },
-        merchant_trial_ends_at: null,
+        merchant_trial_ends_at: ownerAccess
+          ? null
+          : ownerPaying
+            ? null
+            : getMerchantTrialEndsAtIso(ownerIdStr) ?? getMerchantTrialEndsAtIso(userId),
       };
     }
   }
   const paying = hasPaidMerchantSubscription(userId);
   return {
     subscription: subPayload,
-    has_active_subscription: paying,
-    has_paid_merchant_subscription: paying,
+    has_active_subscription: hasOperationalMerchantAccess(userId),
     entitlements,
-    merchant_trial_ends_at: null,
+    merchant_trial_ends_at: paying ? null : getMerchantTrialEndsAtIso(userId),
   };
 }
 
@@ -1049,7 +1045,6 @@ router.get("/me", (req, res, next) => {
       requires_business_setup: businesses.length === 0,
       subscription: subPayload.subscription,
       has_active_subscription: subPayload.has_active_subscription,
-      has_paid_merchant_subscription: subPayload.has_paid_merchant_subscription,
       entitlements: subPayload.entitlements,
       merchant_trial_ends_at: subPayload.merchant_trial_ends_at,
     });
@@ -1061,26 +1056,6 @@ router.get("/me", (req, res, next) => {
       code: "me_failed",
       ...(!isProd && e?.message ? { detail: String(e.message) } : {}),
     });
-  }
-});
-
-/**
- * PATCH /api/auth/me
- * Body: { name } — prénom commerçant après inscription OTP.
- */
-router.patch("/me", requireAuth, validate(schemas.authMePatch), (req, res) => {
-  try {
-    const name = String(req.body?.name || "").trim();
-    const ok = updateUserName(req.user.id, name);
-    if (!ok) {
-      return res.status(400).json({ error: "Prénom invalide.", code: "name_invalid" });
-    }
-    invalidateAuthUserCache(req.user.id);
-    const user = getUserById(req.user.id);
-    return res.json({ ok: true, user: authUserPayload(user) });
-  } catch (e) {
-    console.error("PATCH /api/auth/me:", e);
-    return res.status(500).json({ error: "Impossible de mettre à jour le profil." });
   }
 });
 
@@ -1097,23 +1072,15 @@ router.get("/me/businesses", requireAuth, (req, res) => {
  * DELETE /api/auth/account
  * Supprime définitivement le compte de l'utilisateur connecté (RGPD, exigence App Store).
  */
-router.delete("/account", requireAuth, async (req, res) => {
+router.delete("/account", requireAuth, (req, res) => {
   try {
     const userId = req.user.id;
-    const billing = await cancelPaidSubscriptionsBeforeAccountDeletion(userId);
     const deleted = deleteUserAccount(userId);
     invalidateAuthUserCache(userId);
     if (!deleted) {
       return res.status(404).json({ error: "Compte déjà supprimé.", code: "account_already_deleted" });
     }
-    return res.json({
-      ok: true,
-      message: "Compte supprimé",
-      deleted_user_id: userId,
-      stripe_subscriptions_canceled: billing.stripeCanceled,
-      /** L’abonnement App Store reste sur l’Apple ID ; l’utilisateur doit l’annuler dans Réglages si besoin. */
-      apple_subscription_remains_on_apple_id: billing.hadAppleIap,
-    });
+    return res.json({ ok: true, message: "Compte supprimé", deleted_user_id: userId });
   } catch (e) {
     console.error("Delete account error:", e);
     return res.status(500).json({ error: "Erreur lors de la suppression du compte." });
@@ -1303,179 +1270,6 @@ router.post("/phone/verify", validate(schemas.phoneVerify), async (req, res) => 
   } catch (e) {
     console.error("[phone/verify] createUserWithPhone:", e);
     return res.status(409).json({ error: "Ce numéro est déjà utilisé. Connectez-vous avec le code." });
-  }
-
-  const businessState = await ensureInitialBusinessForUser(user.id, establishmentSelection);
-  if (businessState.setup_error_code) {
-    return res.status(409).json({
-      error: businessState.setup_error_message || "Impossible de créer l'établissement.",
-      code: businessState.setup_error_code,
-    });
-  }
-  if (businessState.requires_business_setup) {
-    return respondMissingEstablishment(res);
-  }
-
-  const { accessToken, refreshToken } = issueTokenPair(user.id);
-  return res.status(201).json({
-    ...buildAuthSuccessPayload(user),
-    token: accessToken,
-    refreshToken,
-  });
-});
-
-// ── E-mail + OTP (app commerçant — connexion / inscription sans mot de passe) ──
-
-const EMAIL_OTP_MAX_ATTEMPTS = 5;
-const EMAIL_SEND_COOLDOWN_SEC = 60;
-
-function hashEmailOtp(emailNorm, code) {
-  const secret = process.env.EMAIL_OTP_HMAC_SECRET || process.env.JWT_SECRET || "local-dev-only";
-  return createHmac("sha256", secret).update(`${emailNorm}:${code}`).digest("hex");
-}
-
-/**
- * POST /api/auth/email/send-code
- */
-router.post("/email/send-code", validate(schemas.emailSend), async (req, res) => {
-  const emailNorm = req.body.email;
-
-  if (isReservedStaffEmailOnly(emailNorm)) {
-    return res.status(400).json({ error: "Adresse e-mail invalide.", code: "email_reserved" });
-  }
-
-  const existing = getEmailOtpChallenge(emailNorm);
-  if (existing?.last_sent_at) {
-    const last = Date.parse(existing.last_sent_at);
-    if (!Number.isNaN(last) && Date.now() - last < EMAIL_SEND_COOLDOWN_SEC * 1000) {
-      return res.status(429).json({ error: `Attendez ${EMAIL_SEND_COOLDOWN_SEC} secondes avant un nouvel envoi.` });
-    }
-  }
-
-  const code =
-    process.env.NODE_ENV === "test"
-      ? "123456"
-      : String(randomInt(100000, 999999));
-  const codeHash = hashEmailOtp(emailNorm, code);
-  const expires = new Date(Date.now() + 5 * 60 * 1000).toISOString();
-
-  const isProd = process.env.NODE_ENV === "production";
-  if (isProd && !isEmailConfigured()) {
-    return res.status(503).json({ error: "Envoi e-mail temporairement indisponible." });
-  }
-
-  if (isEmailConfigured()) {
-    const mailResult = await sendMail({
-      to: emailNorm,
-      subject: "Votre code MyFidpass",
-      text: `MyFidpass : votre code de connexion est ${code}. Il expire dans 5 minutes.`,
-      html: `<p>MyFidpass : votre code de connexion est <strong>${code}</strong>.</p><p>Il expire dans 5 minutes.</p>`,
-    });
-    if (!mailResult.sent) {
-      console.error("[email/send-code] sendMail failed for", emailNorm, mailResult.error || "");
-      const detail = mailResult.error ? String(mailResult.error).slice(0, 400) : null;
-      let errorMsg = "Impossible d'envoyer l'e-mail. Réessayez.";
-      const detailLower = (detail || "").toLowerCase();
-      if (
-        detailLower.includes("verify a domain") ||
-        detailLower.includes("testing emails") ||
-        detailLower.includes("own email address")
-      ) {
-        errorMsg =
-          "Envoi e-mail bloqué : vérifiez le domaine myfidpass.fr sur Resend (resend.com/domains) et configurez RESEND_FROM sur Railway.";
-      }
-      return res.status(502).json({
-        error: errorMsg,
-        ...(detail ? { detail } : {}),
-      });
-    }
-  } else {
-    console.warn(`[email/send-code] E-mail non configuré — code pour ${emailNorm} : ${code}`);
-  }
-
-  const now = new Date().toISOString();
-  upsertEmailOtpChallenge(emailNorm, codeHash, expires, now);
-
-  return res.json({ ok: true });
-});
-
-/**
- * POST /api/auth/email/verify
- * Compte existant : connexion. Sinon : création si établissement fourni.
- */
-router.post("/email/verify", validate(schemas.emailVerify), async (req, res) => {
-  const emailNorm = req.body.email;
-  const code = String(req.body.code || "").trim();
-
-  if (isReservedStaffEmailOnly(emailNorm)) {
-    return res.status(400).json({ error: "Adresse e-mail invalide.", code: "email_reserved" });
-  }
-
-  const row = getEmailOtpChallenge(emailNorm);
-  if (!row) {
-    return res.status(400).json({ error: "Aucun code en attente. Demandez un nouveau code." });
-  }
-  if (Date.parse(row.expires_at) < Date.now()) {
-    deleteEmailOtpChallenge(emailNorm);
-    return res.status(400).json({ error: "Code expiré. Demandez un nouveau code." });
-  }
-  if ((row.attempts || 0) >= EMAIL_OTP_MAX_ATTEMPTS) {
-    deleteEmailOtpChallenge(emailNorm);
-    return res.status(429).json({ error: "Trop de tentatives. Demandez un nouveau code." });
-  }
-
-  const expected = row.code_hash;
-  const got = hashEmailOtp(emailNorm, code);
-  let a;
-  let b;
-  try {
-    a = Buffer.from(expected, "hex");
-    b = Buffer.from(got, "hex");
-  } catch {
-    incrementEmailOtpAttempts(emailNorm);
-    return res.status(401).json({ error: "Code incorrect." });
-  }
-  if (a.length !== b.length || !timingSafeEqual(a, b)) {
-    incrementEmailOtpAttempts(emailNorm);
-    return res.status(401).json({ error: "Code incorrect." });
-  }
-
-  deleteEmailOtpChallenge(emailNorm);
-
-  let user = getUserByEmail(emailNorm);
-  const establishmentSelection = normalizeEstablishmentSelection(req.body || {});
-  const nameHint = req.body?.name ? String(req.body.name).trim() : null;
-
-  if (user) {
-    const { accessToken, refreshToken } = issueTokenPair(user.id);
-    return res.json({
-      ...buildAuthSuccessPayload(user),
-      token: accessToken,
-      refreshToken,
-    });
-  }
-
-  if (!hasSelectedEstablishment(establishmentSelection)) {
-    return respondMissingEstablishment(res);
-  }
-
-  try {
-    user = createUserWithEmailOtp({ email: emailNorm, name: nameHint });
-  } catch (e) {
-    const c = e?.code;
-    if (c === "EMAIL_TAKEN") {
-      user = getUserByEmail(emailNorm);
-      if (user) {
-        const { accessToken, refreshToken } = issueTokenPair(user.id);
-        return res.json({
-          ...buildAuthSuccessPayload(user),
-          token: accessToken,
-          refreshToken,
-        });
-      }
-    }
-    console.error("[email/verify] createUserWithEmailOtp:", e);
-    return res.status(409).json({ error: "Impossible de créer le compte. Réessayez." });
   }
 
   const businessState = await ensureInitialBusinessForUser(user.id, establishmentSelection);

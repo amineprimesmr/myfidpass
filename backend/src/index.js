@@ -307,8 +307,6 @@ app.use("/api/auth/check-identifier", authAccountProbeLimiter);
 app.use("/api/auth/check-google-place", authAccountProbeLimiter);
 app.use("/api/auth/phone/send-code", authLimiter);
 app.use("/api/auth/phone/verify", authLimiter);
-app.use("/api/auth/email/send-code", authLimiter);
-app.use("/api/auth/email/verify", authLimiter);
 
 const placesSearchLimiter = rateLimit({
   windowMs: 60 * 1000,

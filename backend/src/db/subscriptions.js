@@ -7,20 +7,52 @@ import { getUserById } from "./users.js";
 
 const db = getDb();
 
-/** @deprecated Essai gratuit application supprimé — toujours `false`. */
-export function isUserInMerchantTrial(_userId) {
-  return false;
+/**
+ * Durée d’accès complet **sans abonnement Stripe payant** après création du compte.
+ * Priorité : `MERCHANT_TRIAL_HOURS` puis `MERCHANT_TRIAL_DAYS`, sinon **3 j** (aligné offre 3 j gratuits).
+ */
+export function merchantTrialDurationMs() {
+  const hoursRaw = process.env.MERCHANT_TRIAL_HOURS;
+  if (hoursRaw !== undefined && String(hoursRaw).trim() !== "") {
+    const h = parseInt(hoursRaw, 10);
+    if (Number.isFinite(h) && h >= 0) return h * 60 * 60 * 1000;
+  }
+  const n = parseInt(process.env.MERCHANT_TRIAL_DAYS, 10);
+  if (Number.isFinite(n) && n >= 0) return n * 24 * 60 * 60 * 1000;
+  return 3 * 24 * 60 * 60 * 1000;
 }
 
-/** @deprecated Conservé pour compat imports ; toujours `null`. */
-export function getMerchantTrialEndsAtIso(_userId) {
-  return null;
+function userCreatedAtMs(user) {
+  if (!user?.created_at) return null;
+  let s = String(user.created_at).trim();
+  if (!s) return null;
+  if (!s.includes("T")) s = s.replace(" ", "T");
+  if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(s)) s += "Z";
+  const t = Date.parse(s);
+  return Number.isFinite(t) ? t : null;
 }
 
-/** Accès opérationnel (scan, points, campagnes, etc.) : abonnement payant uniquement. */
+/** Fin de la fenêtre d’essai (ISO UTC), ou `null` si date de création illisible. */
+export function getMerchantTrialEndsAtIso(userId) {
+  if (!userId) return null;
+  const user = getUserById(String(userId).trim());
+  const start = userCreatedAtMs(user);
+  if (start == null) return null;
+  return new Date(start + merchantTrialDurationMs()).toISOString();
+}
+
+/** Essai actif : pas d’abo payant (Stripe `sub_…` ou App Store `apple_iap:…`) et encore dans la fenêtre d’essai. */
+export function isUserInMerchantTrial(userId) {
+  if (!userId || hasPaidMerchantSubscription(userId)) return false;
+  const endIso = getMerchantTrialEndsAtIso(userId);
+  if (!endIso) return false;
+  return Date.now() < Date.parse(endIso);
+}
+
+/** Accès opérationnel (scan, points, campagnes, etc.) : abo payant (Stripe ou App Store) ou essai gratuit. */
 export function hasOperationalMerchantAccess(userId) {
   if (!userId) return false;
-  return hasPaidMerchantSubscription(userId);
+  return hasPaidMerchantSubscription(userId) || isUserInMerchantTrial(userId);
 }
 
 export const PLANS = { starter: { max_businesses: 1 }, pro: { max_businesses: 5 } };
@@ -178,6 +210,10 @@ export function upsertMerchantEntitlement({
 }
 
 export function resolveEffectiveAllowedBusinesses(userId) {
+  // Pendant l'essai gratuit commerçant, on autorise l'ajout de commerces sans plafond strict.
+  if (isUserInMerchantTrial(userId)) {
+    return 999;
+  }
   const businessSplitPaidCount = countActiveBusinessSubscriptionsByUserId(userId);
   const entitlement = getMerchantEntitlementByUserId(userId);
   const entitlementAllowed = entitlement
