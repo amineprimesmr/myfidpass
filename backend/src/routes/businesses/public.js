@@ -16,6 +16,7 @@ import {
 import { buildIpHash, buildDeviceHash } from "../../services/engagement-proof.js";
 import { parseFlyerPrefsCustomLogoDataUrl } from "../../lib/resolve-flyer-prefs-custom-logo.js";
 import { getApiBase, getIdempotencyKey } from "./shared.js";
+import { buildPublicFidelityClientUrl } from "../../lib/public-client-url.js";
 import { normalizePointsRewardTiersForClient } from "../../lib/points-reward-tiers.js";
 import { resolveSignupRewardLabelForBusiness } from "../../lib/signup-reward-label.js";
 
@@ -73,10 +74,16 @@ export function publicInfo(req, res) {
     ? `https://search.google.com/local/writereview?placeid=${encodeURIComponent(placeId)}`
     : undefined;
 
+  const frontendBase = (process.env.FRONTEND_URL || "https://www.myfidpass.fr").replace(/\/$/, "");
+  const clientProgramUrl = buildPublicFidelityClientUrl(frontendBase, slug, business.id);
+
   res.json({
     id: business.id,
     name: business.name,
     slug: business.slug,
+    /** Lien client à partager (roue + missions si jeu activé → ?qr=1). */
+    client_program_url: clientProgramUrl,
+    clientProgramUrl,
     organizationName: business.organization_name,
     /** Secteur d’activité (ex. fastfood, boulangerie) — pour préremplissage SaaS / flyer IA. */
     sector: business.sector?.trim() || undefined,

@@ -4,6 +4,7 @@
  */
 import { Router } from "express";
 import { normalizePassKitChangeMessageStored } from "../../lib/passkit-change-message-template.js";
+import { buildPublicFidelityClientUrl } from "../../lib/public-client-url.js";
 import {
   updateBusiness,
   getBusinessById,
@@ -936,7 +937,7 @@ router.get("/flyer", (req, res) => {
   let business = syncFlyerAiBillingMonth(req.business);
   const slug = req.params.slug ?? business.slug;
   const fe = (process.env.FRONTEND_URL || "https://www.myfidpass.fr").replace(/\/$/, "");
-  const shareUrl = `${fe}/fidelity/${encodeURIComponent(slug)}`;
+  const shareUrl = buildPublicFidelityClientUrl(fe, slug, business.id);
   let flyer_prefs = null;
   if (business.flyer_prefs_json && String(business.flyer_prefs_json).trim()) {
     try {

@@ -224,9 +224,24 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     }
   }
 
+  /** Lien commerce standard : roue activée → parcours jeu (roue, avis Google, missions). ?signup=1 force l’inscription seule. */
+  async function commerceUsesQrGameFlow() {
+    if (isQrGameEntryIntent(slug)) return true;
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      if (["1", "true", "yes"].includes(String(sp.get("signup") || "").toLowerCase())) return false;
+    }
+    try {
+      const gamesData = await api.getGames(slug);
+      const roulette = (gamesData?.games || []).find((g) => g.game_code === "roulette");
+      return !!(roulette && roulette.enabled);
+    } catch {
+      return false;
+    }
+  }
+
   /**
-   * Session client : lien pass ?m=, membre stocké, ou invité QR uniquement si parcours jeu (?qr=1 / session).
-   * Sans compte et sans intent QR → pas de membre (écran inscription), pas de flash « Invité ».
+   * Session client : lien pass ?m=, membre stocké, ou invité QR (lien ?qr=1 ou commerce avec roue activée).
    */
   async function resolveClientSession() {
     if (await tryHydrateMemberFromPassLink()) {
@@ -234,6 +249,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       if (mid) await hydrateMemberExtras(mid);
       return;
     }
+
+    const useQrFlow = await commerceUsesQrGameFlow();
 
     const raw = localStorage.getItem(memberStorageKey(slug));
     if (raw) {
@@ -243,7 +260,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
           await hydrateMemberCore(parsed.memberId);
           await hydrateMemberExtras(parsed.memberId);
           if (isGuestMember(store.get().member)) {
-            if (!isQrGameEntryIntent(slug)) {
+            if (!useQrFlow) {
               clearStoredGuestSession();
             } else {
               markQrGameSession(slug);
@@ -254,7 +271,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       } catch (_) {}
     }
 
-    if (!isQrGameEntryIntent(slug)) return;
+    if (!useQrFlow) return;
 
     const email = `guest-${crypto.randomUUID()}@guest.invalid`;
     const data = await api.createMember(slug, { name: "Invité", email });
