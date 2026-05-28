@@ -12,43 +12,65 @@ function preferSameOriginApiAssetPaths() {
   }
 }
 
+/**
+ * @param {Record<string, unknown> | null | undefined} business
+ */
+export function businessHasFlyerCustomLogo(business) {
+  if (!business || typeof business !== "object") return false;
+  if (business.has_flyer_custom_logo === true || business.hasFlyerCustomLogo === true) return true;
+  if (business.has_flyer_custom_logo === false || business.hasFlyerCustomLogo === false) return false;
+  const raw = typeof business.logoUrl === "string" ? business.logoUrl.trim() : "";
+  const pathOnly = (raw.split("?")[0] || "").toLowerCase();
+  return /\/public\/flyer-qr-logo$/i.test(pathOnly);
+}
 
 /**
- * URL à mettre dans <img src> pour le logo commerce (page fidélité / jeu).
- * Quand apiBase est vide (proxy Vite), on utilise toujours un chemin **relatif**
- * `/api/businesses/:slug/public/flyer-qr-logo` pour rester sur la même origine que la page.
- * Sinon le JSON peut contenir `http://127.0.0.1:3001/...` alors que la page est sur
- * `http://localhost:5174` → chargement d’image en échec → repli texte « OCALI… ».
+ * URL à mettre dans <img src> pour le logo commerce (page fidélité / jeu QR).
+ * Priorité : logo importé dans le flyer ; sinon logo de la carte fidélité Wallet.
  *
  * @param {Record<string, unknown> | null | undefined} business
  * @param {string} slug
  * @param {string} apiBase
  */
 export function resolveClientLogoImgSrc(business, slug, apiBase) {
-  const path = slug ? `/api/businesses/${encodeURIComponent(slug)}/public/flyer-qr-logo` : "";
+  const useFlyer = businessHasFlyerCustomLogo(business);
+  const asset = useFlyer ? "flyer-qr-logo" : "logo";
+  const path = slug ? `/api/businesses/${encodeURIComponent(slug)}/public/${asset}` : "";
   if (!path) return "";
   const baseTrim = preferSameOriginApiAssetPaths() ? "" : String(apiBase || "").replace(/\/$/, "");
   const apiLogoRaw = typeof business?.logoUrl === "string" ? business.logoUrl.trim() : "";
-  /** Ne jamais suivre une URL « bandeau Wallet » : le hero jeu QR doit appeler `/public/flyer-qr-logo` (logo flyer si en base). */
   const pathOnly = (apiLogoRaw.split("?")[0] || "").toLowerCase();
-  const apiLogoLooksWallet =
+  const apiLogoMatchesAsset =
     apiLogoRaw.length > 0 &&
-    /\/public\/logo$/i.test(pathOnly) &&
-    !/\/public\/flyer-qr-logo/i.test(pathOnly);
-  const apiLogo = apiLogoLooksWallet ? "" : apiLogoRaw;
+    (pathOnly.endsWith(`/public/${asset}`) || pathOnly.endsWith(`/public/${asset}/`));
+  const apiLogo = apiLogoMatchesAsset ? apiLogoRaw : "";
   const srcBase = baseTrim ? apiLogo || `${baseTrim}${path}` : path;
-  const upd = business?.logo_updated_at ?? business?.logoUpdatedAt;
+  const logoUpd = business?.logo_updated_at ?? business?.logoUpdatedAt;
   const flyerPrefsUpd = business?.flyer_prefs_updated_at ?? business?.flyerPrefsUpdatedAt;
-  const vParts = [upd, flyerPrefsUpd]
+  const vParts = useFlyer
+    ? [flyerPrefsUpd, logoUpd]
+    : [logoUpd, flyerPrefsUpd];
+  const v = vParts
     .filter((x) => x != null && String(x).trim() !== "")
-    .map((x) => String(x).trim());
-  const v = vParts.length ? vParts.join("|") : "";
+    .map((x) => String(x).trim())
+    .join("|");
   return v ? `${srcBase}${srcBase.includes("?") ? "&" : "?"}v=${encodeURIComponent(v)}` : srcBase;
+}
+
+/** Repli explicite logo carte (ex. `onerror` si l’URL flyer est encore en cache). */
+export function resolveClientWalletLogoImgSrc(business, slug, apiBase) {
+  const path = slug ? `/api/businesses/${encodeURIComponent(slug)}/public/logo` : "";
+  if (!path) return "";
+  const baseTrim = preferSameOriginApiAssetPaths() ? "" : String(apiBase || "").replace(/\/$/, "");
+  const upd = business?.logo_updated_at ?? business?.logoUpdatedAt;
+  const srcBase = baseTrim ? `${baseTrim}${path}` : path;
+  const v = upd != null && String(upd).trim() !== "" ? encodeURIComponent(String(upd).trim()) : "";
+  return v ? `${srcBase}?v=${v}` : srcBase;
 }
 
 /**
  * Icône marque **campagnes / notifications** (`GET …/notification-icon`) — uniquement pour ces écrans.
- * Ne pas utiliser pour le **hero jeu QR** : utiliser `resolveClientLogoImgSrc` (logo Flyer IA `/public/flyer-qr-logo`).
+ * Ne pas utiliser pour le **hero jeu QR** : utiliser `resolveClientLogoImgSrc`.
  *
  * @param {Record<string, unknown> | null | undefined} business
  * @param {string} slug
@@ -56,7 +78,6 @@ export function resolveClientLogoImgSrc(business, slug, apiBase) {
  */
 export function resolveClientNotificationIconImgSrc(business, slug, apiBase) {
   const apiNotifUrl = typeof business?.notificationIconUrl === "string" ? business.notificationIconUrl.trim() : "";
-  /** Pas d’URL dans le JSON public = pas d’icône dédiée (le GET ne doit plus retomber sur le logo carte). */
   if (!apiNotifUrl) return "";
   const path = slug ? `/api/businesses/${encodeURIComponent(slug)}/notification-icon` : "";
   if (!path) return "";
@@ -70,7 +91,6 @@ export function resolveClientNotificationIconImgSrc(business, slug, apiBase) {
 
 /**
  * Fond page /fidelity/:slug — image importée manuellement par le commerçant.
- * Sur myfidpass.fr, chemin relatif pour éviter CORP sur l’URL API en `background-image`.
  *
  * @param {Record<string, unknown> | null | undefined} business
  * @param {string} slug

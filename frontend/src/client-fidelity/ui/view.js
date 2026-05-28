@@ -11,7 +11,11 @@ import { renderRouletteInlineMarkup } from "./roulette-inline-markup.js";
 import { renderQrGamePage } from "./qr-game-markup.js";
 import { shouldShowQrThanksHero } from "../qr-game-flow.js";
 import { buildNextRewardBannerState, renderNextRewardBannerMarkup } from "./next-reward-banner-markup.js";
-import { resolveClientLogoImgSrc } from "../lib/resolve-client-logo-src.js";
+import {
+  businessHasFlyerCustomLogo,
+  resolveClientLogoImgSrc,
+  resolveClientWalletLogoImgSrc,
+} from "../lib/resolve-client-logo-src.js";
 import {
   buildHeroBalanceProgressState,
   renderHeroBalanceProgressMarkup,
@@ -85,8 +89,11 @@ export function renderClientPage(root, state, options = {}) {
       ticketStatusDotClass,
       variant: "qr",
     });
-    /** Logo page jeu QR = import « Flyer IA » si enregistré (`/public/flyer-qr-logo`), sinon bandeau Wallet. */
+    /** Logo page jeu QR : flyer IA si importé, sinon logo carte fidélité. */
     const logoUrl = resolveClientLogoImgSrc(state.business, slugForAssets, apiBase);
+    const walletLogoFallbackUrl = businessHasFlyerCustomLogo(state.business)
+      ? resolveClientWalletLogoImgSrc(state.business, slugForAssets, apiBase)
+      : "";
     const qrThanksHeroMode = shouldShowQrThanksHero(slugForAssets);
     root.innerHTML = renderQrGamePage(esc, {
       businessNameEsc: businessName,
@@ -94,6 +101,7 @@ export function renderClientPage(root, state, options = {}) {
       rouletteHtml,
       googleReviewUrl,
       logoUrl,
+      walletLogoFallbackUrl,
       qrThanksHeroMode,
     });
     return;
@@ -177,8 +185,13 @@ export function renderClientPage(root, state, options = {}) {
     Number(state.business?.delivery_receipt_claims_enabled ?? state.business?.deliveryReceiptClaimsEnabled ?? 1) === 1;
 
   const memberLogoUrl = hasMember ? resolveClientLogoImgSrc(state.business, slugForAssets, apiBase) : "";
-  const logoOnErr =
-    "this.onerror=null;this.classList.add('fidelity-qr-logo--hidden');this.removeAttribute('src')";
+  const memberWalletLogoFallback =
+    hasMember && businessHasFlyerCustomLogo(state.business)
+      ? resolveClientWalletLogoImgSrc(state.business, slugForAssets, apiBase)
+      : "";
+  const logoOnErr = memberWalletLogoFallback
+    ? `this.onerror=null;this.src='${memberWalletLogoFallback.replace(/'/g, "\\'")}';`
+    : "this.onerror=null;this.classList.add('fidelity-qr-logo--hidden');this.removeAttribute('src')";
   const memberHeroLogoHtml =
     hasMember && memberLogoUrl
       ? `<div class="fidelity-v2-hero-brand">

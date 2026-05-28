@@ -14,6 +14,7 @@ import {
   spinGameForMember,
 } from "../../db.js";
 import { buildIpHash, buildDeviceHash } from "../../services/engagement-proof.js";
+import { parseFlyerPrefsCustomLogoDataUrl } from "../../lib/resolve-flyer-prefs-custom-logo.js";
 import { getApiBase, getIdempotencyKey } from "./shared.js";
 
 /** @param {string} v */
@@ -33,8 +34,10 @@ export function publicInfo(req, res) {
       points_reward_tiers = undefined;
     }
   }
-  /** Logo hero page jeu QR : **uniquement** logo importé Flyer IA (`/public/flyer-qr-logo`) — pas d’icône notif / Wallet. */
-  const logoUrl = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/public/flyer-qr-logo`;
+  /** Logo parcours client : flyer IA si importé, sinon logo carte fidélité (`/public/logo`). */
+  const hasFlyerCustomLogo = !!parseFlyerPrefsCustomLogoDataUrl(business.flyer_prefs_json);
+  const logoAssetPath = hasFlyerCustomLogo ? "flyer-qr-logo" : "logo";
+  const logoUrl = `${apiBase}/api/businesses/${encodeURIComponent(slug)}/public/${logoAssetPath}`;
   /** Icône push / aperçu campagne — uniquement si import dédié (sinon le client utilise son placeholder). */
   const notificationIconUrl =
     Number(business.asset_notification_icon_present) === 1
@@ -78,6 +81,7 @@ export function publicInfo(req, res) {
     /** Secteur d’activité (ex. fastfood, boulangerie) — pour préremplissage SaaS / flyer IA. */
     sector: business.sector?.trim() || undefined,
     logoUrl,
+    has_flyer_custom_logo: hasFlyerCustomLogo,
     notificationIconUrl,
     logo_updated_at: business.logo_updated_at ?? undefined,
     logo_icon_updated_at: business.logo_icon_updated_at ?? undefined,

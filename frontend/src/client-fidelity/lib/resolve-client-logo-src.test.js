@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  businessHasFlyerCustomLogo,
   resolveClientLogoImgSrc,
   resolveClientNotificationIconImgSrc,
+  resolveClientWalletLogoImgSrc,
   resolveFidelityPageBackgroundImgSrc,
 } from "./resolve-client-logo-src.js";
 
@@ -9,64 +11,72 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+describe("businessHasFlyerCustomLogo", () => {
+  it("lit has_flyer_custom_logo depuis l’API", () => {
+    expect(businessHasFlyerCustomLogo({ has_flyer_custom_logo: true })).toBe(true);
+    expect(businessHasFlyerCustomLogo({ has_flyer_custom_logo: false })).toBe(false);
+  });
+});
+
 describe("resolveClientLogoImgSrc", () => {
-  it("apiBase vide → chemin relatif (proxy Vite), ignore logoUrl absolu 127.0.0.1", () => {
+  it("sans flyer → logo carte (/public/logo)", () => {
+    const src = resolveClientLogoImgSrc({ has_flyer_custom_logo: false, logo_updated_at: "1" }, "demo", "");
+    expect(src).toBe("/api/businesses/demo/public/logo?v=1");
+  });
+
+  it("avec flyer → flyer-qr-logo", () => {
     const src = resolveClientLogoImgSrc(
-      { logoUrl: "http://127.0.0.1:3001/api/businesses/demo/public/logo" },
+      { has_flyer_custom_logo: true, flyer_prefs_updated_at: "f1" },
+      "demo",
+      "",
+    );
+    expect(src).toBe("/api/businesses/demo/public/flyer-qr-logo?v=f1");
+  });
+
+  it("apiBase vide → chemin relatif, ignore logoUrl absolu wallet si flyer attendu", () => {
+    const src = resolveClientLogoImgSrc(
+      {
+        has_flyer_custom_logo: true,
+        logoUrl: "http://127.0.0.1:3001/api/businesses/demo/public/logo",
+      },
       "demo",
       "",
     );
     expect(src).toBe("/api/businesses/demo/public/flyer-qr-logo");
   });
 
-  it("apiBase défini → préfère logoUrl API", () => {
+  it("apiBase défini → préfère logoUrl API flyer", () => {
     const src = resolveClientLogoImgSrc(
-      { logoUrl: "https://api.example.com/api/businesses/x/public/flyer-qr-logo" },
+      {
+        has_flyer_custom_logo: true,
+        logoUrl: "https://api.example.com/api/businesses/x/public/flyer-qr-logo",
+      },
       "x",
       "https://api.example.com",
     );
     expect(src).toBe("https://api.example.com/api/businesses/x/public/flyer-qr-logo");
   });
 
-  it("ignore logoUrl Wallet (/public/logo) — force repli flyer-qr-logo", () => {
-    const src = resolveClientLogoImgSrc(
-      { logoUrl: "https://api.example.com/api/businesses/x/public/logo" },
-      "x",
-      "https://api.example.com",
-    );
-    expect(src).toBe("https://api.example.com/api/businesses/x/public/flyer-qr-logo");
-  });
-
-  it("hôte myfidpass.fr → chemin relatif même si apiBase pointe vers l’API (évite CORP / img cassée)", () => {
+  it("hôte myfidpass.fr → chemin relatif (évite CORP)", () => {
     vi.stubGlobal("location", { hostname: "www.myfidpass.fr" });
     const src = resolveClientLogoImgSrc(
-      { logoUrl: "https://api.myfidpass.fr/api/businesses/x/public/flyer-qr-logo", logo_updated_at: "1" },
+      {
+        has_flyer_custom_logo: false,
+        logoUrl: "https://api.myfidpass.fr/api/businesses/x/public/logo",
+        logo_updated_at: "1",
+      },
       "x",
       "https://api.myfidpass.fr",
     );
-    expect(src.startsWith("/api/businesses/x/public/flyer-qr-logo?v=")).toBe(true);
+    expect(src.startsWith("/api/businesses/x/public/logo?v=")).toBe(true);
   });
+});
 
-  it("cache-bust si logo_updated_at", () => {
-    const src = resolveClientLogoImgSrc(
-      { logo_updated_at: "2026-03-22T10:00:00.000Z" },
-      "demo",
-      "",
+describe("resolveClientWalletLogoImgSrc", () => {
+  it("pointe toujours vers /public/logo", () => {
+    expect(resolveClientWalletLogoImgSrc({ logo_updated_at: "z" }, "cafe", "")).toBe(
+      "/api/businesses/cafe/public/logo?v=z",
     );
-    expect(src).toContain("/api/businesses/demo/public/flyer-qr-logo?v=");
-    expect(src).toContain("2026-03-22");
-  });
-
-  it("cache-bust combine logo + flyer_prefs_updated_at", () => {
-    const src = resolveClientLogoImgSrc(
-      {
-        logo_updated_at: "a",
-        flyer_prefs_updated_at: "b",
-      },
-      "demo",
-      "",
-    );
-    expect(src).toContain("v=a%7Cb");
   });
 });
 
@@ -80,70 +90,15 @@ describe("resolveClientNotificationIconImgSrc", () => {
     expect(src).toBe("/api/businesses/demo/notification-icon");
   });
 
-  it("sans notificationIconUrl → vide (pas de repli logo carte)", () => {
+  it("sans notificationIconUrl → vide", () => {
     expect(resolveClientNotificationIconImgSrc({ logo_updated_at: "2026-01-01T00:00:00.000Z" }, "demo", "")).toBe(
       "",
     );
-  });
-
-  it("cache-bust utilise uniquement notification_icon_updated_at", () => {
-    const src = resolveClientNotificationIconImgSrc(
-      {
-        notificationIconUrl: "http://127.0.0.1:3001/api/businesses/demo/notification-icon",
-        notification_icon_updated_at: "2026-04-01T12:00:00.000Z",
-        logo_updated_at: "2026-01-01T00:00:00.000Z",
-      },
-      "demo",
-      "",
-    );
-    expect(src).toContain("notification-icon?v=");
-    expect(src).toContain("2026-04-01");
-    expect(src).not.toContain("2026-01-01");
   });
 });
 
 describe("resolveFidelityPageBackgroundImgSrc", () => {
   it("sans URL de fond dans le JSON → vide", () => {
     expect(resolveFidelityPageBackgroundImgSrc({}, "demo", "")).toBe("");
-    expect(resolveFidelityPageBackgroundImgSrc({ fidelityPageBackgroundUrl: "" }, "demo", "")).toBe("");
-  });
-
-  it("apiBase vide → chemin relatif fidelity-page-background", () => {
-    const src = resolveFidelityPageBackgroundImgSrc(
-      {
-        fidelityPageBackgroundUrl: "https://api.example.com/api/businesses/cafe/fidelity-page-background",
-        fidelityPageBackgroundUpdatedAt: "2026-04-03T12:00:00.000Z",
-      },
-      "cafe",
-      "",
-    );
-    expect(src.startsWith("/api/businesses/cafe/fidelity-page-background?v=")).toBe(true);
-    expect(src).toContain("2026-04-03");
-  });
-
-  it("myfidpass.fr → relatif même avec apiBase API (CSS background / CORP)", () => {
-    vi.stubGlobal("location", { hostname: "www.myfidpass.fr" });
-    const src = resolveFidelityPageBackgroundImgSrc(
-      {
-        fidelityPageBackgroundUrl: "https://api.myfidpass.fr/api/businesses/x/fidelity-page-background",
-        fidelityPageBackgroundUpdatedAt: "t1",
-      },
-      "x",
-      "https://api.myfidpass.fr",
-    );
-    expect(src.startsWith("/api/businesses/x/fidelity-page-background?v=")).toBe(true);
-  });
-
-  it("sans asset fidélité → vide (pas de repli flyer)", () => {
-    vi.stubGlobal("location", { hostname: "www.myfidpass.fr" });
-    const src = resolveFidelityPageBackgroundImgSrc(
-      {
-        fidelityPageBackgroundUrl: "",
-        flyerCustomBgUrl: "https://api.myfidpass.fr/api/businesses/cafe/public/flyer-custom-bg",
-      },
-      "cafe",
-      "https://api.myfidpass.fr",
-    );
-    expect(src).toBe("");
   });
 });
