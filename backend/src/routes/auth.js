@@ -23,8 +23,6 @@ import {
   getSubscriptionByUserId,
   hasStripeBackedActiveSubscription,
   hasPaidMerchantSubscription,
-  hasOperationalMerchantAccess,
-  getMerchantTrialEndsAtIso,
   setPasswordResetToken,
   getPasswordResetByToken,
   deletePasswordResetToken,
@@ -163,33 +161,27 @@ function authSubscriptionPayload(userId) {
       const ownerIdStr = String(ownerId).trim();
       const ownerSubRow = getSubscriptionByUserId(ownerIdStr);
       const ownerSubPayload = subscriptionPayloadForAuth(ownerIdStr, ownerSubRow);
-      const ownerAccess = hasOperationalMerchantAccess(ownerIdStr);
       const ownerPaying = hasPaidMerchantSubscription(ownerIdStr);
       const ownerEntitlements = getMerchantBusinessEntitlements(ownerIdStr);
       return {
         subscription: ownerSubPayload,
-        has_active_subscription: ownerAccess,
+        has_active_subscription: ownerPaying,
         has_paid_merchant_subscription: ownerPaying,
         entitlements: {
           ...ownerEntitlements,
           can_create_business: false,
         },
-        merchant_trial_ends_at: ownerAccess
-          ? null
-          : ownerPaying
-            ? null
-            : getMerchantTrialEndsAtIso(ownerIdStr) ?? getMerchantTrialEndsAtIso(userId),
+        merchant_trial_ends_at: null,
       };
     }
   }
   const paying = hasPaidMerchantSubscription(userId);
   return {
     subscription: subPayload,
-    has_active_subscription: hasOperationalMerchantAccess(userId),
-    /** Abonnement encaissé (Stripe / App Store) — distinct de l’essai gratuit application. */
+    has_active_subscription: paying,
     has_paid_merchant_subscription: paying,
     entitlements,
-    merchant_trial_ends_at: paying ? null : getMerchantTrialEndsAtIso(userId),
+    merchant_trial_ends_at: null,
   };
 }
 

@@ -10,7 +10,6 @@ import {
   getUserByEmail,
   hasStripeBackedActiveSubscription,
   hasOperationalMerchantAccess,
-  isUserInMerchantTrial,
   incrementFlyerAiGenerationsBonus,
   getSubscriptionByStripeSubscriptionId,
   upsertBusinessSubscription,
