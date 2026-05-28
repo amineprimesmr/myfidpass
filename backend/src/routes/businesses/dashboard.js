@@ -184,7 +184,8 @@ router.get("/settings", (req, res) => {
         ? Math.round(Number(business.baseline_avg_basket_eur) * 100) / 100
         : undefined,
     points_reward_tiers: points_reward_tiers ?? undefined,
-    welcome_bonus_enabled: Number(business.welcome_bonus_enabled) === 1,
+    /** 0/1 (pas booléen) — contrat iOS/Android `welcomeBonusEnabled: Int?`. */
+    welcome_bonus_enabled: Number(business.welcome_bonus_enabled) === 1 ? 1 : 0,
     welcome_bonus_amount:
       business.welcome_bonus_amount != null ? Number(business.welcome_bonus_amount) : 10,
     sector: business.sector ?? undefined,
