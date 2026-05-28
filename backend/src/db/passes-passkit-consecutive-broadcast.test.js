@@ -8,10 +8,7 @@ import {
   filterPassKitRegistrationRows,
   effectivePassKitRowUpdateTs,
 } from "./passes-passkit-since-filter.js";
-import {
-  buildLastBroadcastFieldValue,
-  buildBroadcastAlertVisibleSuffix,
-} from "../pass/broadcast-field.js";
+import { buildLastBroadcastFieldValue } from "../pass/broadcast-field.js";
 
 function makeRow({ lastBroadcastAt, passMs, layoutAt = null }) {
   return {
@@ -87,12 +84,12 @@ describe("2 campagnes PassKit consécutives (filtre registrations)", () => {
 });
 
 describe("valeur lastMessage (alerte %@)", () => {
-  it("1er et 2e envoi ont des valeurs distinctes (visible dès seq 2)", () => {
+  it("1er et 2e envoi ont des valeurs distinctes (suffixe invisible)", () => {
     const at = "2026-05-28 16:00:01.123";
     const v1 = buildLastBroadcastFieldValue("Hello", at, 1);
     const v2 = buildLastBroadcastFieldValue("World", at, 2);
     expect(v1).not.toBe(v2);
-    expect(buildBroadcastAlertVisibleSuffix(2)).toBe("·2");
-    expect(v2.includes("·2")).toBe(true);
+    expect(v1.startsWith("Hello")).toBe(true);
+    expect(v2.startsWith("World")).toBe(true);
   });
 });

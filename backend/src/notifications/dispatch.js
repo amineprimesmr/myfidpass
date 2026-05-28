@@ -151,8 +151,7 @@ export async function deliverCustomerBroadcast({
   logTypePasskit = "passkit",
   merchantUserId = null,
   sendMerchantReceipt = true,
-  /** Inutile pour une campagne message : fausse une visite caisse et brouille les timestamps PassKit. */
-  touchMemberLastVisit = false,
+  touchMemberLastVisit = true,
 }) {
   if (!businessHasCustomNotificationIcon(business)) {
     logger.warn(
@@ -232,25 +231,19 @@ export async function deliverCustomerBroadcast({
   // Web Push : déjà filtré en SQL (voir getWebPushSubscriptionsByBusiness*ExcludingPassKitOwners) :
   // un membre avec Apple Wallet actif ne reçoit pas aussi la PWA/Safari pour la même campagne.
 
+  // Titre + gabarit `%@` stable (le corps de campagne vit dans last_broadcast_message, pas dans changeMessage).
+  const businessAfterSync = syncNotificationTextsForCampaign(business.id, title, bodyMessage);
+  ensurePassKitChangeMessageTemplate(business.id);
+
   const batchId = createNotificationBatch({
     businessId: business.id,
     triggerName,
     summary: { started_at: new Date().toISOString() },
   });
 
-  // 1) Persister le message de campagne AVANT tout push (Apple : données pass à jour puis APNs).
-  setLastBroadcastMessage(business.id, bodyMessage);
-  // 2) Titre optionnel + gabarit `%@` (sans préfixe « Nouveau message : »).
-  const businessAfterSync = syncNotificationTextsForCampaign(business.id, title, bodyMessage);
-  ensurePassKitChangeMessageTemplate(business.id);
-  bumpBusinessPassRefreshTimestamp(business.id);
-  const businessAfterBump = getBusinessById(business.id) || businessAfterSync || business;
-  const passMs = Number(businessAfterBump?.pass_last_modified_ms) || Date.now();
-  const broadcastSeq = Number(businessAfterBump?.broadcast_send_seq) || 0;
-
   // Relire la ligne commerce : évite une ligne `req.business` ou un snapshot légèrement vieux si icône
   // vient d’être PATCH juste avant l’envoi ; les timestamps alimentent le `?v=` ci-dessous.
-  const businessFresh = businessAfterBump;
+  const businessFresh = getBusinessById(business.id) || businessAfterSync || business;
   const googleWalletBusiness = mergeBusinessAssetsForPass(businessFresh);
   const iconSource = businessAfterSync || businessFresh;
   // Toujours inclure l'URL — l'endpoint retourne logonotif quand aucune icône custom n'est configurée.
@@ -271,70 +264,7 @@ export async function deliverCustomerBroadcast({
   };
   const errors = [];
 
-  // PassKit en premier (avant Web Push lent) : le .pkpass servi après push contient déjà last_broadcast.
-  let sentPassKit = 0;
-  if (passKitTokens.length > 0) {
-    if (touchMemberLastVisit) {
-      const touchedMembers = new Set();
-      for (const row of passKitTokens) {
-        if (row.serial_number && !touchedMembers.has(row.serial_number)) {
-          dbTouchMemberLastVisit(row.serial_number);
-          touchedMembers.add(row.serial_number);
-        }
-      }
-    }
-    logger.info(
-      { businessId: business.id, batchId, passMs, broadcastSeq, passKitCount: passKitTokens.length },
-      "[dispatch] push PassKit campagne"
-    );
-    // Sans collapse-id : apns-id unique par push (évite fusion silencieuse campagne B après A).
-    const pushOpts = { collapseId: null };
-    let waveResults = await sendPassKitPushWaves(passKitTokens, pushOpts);
-    for (const delayMs of [400, 900]) {
-      await new Promise((r) => setTimeout(r, delayMs));
-      const retryResults = await sendPassKitPushWaves(passKitTokens, pushOpts);
-      waveResults = retryResults.map((w2, i) => {
-        if (!w2.result.sent && waveResults[i]?.result?.sent) return waveResults[i];
-        return w2;
-      });
-    }
-    for (const { row, result } of waveResults) {
-      if (result.sent) {
-        sentPassKit++;
-        logNotification({
-          businessId: business.id,
-          memberId: row.serial_number,
-          title: payloadTitle,
-          body: bodyMessage,
-          type: logTypePasskit,
-          batchId,
-          channel: "passkit",
-          triggerName,
-          countsForMemberCooldown: 1,
-          status: "sent",
-        });
-      } else if (result.error) {
-        errors.push({ type: "passkit", memberId: row.serial_number, error: result.error });
-        logNotification({
-          businessId: business.id,
-          memberId: row.serial_number,
-          title: payloadTitle,
-          body: bodyMessage,
-          type: logTypePasskit,
-          batchId,
-          channel: "passkit",
-          triggerName,
-          countsForMemberCooldown: 1,
-          status: "failed",
-          errorDetail: result.error,
-        });
-        if (isLikelyInvalidDeviceTokenApnsError({ message: result.error })) {
-          deletePassRegistrationsByPushToken(row.push_token);
-        }
-      }
-    }
-  }
-
+  // Ordre validé en prod ce matin (d5b73fc) : Web Push d’abord, puis last_broadcast + bump, puis PassKit.
   const webPushResults = await Promise.all(
     webSubscriptions.map(async (sub) => {
       try {
@@ -377,6 +307,65 @@ export async function deliverCustomerBroadcast({
     })
   );
   const sentWebPush = webPushResults.filter((r) => r.ok).length;
+
+  setLastBroadcastMessage(business.id, bodyMessage);
+  bumpBusinessPassRefreshTimestamp(business.id);
+  const businessAfterBump = getBusinessById(business.id) || businessFresh;
+  const passMs = Number(businessAfterBump?.pass_last_modified_ms) || Date.now();
+  const broadcastCollapseId = `bcast-${passMs}`.slice(0, 64);
+
+  let sentPassKit = 0;
+  if (passKitTokens.length > 0) {
+    if (touchMemberLastVisit) {
+      const touchedMembers = new Set();
+      for (const row of passKitTokens) {
+        if (row.serial_number && !touchedMembers.has(row.serial_number)) {
+          dbTouchMemberLastVisit(row.serial_number);
+          touchedMembers.add(row.serial_number);
+        }
+      }
+    }
+    logger.info(
+      { businessId: business.id, batchId, passMs, passKitCount: passKitTokens.length },
+      "[dispatch] push PassKit campagne"
+    );
+    const waveResults = await sendPassKitPushWaves(passKitTokens, { collapseId: broadcastCollapseId });
+    for (const { row, result } of waveResults) {
+      if (result.sent) {
+        sentPassKit++;
+        logNotification({
+          businessId: business.id,
+          memberId: row.serial_number,
+          title: payloadTitle,
+          body: bodyMessage,
+          type: logTypePasskit,
+          batchId,
+          channel: "passkit",
+          triggerName,
+          countsForMemberCooldown: 1,
+          status: "sent",
+        });
+      } else if (result.error) {
+        errors.push({ type: "passkit", memberId: row.serial_number, error: result.error });
+        logNotification({
+          businessId: business.id,
+          memberId: row.serial_number,
+          title: payloadTitle,
+          body: bodyMessage,
+          type: logTypePasskit,
+          batchId,
+          channel: "passkit",
+          triggerName,
+          countsForMemberCooldown: 1,
+          status: "failed",
+          errorDetail: result.error,
+        });
+        if (isLikelyInvalidDeviceTokenApnsError({ message: result.error })) {
+          deletePassRegistrationsByPushToken(row.push_token);
+        }
+      }
+    }
+  }
 
   let sentGoogleWallet = 0;
   let skippedGoogleWallet = 0;

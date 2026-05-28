@@ -65,7 +65,7 @@ export async function deliverDashboardBroadcast(
     triggerName = "campaign_manual",
     merchantUserId = null,
     sendMerchantReceipt = true,
-    touchMemberLastVisit = false,
+    touchMemberLastVisit = true,
   } = options || {};
   return deliverCustomerBroadcast({
     business,
@@ -212,7 +212,7 @@ router.post("/send", async (req, res) => {
     body,
     triggerName,
     merchantUserId: req.user?.id ?? null,
-    touchMemberLastVisit: false,
+    touchMemberLastVisit: true,
   });
 
   res.status(202).json({

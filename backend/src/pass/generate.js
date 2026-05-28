@@ -482,22 +482,10 @@ export async function generatePass(member, business = null, options = {}) {
     attributedValue: `<a href="${walletPassEscapeHtmlAttribute(poweredByPassUrl)}">Propulsé par Myfidpass</a>`,
   };
 
-  /**
-   * Alerte écran verrouillé : champ **auxiliaire** (face) — plus fiable en rafale que le seul verso.
-   * Le verso garde le texte sans `changeMessage` (évite qu’iOS ne livre que la 1ʳᵉ bannière).
-   */
-  if (rawBroadcast && walletAlerts) {
-    const broadcastChangeMsg = normalizeChangeMessage(changeMsg, rawBroadcast);
-    pass.auxiliaryFields.unshift({
-      key: "walletBroadcast",
-      label: " ",
-      value: lastBroadcast,
-      changeMessage: broadcastChangeMsg,
-      textAlignment: "PKTextAlignmentLeft",
-    });
-  }
-
   const lastMessageBackField = { key: "lastMessage", label: "Message", value: lastBroadcast };
+  if (rawBroadcast && walletAlerts) {
+    lastMessageBackField.changeMessage = normalizeChangeMessage(changeMsg, rawBroadcast);
+  }
 
   const backAddress =
     business?.location_address != null ? String(business.location_address).trim() : "";

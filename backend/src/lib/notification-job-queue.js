@@ -152,7 +152,7 @@ export function createNotificationJob({
   body,
   triggerName = "campaign_manual",
   merchantUserId = null,
-  touchMemberLastVisit = false,
+  touchMemberLastVisit = true,
 }) {
   const id = randomUUID();
   const now = new Date().toISOString();

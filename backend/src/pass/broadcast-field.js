@@ -75,16 +75,6 @@ export function buildBroadcastUniquenessSuffix(rawBroadcast, lastBroadcastAt, br
 }
 
 /**
- * Suffixe visible pour l’alerte `%@` — **chaque** envoi (seq ≥ 1).
- * iOS ignore parfois la 2ᵉ alerte si seuls des ZWSP changent ; le compteur visible force le delta.
- */
-export function buildBroadcastAlertVisibleSuffix(broadcastSendSeq) {
-  const seq = Number(broadcastSendSeq);
-  if (!Number.isFinite(seq) || seq < 1) return "";
-  return `\u00B7${seq}`;
-}
-
-/**
  * Valeur du champ « Message » (verso / face) : texte visible + suffixe d’unicité **systématique**.
  * @param {string} rawBroadcast — message brut (déjà limité côté appelant si besoin)
  * @param {string | null | undefined} lastBroadcastAt — horodatage d’envoi
@@ -95,8 +85,7 @@ export function buildLastBroadcastFieldValue(rawBroadcast, lastBroadcastAt, broa
   const raw = String(rawBroadcast).trim();
   if (!raw) return "—";
 
-  const invisible = buildBroadcastUniquenessSuffix(raw, lastBroadcastAt, broadcastSendSeq);
-  const visible = buildBroadcastAlertVisibleSuffix(broadcastSendSeq);
-  const maxRaw = Math.max(0, 200 - invisible.length - visible.length);
-  return `${raw.slice(0, maxRaw)}${visible}${invisible}`;
+  const suffix = buildBroadcastUniquenessSuffix(raw, lastBroadcastAt, broadcastSendSeq);
+  const maxRaw = Math.max(0, 200 - suffix.length);
+  return `${raw.slice(0, maxRaw)}${suffix}`;
 }

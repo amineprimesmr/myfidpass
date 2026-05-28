@@ -61,8 +61,13 @@ describe("buildLastBroadcastFieldValue", () => {
     const b = buildLastBroadcastFieldValue("Message B", at, 5);
     expect(a).not.toBe(b);
   });
-  it("chaque envoi : suffixe visible ·seq pour alerte Wallet", () => {
-    expect(buildLastBroadcastFieldValue("Promo", "2026-03-26 21:37:21.123", 1).startsWith("Promo·1")).toBe(true);
-    expect(buildLastBroadcastFieldValue("Promo", "2026-03-26 21:37:21.123", 2).startsWith("Promo·2")).toBe(true);
+  it("chaque envoi : suffixe invisible (ZWSP) distinct sans ·seq visible", () => {
+    const a = buildLastBroadcastFieldValue("Promo", "2026-03-26 21:37:21.123", 1);
+    const b = buildLastBroadcastFieldValue("Promo", "2026-03-26 21:37:21.123", 2);
+    expect(a.startsWith("Promo")).toBe(true);
+    expect(b.startsWith("Promo")).toBe(true);
+    expect(a).not.toBe(b);
+    expect(a.includes("·")).toBe(false);
+    expect(b.includes("·")).toBe(false);
   });
 });
