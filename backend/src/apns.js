@@ -2,18 +2,15 @@
  * Envoi de notifications APNs pour mise à jour des passes Apple Wallet
  * et alertes push sur l'app iOS commerçant.
  *
- * Utilise apns2@12 (undici HTTP/2 + fast-jwt) — remplace apn@2.2.0
- * (3 CVE haute gravité via jsonwebtoken + node-forge).
+ * Utilise HTTP/2 natif pour PassKit Wallet et apns2@12 pour l'app iOS commerçant.
  *
- * apns2@12 utilise exclusivement l'authentification par token (clé .p8 APNs
- * Auth Key depuis Apple Developer Console). Apple supporte ce mode pour PassKit
- * depuis 2016 : la clé SIGNER_CERT reste uniquement pour signer les .pkpass.
+ * IMPORTANT PassKit Wallet :
+ * Apple documente les mises à jour Wallet comme un push APNs envoyé avec le certificat
+ * du Pass Type ID (le même certificat que celui qui signe le .pkpass) et un payload JSON
+ * vide `{}`. Ce n'est pas un silent push d'app avec `aps.content-available`.
  *
  * Variables d'environnement requises pour les push Wallet :
- *   APNS_KEY_ID           — ID de la clé APNs (ex. ABCDE12345)
- *   APNS_TEAM_ID          — Team ID Apple (ex. XXXXXXXXXX)
- *   APNS_KEY_P8           — Contenu brut du fichier .p8 (ou via APNS_KEY_P8_BASE64)
- *   APNS_KEY_P8_BASE64    — Contenu base64 du .p8 (alternative à APNS_KEY_P8)
+ *   SIGNER_CERT_PEM_BASE64 / SIGNER_KEY_PEM_BASE64, ou SIGNER_CERT_PEM / SIGNER_KEY_PEM
  *   PASS_TYPE_ID          — Pass Type Identifier (ex. pass.com.yourcompany.fidelity)
  *
  * Optionnel :
@@ -29,8 +26,11 @@ import { createPrivateKey } from "node:crypto";
 import { createSigner } from "fast-jwt";
 import { ApnsClient, Notification, SilentNotification, PushType, Priority } from "apns2";
 import logger from "./lib/logger.js";
+import { connect as http2Connect } from "node:http2";
+import { createSecureContext } from "node:tls";
+import { loadCertificates } from "./pass/certs.js";
 
-const APNS_BUILD = "2026-04-17-background-priority-5-fix";
+const APNS_BUILD = "2026-05-28-passkit-cert-empty-payload";
 
 /** En-tête PEM Apple Auth Key (.p8) : PKCS#8 « BEGIN PRIVATE KEY » ou legacy « BEGIN EC PRIVATE KEY ». */
 const PEM_APNS_AUTH_KEY = /-----BEGIN\s+(?:EC\s+)?PRIVATE KEY-----/;
@@ -127,57 +127,55 @@ function friendlyApnsInitError(err) {
   return `Configuration APNs : ${m}`;
 }
 
-// ——— PassKit provider (token-based — clé .p8 APNs) ———
+// ——— PassKit provider (certificat Pass Type ID + payload vide) ———
 
 let passkitProvider = undefined; // undefined = pas encore initialisé, null = échec
 let passkitError = null;
+let passkitSession = null;
+let passkitSessionKey = null;
+
+function loadPasskitCertificateCredentials() {
+  try {
+    const certs = loadCertificates();
+    const passTypeId = (process.env.PASS_TYPE_ID ?? "").trim();
+    if (!passTypeId) {
+      return { ok: false, error: "PASS_TYPE_ID manquant. Définis-le sur Railway (ex. pass.com.tonentreprise.fidelity)." };
+    }
+    if (!certs?.signerCert || !certs?.signerKey) {
+      return {
+        ok: false,
+        error:
+          "Certificat PassKit manquant. Les push Wallet doivent utiliser SIGNER_CERT_PEM_BASE64 et SIGNER_KEY_PEM_BASE64 (certificat du Pass Type ID).",
+      };
+    }
+    createSecureContext({
+      cert: certs.signerCert,
+      key: certs.signerKey,
+      passphrase: certs.signerKeyPassphrase,
+    });
+    return {
+      ok: true,
+      passTypeId,
+      cert: certs.signerCert,
+      key: certs.signerKey,
+      passphrase: certs.signerKeyPassphrase,
+    };
+  } catch (err) {
+    return { ok: false, error: `Certificat PassKit/APNs invalide : ${err?.message ?? String(err)}` };
+  }
+}
 
 function getPasskitProvider() {
   if (passkitProvider !== undefined) return passkitProvider;
   passkitError = null;
-
-  const keyId = (process.env.APNS_KEY_ID ?? "").trim();
-  const teamId = (process.env.APNS_TEAM_ID ?? "").trim();
-  const signingKey = loadP8Key("APNS_KEY_P8", "APNS_KEY_P8_BASE64");
-  const passTypeId = (process.env.PASS_TYPE_ID ?? "").trim();
-
-  if (!passTypeId) {
-    passkitError =
-      "PASS_TYPE_ID manquant. Définis-le sur Railway (ex. pass.com.tonentreprise.fidelity).";
+  const creds = loadPasskitCertificateCredentials();
+  if (!creds.ok) {
+    passkitError = creds.error;
     passkitProvider = null;
     return null;
   }
-  if (!keyId || !teamId || !signingKey) {
-    passkitError =
-      "Clé APNs manquante. Sur Railway, définis APNS_KEY_ID, APNS_TEAM_ID et APNS_KEY_P8 (contenu de ta clé .p8 Apple Developer Console → Keys → APNs Auth Key). " +
-      "Cette clé est différente du certificat de signature des passes : elle sert uniquement aux push notifications.";
-    passkitProvider = null;
-    return null;
-  }
-
-  try {
-    validateP8AndJwtForApns(teamId, keyId, signingKey);
-  } catch (err) {
-    passkitError = friendlyApnsInitError(err);
-    logger.warn({ err }, "[apns] PassKit — validation clé .p8 / JWT refusée");
-    passkitProvider = null;
-    return null;
-  }
-
-  try {
-    passkitProvider = new ApnsClient({
-      team: teamId,
-      keyId,
-      signingKey,
-      defaultTopic: passTypeId,
-      host: apnsHost(),
-    });
-    logger.debug({ keyId, passTypeId }, "[apns] PassKit provider prêt");
-  } catch (err) {
-    passkitError = `APNs PassKit : ${err?.message ?? String(err)}`;
-    logger.warn({ err }, "[apns] PassKit provider erreur");
-    passkitProvider = null;
-  }
+  passkitProvider = creds;
+  logger.debug({ passTypeId: creds.passTypeId, host: apnsHost() }, "[apns] PassKit provider certificat prêt");
   return passkitProvider;
 }
 
@@ -192,6 +190,7 @@ export function getApnsUnavailableReason() {
 /** Diagnostic HTTP (aucun secret : longueurs et indicateurs booléens seulement). */
 export function getApnsHealthForDiagnostics() {
   const pem = loadP8Key("APNS_KEY_P8", "APNS_KEY_P8_BASE64");
+  const passkitCreds = loadPasskitCertificateCredentials();
   const reason = getApnsUnavailableReason();
   const raw = normalizeApnsP8String(process.env.APNS_KEY_P8);
   return {
@@ -199,6 +198,9 @@ export function getApnsHealthForDiagnostics() {
     build: APNS_BUILD,
     host: apnsHost(),
     passTypeIdPresent: !!(process.env.PASS_TYPE_ID ?? "").trim(),
+    passkitAuth: "certificate",
+    passkitCertificateReady: !!passkitCreds.ok,
+    passkitCertificateReason: passkitCreds.ok ? undefined : passkitCreds.error,
     keyIdPresent: !!(process.env.APNS_KEY_ID ?? "").trim(),
     teamIdPresent: !!(process.env.APNS_TEAM_ID ?? "").trim(),
     apnsKeyP8RawCharCount: raw ? raw.length : 0,
@@ -240,6 +242,36 @@ function isConnectionLevelError(err) {
   );
 }
 
+function getPasskitHttp2Session(creds) {
+  const host = apnsHost();
+  const key = `${host}:${creds.passTypeId}`;
+  if (passkitSession && !passkitSession.closed && !passkitSession.destroyed && passkitSessionKey === key) {
+    return passkitSession;
+  }
+  if (passkitSession && !passkitSession.destroyed) {
+    try {
+      passkitSession.close();
+    } catch (_) {}
+  }
+  passkitSessionKey = key;
+  passkitSession = http2Connect(`https://${host}`, {
+    cert: creds.cert,
+    key: creds.key,
+    passphrase: creds.passphrase,
+    ALPNProtocols: ["h2"],
+  });
+  passkitSession.on("error", (err) => {
+    logger.warn({ errMsg: err?.message }, "[apns] PassKit session HTTP/2 erreur — reset");
+    passkitSession = null;
+    passkitSessionKey = null;
+  });
+  passkitSession.on("close", () => {
+    passkitSession = null;
+    passkitSessionKey = null;
+  });
+  return passkitSession;
+}
+
 /**
  * Envoie une notification "pass mis à jour" (payload vide) à un device Apple Wallet.
  *
@@ -252,77 +284,77 @@ function isConnectionLevelError(err) {
  * @returns {Promise<{ sent: boolean, error?: string }>}
  */
 export function sendPassKitUpdate(deviceToken, opts = {}) {
-  const prov = getPasskitProvider();
-  if (!prov) {
+  void opts;
+  const creds = getPasskitProvider();
+  if (!creds) {
     return Promise.resolve({ sent: false, error: passkitError ?? "APNs non configuré" });
   }
-  const passTypeId = process.env.PASS_TYPE_ID;
-  if (!passTypeId) return Promise.resolve({ sent: false, error: "PASS_TYPE_ID manquant" });
-
-  // PassKit Wallet : Apple exige impérativement apns-push-type: background.
-  // Avec le type "alert" (défaut Notification), iOS ne réveille PAS PassKit en background :
-  // la notification est mise en queue et traitée de façon opportuniste (aléatoire), ce qui
-  // cause les délais et la réception "seulement à l'ouverture de l'app".
-  //
-  // CRITIQUE : Apple exige content-available: 1 dans aps quand apns-push-type: background.
-  // Sans ça, APNs rejette ou drop silencieusement la notification → rien ne s'affiche.
-  // contentAvailable: true → ajoute "content-available": 1 dans le payload aps.
-  //
-  // Expiration 86400s (24h) : si le téléphone est offline, Apple retentera pendant 24h.
-  //
-  // CRITIQUE — priorité 5 (throttled) :
-  //   Apple impose `apns-priority: 5` pour `apns-push-type: background`. Si on envoie
-  //   priorité 10 (défaut apns2), APNs peut renvoyer 400 BadPriority OU accepter le
-  //   200 en apparence mais DROP silencieusement la livraison côté appareil.
-  //   Symptôme observé côté commerçant : après un changement d’icône de notif, la
-  //   bannière Wallet continuait d’afficher l’ANCIEN `icon.png` parce que le silent
-  //   push n’était jamais livré et Wallet ne refetch pas le pass.
-  //   Voir https://developer.apple.com/documentation/usernotifications/sending-notification-requests-to-apns
-  //   (section "Create a POST request to APNs" : "Use priority 5 for background pushes").
-  /** @type {Record<string, unknown>} */
-  const noteOptions = {
-    topic: passTypeId,
-    expiration: Math.floor(Date.now() / 1000) + 86400,
-    type: PushType.background,
-    priority: Priority.throttled,
-    contentAvailable: true,
-    aps: {},
-  };
-  const note = new Notification(deviceToken, noteOptions);
 
   const tokenTail = deviceToken.slice(-8);
   logger.info(
     {
       deviceToken: tokenTail,
-      passTypeId,
-      priority: Priority.throttled,
-      pushType: PushType.background,
-      collapseId: null,
+      passTypeId: creds.passTypeId,
+      auth: "certificate",
+      payload: "{}",
     },
-    "[apns] PassKit → envoi push background priority=5"
+    "[apns] PassKit → envoi push Wallet certificat payload vide"
   );
-  const sendPromise = prov.send(note).then(
-    () => {
-      logger.info({ deviceToken: tokenTail }, "[apns] PassKit push ACK 200 par APNs");
-      return { sent: true };
-    },
-    (err) => {
-      const reason = err?.reason ?? err?.message ?? String(err);
-      const statusCode = err?.statusCode;
-      if (isConnectionLevelError(err)) {
-        logger.warn({ errMsg: err?.message }, "[apns] Connexion HTTP/2 APNs morte — provider recyclé");
-        passkitProvider = undefined;
-      } else {
-        logger.warn({ reason, statusCode, deviceToken: tokenTail }, "[apns] PassKit push REFUSÉ par APNs");
+
+  const sendPromise = new Promise((resolve) => {
+    let session;
+    try {
+      session = getPasskitHttp2Session(creds);
+    } catch (err) {
+      passkitSession = null;
+      passkitSessionKey = null;
+      resolve({ sent: false, error: err?.message ?? String(err) });
+      return;
+    }
+
+    const req = session.request({
+      ":method": "POST",
+      ":path": `/3/device/${deviceToken}`,
+      "apns-topic": creds.passTypeId,
+      "apns-push-type": "background",
+      "apns-priority": "5",
+      "apns-expiration": String(Math.floor(Date.now() / 1000) + 86400),
+    });
+    let statusCode = 0;
+    let body = "";
+    req.setEncoding("utf8");
+    req.on("response", (headers) => {
+      statusCode = Number(headers[":status"]) || 0;
+    });
+    req.on("data", (chunk) => {
+      body += chunk;
+    });
+    req.on("end", () => {
+      if (statusCode >= 200 && statusCode < 300) {
+        logger.info({ deviceToken: tokenTail, statusCode }, "[apns] PassKit push ACK par APNs");
+        resolve({ sent: true });
+        return;
       }
-      return { sent: false, error: reason };
-    }
-  );
+      let reason = body || `APNs HTTP ${statusCode || "unknown"}`;
+      try {
+        const parsed = body ? JSON.parse(body) : null;
+        if (parsed?.reason) reason = parsed.reason;
+      } catch (_) {}
+      logger.warn({ reason, statusCode, deviceToken: tokenTail }, "[apns] PassKit push REFUSÉ par APNs");
+      resolve({ sent: false, error: reason });
+    });
+    req.on("error", (err) => {
+      passkitSession = null;
+      passkitSessionKey = null;
+      logger.warn({ errMsg: err?.message }, "[apns] PassKit push erreur HTTP/2");
+      resolve({ sent: false, error: err?.message ?? String(err) });
+    });
+    req.end("{}");
+  });
   return withTimeout(sendPromise, PASSKIT_TIMEOUT_MS, "PassKit APNs").catch((err) => {
-    if (passkitProvider !== undefined) {
-      logger.warn("[apns] Timeout APNs — provider recyclé");
-      passkitProvider = undefined;
-    }
+    logger.warn("[apns] Timeout APNs PassKit — session recyclée");
+    passkitSession = null;
+    passkitSessionKey = null;
     return { sent: false, error: err?.message ?? String(err) };
   });
 }
@@ -489,7 +521,7 @@ export function sendMerchantSilentDashboardSync(deviceToken, data = {}) {
 export function logApnsStatus() {
   const prov = getPasskitProvider();
   if (prov) {
-    logger.info({ build: APNS_BUILD }, "[apns] PassKit APNs prêt (token p8 OK)");
+    logger.info({ build: APNS_BUILD, auth: "certificate" }, "[apns] PassKit APNs prêt (certificat Pass Type ID OK)");
   } else {
     logger.warn({ build: APNS_BUILD, reason: passkitError }, "[apns] PassKit APNs non disponible");
   }
@@ -506,8 +538,12 @@ export function logMerchantApnsStatus() {
 }
 
 export async function shutdownApns() {
+  if (passkitSession && !passkitSession.destroyed) {
+    passkitSession.close();
+    passkitSession = null;
+    passkitSessionKey = null;
+  }
   if (passkitProvider) {
-    await passkitProvider.destroy().catch(() => {});
     passkitProvider = null;
   }
   if (merchantProvider) {
