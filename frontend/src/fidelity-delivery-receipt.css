@@ -9,7 +9,9 @@
   z-index: 26;
   pointer-events: none;
   padding-right: max(0.85rem, env(safe-area-inset-right, 0px));
-  padding-bottom: calc(max(0.75rem, env(safe-area-inset-bottom, 0px)) + var(--fidelity-visual-gap-bottom, 0px));
+  padding-bottom: calc(
+    max(0.75rem, env(safe-area-inset-bottom, 0px)) + var(--fidelity-powered-by-bar, 0px) + var(--fidelity-visual-gap-bottom, 0px)
+  );
   box-sizing: border-box;
 }
 

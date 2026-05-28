@@ -41,6 +41,10 @@
   margin-top: auto !important;
   flex-shrink: 0 !important;
   width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-align: center !important;
   /* Pas de bandeau noir : le dégradé continue sous le texte « pro ». */
   background: transparent !important;
   color: #64748b !important;

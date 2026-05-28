@@ -3,6 +3,10 @@
 .fidelity-powered-by {
   box-sizing: border-box;
   width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 }
 
 .fidelity-powered-by__link {
@@ -48,15 +52,23 @@
   color: #1e293b;
 }
 
-/* Variante espace membre / récompenses : discret, centré, dans le flux */
+/* Espace membre : fixé en bas de l’écran, centré */
 .fidelity-powered-by--member {
-  text-align: center;
-  padding: 0.65rem 1rem 1rem;
-  flex-shrink: 0;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 22;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  padding-bottom: calc(max(0.55rem, env(safe-area-inset-bottom, 0px)) + var(--fidelity-visual-gap-bottom, 0px));
+  background: transparent;
+  pointer-events: none;
 }
 
 .fidelity-powered-by--member .fidelity-powered-by__link {
   opacity: 0.92;
+  pointer-events: auto;
 }
 
 /* À l’intérieur du pied fixe « pro » (visiteurs) */
@@ -82,11 +94,18 @@
   color: #fff;
 }
 
-/* Jeu QR : fusion avec les règles .fidelity-qr-powered (bord sup., safe area) */
+/* Jeu QR : bas de page, centré */
 footer.fidelity-powered-by.fidelity-qr-powered {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-align: center !important;
   padding-top: 0.35rem !important;
+  width: 100% !important;
 }
 
 footer.fidelity-powered-by.fidelity-qr-powered .fidelity-powered-by__link {
   padding-bottom: 0.1rem;
+  margin-left: auto;
+  margin-right: auto;
 }

@@ -15,6 +15,7 @@ html.fidpass-fidelity-route body.fidpass-fidelity-route:not(:has(main.fidelity-q
 /* lvh = grand viewport (sécurité) puis dvh en dernier pour navigateurs récents */
 #fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) {
   --fidelity-member-footer-bar: calc(5.85rem + env(safe-area-inset-bottom, 0px));
+  --fidelity-powered-by-bar: calc(2.85rem + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   min-height: 100lvh;
@@ -33,9 +34,19 @@ html.fidpass-fidelity-route body.fidpass-fidelity-route:not(:has(main.fidelity-q
   width: 100%;
 }
 
-/* Réclamation ticket (barre sticky) : évite que le contenu passe sous le bouton */
+/* Espace membre connecté : réserve la hauteur du badge « Propulsé par » fixé en bas */
+#fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)):has(> footer.fidelity-powered-by--member) > main.fidelity-v2-main {
+  padding-bottom: calc(1.35rem + var(--fidelity-powered-by-bar) + var(--fidelity-visual-gap-bottom, 0px));
+}
+
+/* Réclamation ticket (barre sticky) : évite que le contenu passe sous le bouton + badge */
 #fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)):has(.fidelity-delivery-sticky) > main.fidelity-v2-main {
   padding-bottom: calc(1.35rem + 4.85rem + var(--fidelity-visual-gap-bottom, 0px));
+}
+
+#fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)):has(.fidelity-delivery-sticky):has(> footer.fidelity-powered-by--member)
+  > main.fidelity-v2-main {
+  padding-bottom: calc(1.35rem + 4.85rem + var(--fidelity-powered-by-bar) + var(--fidelity-visual-gap-bottom, 0px));
 }
 
 /* Réserve basse seulement si le bandeau « pro » est affiché (visiteurs sans compte) */
