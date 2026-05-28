@@ -22,7 +22,7 @@ import {
   mergeBusinessAssetsForPass,
 } from "../db.js";
 import { sendWebPush } from "../notifications.js";
-import { sendPassKitPushWaves, schedulePassKitBroadcastRetries } from "../passkit-push-waves.js";
+import { sendPassKitPushWaves } from "../passkit-push-waves.js";
 import {
   sendMerchantAppAlert,
   isLikelyInvalidMerchantPushTokenError,
@@ -278,7 +278,6 @@ export async function deliverCustomerBroadcast({
       "[dispatch] push PassKit campagne"
     );
     const waveResults = await sendPassKitPushWaves(passKitTokens, { collapseId: broadcastCollapseId });
-    schedulePassKitBroadcastRetries(passKitTokens, broadcastCollapseId, business.id);
     for (const { row, result } of waveResults) {
       if (result.sent) {
         sentPassKit++;

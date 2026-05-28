@@ -24,7 +24,6 @@ import { getMerchantApnsUnavailableReason } from "../../apns.js";
 import { assertOperationalSubscription, ensureDashboardAccess, blockStaffDashboardWrites, getApiBase } from "./shared.js";
 import logger from "../../lib/logger.js";
 import { syncNotificationTextsForCampaign } from "../../lib/sync-notification-texts-for-campaign.js";
-import { enqueueNotificationJob } from "../../lib/notification-job-queue.js";
 import {
   assertCustomNotificationIconForBroadcast,
   notificationIconRequiredHttpBody,
@@ -191,46 +190,35 @@ router.post("/send", async (req, res) => {
         ? "campaign_manual_categories"
         : "campaign_manual";
 
-  // Synchronise les textes de notification AVANT de créer le job, pour que le pass
-  // refetché par les iPhones contienne déjà le bon changeMessage.
   syncNotificationTextsForCampaign(business.id, title, body);
 
-  /**
-   * Envoi persistant via la file de travaux SQLite.
-   *
-   * POURQUOI : `setImmediate()` seul perdait la campagne si Railway redémarrait le
-   * conteneur entre le 202 et l’exécution de la microtask (déploiement, OOM, crash).
-   * Désormais, le job est écrit en base AVANT le 202 ; même sans setImmediate,
-   * le worker de notification-job-queue.js le reprend au prochain démarrage.
-   *
-   * job_id retourné dans la réponse : le client peut l’utiliser pour tracker l’envoi
-   * via GET /notifications/batches (le batch_id sera mis à jour une fois l’envoi terminé).
-   */
-  const jobId = enqueueNotificationJob({
-    businessId: business.id,
+  const result = await deliverDashboardBroadcast(
+    business,
     slug,
     apiBase,
     memberIds,
-    title: title ?? null,
+    title ?? null,
     body,
-    triggerName,
-    merchantUserId: req.user?.id ?? null,
-    touchMemberLastVisit: false,
-  });
+    "passkit",
+    {
+      triggerName,
+      merchantUserId: req.user?.id ?? null,
+      sendMerchantReceipt: true,
+      touchMemberLastVisit: false,
+    }
+  );
 
-  res.status(202).json({
+  res.status(200).json({
     ok: true,
-    accepted: true,
-    async_delivery: true,
-    sent: null,
-    sent_web_push: null,
-    sent_pass_kit: null,
-    sent_google_wallet: null,
-    sent_merchant_app: null,
-    job_id: jobId,
-    batch_id: null, // sera disponible dans /notifications/batches une fois terminé
+    sent: result.sent,
+    sentWebPush: result.sentWebPush,
+    sentPassKit: result.sentPassKit,
+    sentGoogleWallet: result.sentGoogleWallet ?? 0,
+    sentMerchantApp: result.sentMerchantApp ?? 0,
+    batch_id: result.batchId,
+    failed: result.failed ?? 0,
+    errors: result.errors,
     total: totalDevices,
-    message: `Envoi lancé vers ${totalDevices} appareil(s). Vous pouvez fermer l’écran : la campagne continue sur le serveur. Consultez l’historique des campagnes pour le résultat (job_id: ${jobId}).`,
   });
   } catch (err) {
     logger.error({ err, businessId: req.business?.id }, "[notifications] POST /send error");

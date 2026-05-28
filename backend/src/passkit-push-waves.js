@@ -1,23 +1,13 @@
 /**
- * Envoi PassKit (APNs) en salves : parallèle par salve, intervalle court entre salves.
+ * Envoi PassKit (APNs) : parallèle borné, une salve immédiate (sans délai ni retry).
  *
- * Apple ne garantit pas la livraison instantanée ; côté serveur on minimise la latence
- * (plus de boucle séquentielle ni pause 2,5 s fixe). Deux salves restent optionnelles
- * pour limiter le batching APNs (apns-id unique par appel dans sendPassKitUpdate).
- *
- * PASSKIT_WAVE_GAP_MS — ms entre salve 1 et 2 (défaut 1800). Mettre 0 pour une seule salve.
+ * PASSKIT_WAVE_GAP_MS — ms entre salve 1 et 2 (défaut 0 = une seule salve).
  */
 import { sendPassKitUpdate } from "./apns.js";
-import logger from "./lib/logger.js";
 
-/** Double salve par défaut : iOS throttle souvent la 1ʳᵉ push background Wallet. */
-const PASSKIT_WAVE_GAP_MS = Math.min(30_000, Math.max(0, Number(process.env.PASSKIT_WAVE_GAP_MS ?? 1800)));
+const PASSKIT_WAVE_GAP_MS = Math.min(30_000, Math.max(0, Number(process.env.PASSKIT_WAVE_GAP_MS ?? 0)));
 
-/**
- * Parallélisme borné : évite des centaines d’APNs simultanés (saturation connexions / timeouts HTTP côté hébergeur).
- * PASSKIT_PARALLEL_LIMIT (défaut 24) — ajuster si besoin.
- */
-/** Défaut 48 : envoi souvent en arrière-plan (plus de timeout HTTP) — monter avec PASSKIT_PARALLEL_LIMIT si le serveur suit. */
+/** Défaut 48 — ajuster avec PASSKIT_PARALLEL_LIMIT si le serveur suit. */
 const PASSKIT_PARALLEL_LIMIT = Math.min(120, Math.max(4, Number(process.env.PASSKIT_PARALLEL_LIMIT ?? 48)));
 
 async function sendPassKitChunked(rows, opts = {}) {
@@ -38,31 +28,21 @@ async function sendPassKitChunked(rows, opts = {}) {
 /**
  * @param {Array<{ push_token: string, serial_number?: string }>} passKitRows
  * @param {{ collapseId?: string | null }} [opts]
- *   - collapseId : transmis tel quel à APNs via `apns-collapse-id`. Permet de distinguer les
- *     différentes raisons d'invalidation (changement d'icône vs broadcast vs scan de point).
- *     Deux pushes avec des collapseId différents ne sont jamais fusionnés par APNs.
  * @returns {Promise<Array<{ row: object, result: { sent: boolean, error?: string } }>>}
- *         Résultats de la **dernière** salve (pour comptage / logs), comme l’ancien code (2ᵉ boucle).
  */
 export async function sendPassKitPushWaves(passKitRows, opts = {}) {
   const rows = (passKitRows || []).filter((r) => r.push_token);
   if (rows.length === 0) return [];
 
-  const runWave = (waveOpts) => sendPassKitChunked(rows, waveOpts);
-
-  const wave1 = await runWave(opts);
+  const wave1 = await sendPassKitChunked(rows, opts);
   if (PASSKIT_WAVE_GAP_MS <= 0) {
     return wave1;
   }
   await new Promise((r) => setTimeout(r, PASSKIT_WAVE_GAP_MS));
-  // Pour la 2ᵉ salve, on dérive un collapseId distinct si présent (suffixe "~w2") afin que les
-  // deux salves ne soient pas coalescées entre elles côté APNs — on garantit ainsi que chaque
-  // device reçoit deux invalidations même si la 1ʳᵉ a été droppée par le throttling background.
   const wave2Opts = opts?.collapseId
     ? { ...opts, collapseId: `${opts.collapseId}~w2`.slice(0, 64) }
     : opts;
-  const wave2 = await runWave(wave2Opts);
-  // Garde le meilleur résultat : si wave 1 a réussi mais wave 2 a échoué, on compte quand même l'envoi.
+  const wave2 = await sendPassKitChunked(rows, wave2Opts);
   return wave2.map((w2, i) => {
     if (!w2.result.sent && wave1[i]?.result?.sent) return wave1[i];
     return w2;
@@ -71,33 +51,4 @@ export async function sendPassKitPushWaves(passKitRows, opts = {}) {
 
 export function passKitWaveGapMsForDiagnostics() {
   return PASSKIT_WAVE_GAP_MS;
-}
-
-/** Retries additionnels après les 2 salves — même pattern que PATCH icône (dashboard.js). */
-const PASSKIT_BROADCAST_EXTRA_RETRY_MS = [4500, 9000];
-
-/**
- * Planifie des pushes PassKit différés (best-effort) pour campagnes manuelles.
- * iOS peut ignorer le 1er silent push background ; un 2e/3e avec collapse-id distinct
- * déclenche souvent le refetch Wallet sans ouvrir la carte.
- *
- * @param {Array<{ push_token: string }>} passKitRows
- * @param {string} baseCollapseId
- * @param {string} [businessId]
- */
-export function schedulePassKitBroadcastRetries(passKitRows, baseCollapseId, businessId = "") {
-  const rows = (passKitRows || []).filter((r) => r.push_token);
-  if (rows.length === 0) return;
-  const base = String(baseCollapseId || "bcast").slice(0, 48);
-  for (const delayMs of PASSKIT_BROADCAST_EXTRA_RETRY_MS) {
-    setTimeout(() => {
-      const collapseId = `${base}~d${delayMs}`.slice(0, 64);
-      sendPassKitChunked(rows, { collapseId }).catch((err) => {
-        logger.warn(
-          { err, businessId, delayMs, collapseId },
-          "[passkit-waves] retry campagne différé"
-        );
-      });
-    }, delayMs);
-  }
 }

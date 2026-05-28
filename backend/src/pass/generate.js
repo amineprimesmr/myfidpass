@@ -417,7 +417,20 @@ export async function generatePass(member, business = null, options = {}) {
     });
   }
 
-  /* Message de campagne : uniquement au **verso** (`lastMessage`), pas sur la face (demande produit). */
+  /*
+   * Campagne : alerte écran verrouillé via champ **face** (auxiliary).
+   * iOS ne compare souvent le changeMessage du verso qu’après ouverture de la carte ;
+   * un champ face avec %@ déclenche l’alerte dès le refetch PassKit.
+   */
+  if (rawBroadcast && walletAlerts) {
+    pass.auxiliaryFields.unshift({
+      key: "campaignAlert",
+      label: "Message",
+      value: lastBroadcast,
+      textAlignment: "PKTextAlignmentLeft",
+      changeMessage: normalizeChangeMessage(changeMsg, rawBroadcast),
+    });
+  }
 
   const barcodePayload = {
     message: member.id,
