@@ -3,6 +3,7 @@
  * Dérogation limite 400 lignes (REFONTE-REGLES) : découpage prévu en sous-fichiers — 2025-03.
  */
 import { Router } from "express";
+import { normalizePassKitChangeMessageStored } from "../../lib/sync-notification-texts-for-campaign.js";
 import {
   updateBusiness,
   getBusinessById,
@@ -589,7 +590,10 @@ router.patch("/settings", async (req, res) => {
   }
   const notification_change_message = body.notification_change_message ?? body.notificationChangeMessage;
   if (notification_change_message !== undefined) {
-    updates.notification_change_message = notification_change_message == null ? null : String(notification_change_message).trim().slice(0, 200);
+    updates.notification_change_message =
+      notification_change_message == null
+        ? null
+        : normalizePassKitChangeMessageStored(notification_change_message);
   }
   const engagement_rewards = body.engagement_rewards ?? body.engagementRewards;
   const campaign_automation_in = body.campaign_automation ?? body.campaignAutomation;

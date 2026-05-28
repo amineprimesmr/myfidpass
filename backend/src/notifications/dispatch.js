@@ -231,21 +231,22 @@ export async function deliverCustomerBroadcast({
   // Web Push : déjà filtré en SQL (voir getWebPushSubscriptionsByBusiness*ExcludingPassKitOwners) :
   // un membre avec Apple Wallet actif ne reçoit pas aussi la PWA/Safari pour la même campagne.
 
-  // 1) Persister le message de campagne AVANT tout push (Apple : données pass à jour puis APNs).
-  setLastBroadcastMessage(business.id, bodyMessage);
-  // 2) Titre optionnel + nettoyage d’un ancien « modèle » sans %@ (ne plus bumper ici — évite un refetch vide).
-  const businessAfterSync = syncNotificationTextsForCampaign(business.id, title, bodyMessage);
-  ensurePassKitChangeMessageTemplate(business.id);
-  bumpBusinessPassRefreshTimestamp(business.id);
-  const businessAfterBump = getBusinessById(business.id) || businessAfterSync || business;
-  const passMs = Number(businessAfterBump?.pass_last_modified_ms) || Date.now();
-  const broadcastCollapseId = `bcast-${passMs}`;
-
   const batchId = createNotificationBatch({
     businessId: business.id,
     triggerName,
     summary: { started_at: new Date().toISOString() },
   });
+
+  // 1) Persister le message de campagne AVANT tout push (Apple : données pass à jour puis APNs).
+  setLastBroadcastMessage(business.id, bodyMessage);
+  // 2) Titre optionnel + gabarit `%@` (sans préfixe « Nouveau message : »).
+  const businessAfterSync = syncNotificationTextsForCampaign(business.id, title, bodyMessage);
+  ensurePassKitChangeMessageTemplate(business.id);
+  bumpBusinessPassRefreshTimestamp(business.id);
+  const businessAfterBump = getBusinessById(business.id) || businessAfterSync || business;
+  const passMs = Number(businessAfterBump?.pass_last_modified_ms) || Date.now();
+  /** UUID par campagne : évite qu’APNs fusionne le 2ᵉ push avec le 1ᵉr (`bcast-<ms>` seul pouvait se répéter). */
+  const broadcastCollapseId = `bcast-${String(batchId).replace(/-/g, "").slice(0, 24)}-${passMs}`.slice(0, 64);
 
   // Relire la ligne commerce : évite une ligne `req.business` ou un snapshot légèrement vieux si icône
   // vient d’être PATCH juste avant l’envoi ; les timestamps alimentent le `?v=` ci-dessous.

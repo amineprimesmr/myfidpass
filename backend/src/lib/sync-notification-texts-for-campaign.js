@@ -7,17 +7,20 @@
  * Si le modèle changeMessage change à chaque envoi, Wallet / APNs peuvent livrer les alertes de façon
  * erratique (retard, silence) alors que le premier message semble « parfait ».
  *
- * Le commerçant règle un modèle stable dans le SaaS / app (ex. « Nouveau message : %@ ») ; seule la
- * valeur du champ change à chaque campagne → comportement fiable comme au premier envoi.
+ * Le commerçant peut laisser le gabarit par défaut `%@` (texte de l’alerte = corps de campagne seul).
+ * Seule la valeur du champ `lastMessage` change à chaque envoi → alertes répétées fiables.
  *
  * Si `notification_change_message` ne contient pas `%@`, ce n’est pas un gabarit PassKit valide
  * (souvent texte périmètre ou ancien corps recopié). À l’envoi on le remet à null pour que le pass
  * utilise `%@` seul — évite « vieux préfixe + nouveau corps » (ex. « Allo » + « L’app est prête »).
  */
 import { getBusinessById, updateBusiness } from "../db.js";
+import {
+  DEFAULT_PASSKIT_CHANGE_MESSAGE,
+  normalizePassKitChangeMessageStored,
+} from "./passkit-change-message-template.js";
 
-/** Gabarit PassKit stable pour alertes écran verrouillé (`%@` = valeur du champ « Message » verso). */
-export const DEFAULT_PASSKIT_CHANGE_MESSAGE = "Nouveau message : %@";
+export { DEFAULT_PASSKIT_CHANGE_MESSAGE, normalizePassKitChangeMessageStored };
 
 export function syncNotificationTextsForCampaign(businessId, title, messageBody) {
   void messageBody;
@@ -47,7 +50,8 @@ export function syncNotificationTextsForCampaign(businessId, title, messageBody)
 export function ensurePassKitChangeMessageTemplate(businessId) {
   const business = getBusinessById(businessId);
   const cur = (business?.notification_change_message ?? "").trim();
-  if (cur.includes("%@")) return business;
-  updateBusiness(businessId, { notification_change_message: DEFAULT_PASSKIT_CHANGE_MESSAGE });
+  const normalized = normalizePassKitChangeMessageStored(cur) ?? DEFAULT_PASSKIT_CHANGE_MESSAGE;
+  if (cur === normalized) return business;
+  updateBusiness(businessId, { notification_change_message: normalized });
   return getBusinessById(businessId);
 }
