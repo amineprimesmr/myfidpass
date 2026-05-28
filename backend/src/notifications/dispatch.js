@@ -27,9 +27,13 @@ import { sendPassKitPushWaves } from "../passkit-push-waves.js";
 import {
   sendMerchantAppAlert,
   isLikelyInvalidMerchantPushTokenError,
+  isLikelyInvalidDeviceTokenApnsError,
 } from "../merchant-app-push.js";
-import { addGoogleWalletNotificationMessageForMember } from "../google-wallet.js";
-import { syncNotificationTextsForCampaign } from "../lib/sync-notification-texts-for-campaign.js";
+import { addGoogleWalletNotificationMessageForMember, isGoogleWalletConfigured } from "../google-wallet.js";
+import {
+  ensurePassKitChangeMessageTemplate,
+  syncNotificationTextsForCampaign,
+} from "../lib/sync-notification-texts-for-campaign.js";
 import { businessHasCustomNotificationIcon } from "../lib/notification-icon-gate.js";
 import logger from "../lib/logger.js";
 
@@ -63,6 +67,49 @@ function targetedGoogleWalletMembers(businessId, memberIds) {
   }
   const { members } = getMembersForBusiness(businessId, { limit: 100000, offset: 0, sort: "created_desc" });
   return members;
+}
+
+/**
+ * Canaux réellement ciblés avant envoi (Web Push + PassKit + GW si configuré).
+ * Ne compte pas « tous les membres » comme des appareils — évite un `total` trompeur en HTTP 202.
+ */
+export function countPreSendNotificationTargets(businessId, memberIds) {
+  if (memberIds !== null && memberIds.length === 0) {
+    return { webPush: 0, passKit: 0, googleWallet: 0, total: 0 };
+  }
+
+  const webSubscriptionsRaw =
+    memberIds !== null && memberIds.length > 0
+      ? getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(businessId, memberIds)
+      : getWebPushSubscriptionsByBusinessExcludingPassKitOwners(businessId);
+  const passKitTokensRaw =
+    memberIds !== null && memberIds.length > 0
+      ? getPassKitPushTokensForBusinessFiltered(businessId, memberIds)
+      : getPassKitPushTokensForBusiness(businessId);
+
+  const passKitMemberKeys = new Set(
+    passKitTokensRaw.map((r) => String(r.serial_number ?? "").trim().toLowerCase()).filter(Boolean)
+  );
+  const webSubscriptions = webSubscriptionsRaw.filter((w) => {
+    const mid = String(w.member_id ?? "").trim().toLowerCase();
+    return !passKitMemberKeys.has(mid);
+  });
+
+  const pushTokenSeen = new Set();
+  const passKitTokens = passKitTokensRaw.filter((r) => {
+    const t = String(r.push_token ?? "").trim();
+    if (!t || pushTokenSeen.has(t)) return false;
+    pushTokenSeen.add(t);
+    return true;
+  });
+
+  const googleWallet = isGoogleWalletConfigured()
+    ? targetedGoogleWalletMembers(businessId, memberIds).length
+    : 0;
+
+  const webPush = webSubscriptions.length;
+  const passKit = passKitTokens.length;
+  return { webPush, passKit, googleWallet, total: webPush + passKit + googleWallet };
 }
 
 async function mapWithConcurrency(items, limit, mapper) {
@@ -184,9 +231,9 @@ export async function deliverCustomerBroadcast({
   // Web Push : déjà filtré en SQL (voir getWebPushSubscriptionsByBusiness*ExcludingPassKitOwners) :
   // un membre avec Apple Wallet actif ne reçoit pas aussi la PWA/Safari pour la même campagne.
 
-  // Titre d’envoi optionnel → `notification_title_override` (stable). Le corps de campagne ne doit pas
-  // écraser `notification_change_message` : voir `sync-notification-texts-for-campaign.js`.
+  // Titre + gabarit `%@` stable (le corps de campagne vit dans last_broadcast_message, pas dans changeMessage).
   const businessAfterSync = syncNotificationTextsForCampaign(business.id, title, bodyMessage);
+  ensurePassKitChangeMessageTemplate(business.id);
 
   const batchId = createNotificationBatch({
     businessId: business.id,
@@ -217,6 +264,7 @@ export async function deliverCustomerBroadcast({
   };
   const errors = [];
 
+  // Ordre validé en prod : Web Push d’abord, puis last_broadcast + bump, puis PassKit.
   const webPushResults = await Promise.all(
     webSubscriptions.map(async (sub) => {
       try {
@@ -261,16 +309,11 @@ export async function deliverCustomerBroadcast({
   const sentWebPush = webPushResults.filter((r) => r.ok).length;
 
   setLastBroadcastMessage(business.id, bodyMessage);
-  // Toujours pousser `notification_pass_layout_at` au moment de l’envoi : sinon le `Last-Modified`
-  // du pass peut rester cohérent avec un ancien envoi alors que l’icône notif vient d’être changée
-  // (max(timestamp) ne bat pas le cache Wallet / refetch).
   bumpBusinessPassRefreshTimestamp(business.id);
-  // Relire la ligne commerce APRÈS bump → on capture `pass_last_modified_ms` frais pour le collapseId
-  // unique à cette campagne (évite la coalescence APNs avec un push précédent de changement d'icône).
   const businessAfterBump = getBusinessById(business.id) || businessFresh;
   const passMs = Number(businessAfterBump?.pass_last_modified_ms) || Date.now();
-  // collapse-id court (ASCII, ≤ 64 octets) — 1 par campagne → pas de fusion avec le push post-PATCH icône.
-  const broadcastCollapseId = `bcast-${passMs}`;
+  const broadcastCollapseId = `bcast-${passMs}`.slice(0, 64);
+
   let sentPassKit = 0;
   if (passKitTokens.length > 0) {
     if (touchMemberLastVisit) {
@@ -282,6 +325,10 @@ export async function deliverCustomerBroadcast({
         }
       }
     }
+    logger.info(
+      { businessId: business.id, batchId, passMs, passKitCount: passKitTokens.length },
+      "[dispatch] push PassKit campagne"
+    );
     const waveResults = await sendPassKitPushWaves(passKitTokens, { collapseId: broadcastCollapseId });
     for (const { row, result } of waveResults) {
       if (result.sent) {

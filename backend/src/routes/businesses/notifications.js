@@ -19,7 +19,7 @@ import {
   getNotificationLogRecentForBusiness,
 } from "../../db.js";
 import { passKitWaveGapMsForDiagnostics } from "../../passkit-push-waves.js";
-import { deliverCustomerBroadcast } from "../../notifications/dispatch.js";
+import { countPreSendNotificationTargets, deliverCustomerBroadcast } from "../../notifications/dispatch.js";
 import { getMerchantApnsUnavailableReason } from "../../apns.js";
 import { assertOperationalSubscription, ensureDashboardAccess, blockStaffDashboardWrites, getApiBase } from "./shared.js";
 import logger from "../../lib/logger.js";
@@ -101,19 +101,7 @@ export async function notifyHandler(req, res) {
   const apiBase = getApiBase(req);
   const slug = req.params.slug ?? business.slug;
 
-  const webSubscriptions =
-    memberIds !== null
-      ? getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(business.id, memberIds)
-      : getWebPushSubscriptionsByBusinessExcludingPassKitOwners(business.id);
-  const passKitTokens =
-    memberIds !== null
-      ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
-      : getPassKitPushTokensForBusiness(business.id);
-  const googleWalletCandidates =
-    memberIds !== null
-      ? memberIds.length
-      : (getMembersForBusiness(business.id, { limit: 1 })?.total ?? 0);
-  const totalDevices = webSubscriptions.length + passKitTokens.length + googleWalletCandidates;
+  const { total: totalDevices } = countPreSendNotificationTargets(business.id, memberIds);
   if (totalDevices === 0) {
     return res.status(200).json({ ok: true, sent: 0, sentWebPush: 0, sentPassKit: 0, sentGoogleWallet: 0, sentMerchantApp: 0, batch_id: null });
   }
@@ -180,19 +168,8 @@ router.post("/send", async (req, res) => {
   }
   const apiBase = getApiBase(req);
   const slug = req.params.slug ?? business.slug;
-  const webSubscriptions =
-    memberIds !== null
-      ? getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(business.id, memberIds)
-      : getWebPushSubscriptionsByBusinessExcludingPassKitOwners(business.id);
-  const passKitTokens =
-    memberIds !== null
-      ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
-      : getPassKitPushTokensForBusiness(business.id);
-  const googleWalletCandidates =
-    memberIds !== null
-      ? memberIds.length
-      : (getMembersForBusiness(business.id, { limit: 1 })?.total ?? 0);
-  const totalDevices = webSubscriptions.length + passKitTokens.length + googleWalletCandidates;
+  const preSend = countPreSendNotificationTargets(business.id, memberIds);
+  const totalDevices = preSend.total;
   if (totalDevices === 0) {
     return res.json({
       ok: true,
@@ -202,7 +179,8 @@ router.post("/send", async (req, res) => {
       sentGoogleWallet: 0,
       sentMerchantApp: 0,
       batch_id: null,
-      message: "Aucun client ciblé. Les clients qui ajoutent la carte (Apple Wallet, Google Wallet ou navigateur) pourront recevoir les notifications.",
+      message:
+        "Aucun appareil joignable pour ce segment (Apple Wallet, navigateur ou Google Wallet). Demandez aux clients de ré-ajouter la carte depuis le lien « Partager », puis réessayez.",
     });
   }
 
