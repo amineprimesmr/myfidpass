@@ -68,6 +68,7 @@ import { sendMail, isEmailConfigured } from "../email.js";
 import { validate, schemas } from "../lib/validate.js";
 import { fetchGooglePlaceBusinessEnrichment } from "../lib/google-place-business-enrichment.js";
 import { refreshGooglePlacesSnapshotFromPlaceId } from "../services/social-metrics-service.js";
+import { cancelPaidSubscriptionsBeforeAccountDeletion } from "../lib/account-deletion-billing.js";
 
 const router = Router();
 
@@ -1100,15 +1101,23 @@ router.get("/me/businesses", requireAuth, (req, res) => {
  * DELETE /api/auth/account
  * Supprime définitivement le compte de l'utilisateur connecté (RGPD, exigence App Store).
  */
-router.delete("/account", requireAuth, (req, res) => {
+router.delete("/account", requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
+    const billing = await cancelPaidSubscriptionsBeforeAccountDeletion(userId);
     const deleted = deleteUserAccount(userId);
     invalidateAuthUserCache(userId);
     if (!deleted) {
       return res.status(404).json({ error: "Compte déjà supprimé.", code: "account_already_deleted" });
     }
-    return res.json({ ok: true, message: "Compte supprimé", deleted_user_id: userId });
+    return res.json({
+      ok: true,
+      message: "Compte supprimé",
+      deleted_user_id: userId,
+      stripe_subscriptions_canceled: billing.stripeCanceled,
+      /** L’abonnement App Store reste sur l’Apple ID ; l’utilisateur doit l’annuler dans Réglages si besoin. */
+      apple_subscription_remains_on_apple_id: billing.hadAppleIap,
+    });
   } catch (e) {
     console.error("Delete account error:", e);
     return res.status(500).json({ error: "Erreur lors de la suppression du compte." });
