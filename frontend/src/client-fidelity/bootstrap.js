@@ -1196,6 +1196,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     { signal }
   );
 
+  await dismissFidelityRouteLoadingOverlay(loadingOverlay);
   rerender();
   } finally {
     await dismissFidelityRouteLoadingOverlay(loadingOverlay);

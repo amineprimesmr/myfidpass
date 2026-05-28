@@ -23,6 +23,20 @@ function doubleRAF() {
   });
 }
 
+/** Voile de chargement encore présent (évite modales floues en dessous, z-index 10050). */
+export function isFidelityRouteLoadingOverlayActive() {
+  const el = document.getElementById(OVERLAY_ID);
+  return !!(el && document.body.contains(el));
+}
+
+/** Attend la fin du voile avant d’ouvrir une modale client. */
+export async function waitForFidelityRouteLoadingDismissed(maxMs = 4000) {
+  const deadline = Date.now() + maxMs;
+  while (isFidelityRouteLoadingOverlayActive() && Date.now() < deadline) {
+    await doubleRAF();
+  }
+}
+
 /** @returns {HTMLElement} */
 export function mountFidelityRouteLoadingOverlay() {
   document.getElementById(OVERLAY_ID)?.remove();

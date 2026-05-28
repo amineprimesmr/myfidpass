@@ -3,6 +3,7 @@ import {
   saveRewardCelebrationStorage,
 } from "./lib/reward-celebration-storage.js";
 import { buildCelebrationQueue } from "./lib/member-reward-celebrations.js";
+import { waitForFidelityRouteLoadingDismissed } from "./fidelity-route-loading.js";
 /** @typedef {{ kind: "welcome"|"tier_unlocked"; threshold: number; tierIndex?: number; points?: number; label: string; imageUrl?: string; costLine?: string; bonusChip?: string; unlocked?: boolean }} CelebrationItem */
 
 const pendingByRoot = new WeakMap();
@@ -35,9 +36,10 @@ function closeCelebrationModal(modal) {
  * @param {CelebrationItem} item
  * @returns {Promise<void>}
  */
-function showOneCelebration(rootEl, item) {
+async function showOneCelebration(rootEl, item) {
+  await waitForFidelityRouteLoadingDismissed();
   const modal = getModal(rootEl);
-  if (!modal) return Promise.resolve();
+  if (!modal) return;
 
   const kicker = modal.querySelector("#fidelity-reward-celebration-kicker");
   const title = modal.querySelector("#fidelity-reward-celebration-title");
