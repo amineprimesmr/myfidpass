@@ -57,8 +57,12 @@ function resolveRewardRedeemPreview(business, member, rewardRedeem) {
   }
   const tierIndex = rewardRedeem.tierIndex ?? 0;
   const tier = Array.isArray(tiers) ? tiers[tierIndex] : null;
-  const pointsRequired = Number(tier?.points) || Number(rewardRedeem.points) || 0;
-  const label = String(tier?.label || "").trim() || `Récompense ${pointsRequired} pts`;
+  const qrPoints = Math.max(0, Math.floor(Number(rewardRedeem.points) || 0));
+  const tierPoints = Math.max(0, Math.floor(Number(tier?.points) || 0));
+  const pointsRequired = qrPoints > 0 ? qrPoints : tierPoints;
+  const label =
+    String(tier?.label || "").trim() ||
+    (pointsRequired > 0 ? `Récompense ${pointsRequired} pts` : "Récompense");
   const balance = Number(member.points) || 0;
   return {
     mode: "points",
@@ -144,12 +148,14 @@ router.post("/reward-redeem", async (req, res) => {
       code: "MEMBER_NOT_FOUND",
     });
   }
-  const programType = (business.program_type || "").toLowerCase();
-  const redeemIntent = parsed.rewardRedeem || {
-    mode: programType === "stamps" ? "stamps" : "points",
-    tierIndex: req.body?.tier_index != null ? Number(req.body.tier_index) : undefined,
-    points: req.body?.points != null ? Number(req.body.points) : undefined,
-  };
+  if (!parsed.rewardRedeem) {
+    return res.status(400).json({
+      error:
+        "Ce QR n'est pas un code récompense. Demandez au client d'ouvrir « Utiliser en magasin » sur sa carte fidélité.",
+      code: "NOT_REWARD_REDEEM_QR",
+    });
+  }
+  const redeemIntent = parsed.rewardRedeem;
   const result = executeMemberRewardRedeem(business, member, {
     mode: redeemIntent.mode === "stamps" ? "stamps" : "points",
     tierIndex: redeemIntent.tierIndex,

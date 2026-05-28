@@ -69,7 +69,10 @@ export function executeMemberRewardRedeem(business, member, opts) {
       return { ok: false, status: 400, code: "INVALID_TIER", error: "Palier de récompense invalide." };
     }
     const tier = tiers[tierIndex];
-    pointsToDeduct = Number(tier?.points) || 0;
+    const tierPoints = Math.max(0, Math.floor(Number(tier?.points) || 0));
+    const qrPoints = Math.max(0, Math.floor(Number(opts.points) || 0));
+    // QR caisse = source de vérité pour le débit (palier DB peut être vide ou réordonné).
+    pointsToDeduct = qrPoints > 0 ? qrPoints : tierPoints;
     rewardLabel = String(tier?.label || "").trim() || `Récompense ${pointsToDeduct} pts`;
   }
 
