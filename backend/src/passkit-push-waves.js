@@ -2,8 +2,9 @@
  * Envoi PassKit (APNs) en salves : parallèle par salve, intervalle court entre salves.
  *
  * Apple ne garantit pas la livraison instantanée ; côté serveur on minimise la latence
- * (plus de boucle séquentielle ni pause 2,5 s fixe). Deux salves restent optionnelles
- * pour limiter le batching APNs (apns-id unique par appel dans sendPassKitUpdate).
+ * (plus de boucle séquentielle ni pause 2,5 s fixe). Le webservice PassKit reste la source
+ * de vérité : si APNs coalesce plusieurs invalidations, Wallet demande tous les serialNumbers
+ * changés depuis son dernier update tag.
  *
  * PASSKIT_WAVE_GAP_MS — ms entre salve 1 et 2 (défaut 0 = une seule salve). Ex. 400 pour l’ancien double envoi.
  */
@@ -37,9 +38,8 @@ async function sendPassKitChunked(rows, opts = {}) {
 /**
  * @param {Array<{ push_token: string, serial_number?: string }>} passKitRows
  * @param {{ collapseId?: string | null }} [opts]
- *   - collapseId : transmis tel quel à APNs via `apns-collapse-id`. Permet de distinguer les
- *     différentes raisons d'invalidation (changement d'icône vs broadcast vs scan de point).
- *     Deux pushes avec des collapseId différents ne sont jamais fusionnés par APNs.
+ *   - collapseId : conservé pour compatibilité avec les appelants historiques ; sendPassKitUpdate
+ *     l'ignore volontairement pour laisser PassKit/APNs coalescer les invalidations sans perte.
  * @returns {Promise<Array<{ row: object, result: { sent: boolean, error?: string } }>>}
  *         Résultats de la **dernière** salve (pour comptage / logs), comme l’ancien code (2ᵉ boucle).
  */
@@ -54,9 +54,8 @@ export async function sendPassKitPushWaves(passKitRows, opts = {}) {
     return wave1;
   }
   await new Promise((r) => setTimeout(r, PASSKIT_WAVE_GAP_MS));
-  // Pour la 2ᵉ salve, on dérive un collapseId distinct si présent (suffixe "~w2") afin que les
-  // deux salves ne soient pas coalescées entre elles côté APNs — on garantit ainsi que chaque
-  // device reçoit deux invalidations même si la 1ʳᵉ a été droppée par le throttling background.
+  // Deuxième salve optionnelle uniquement pour l'ancien mode de diagnostic ; le serveur ne dépend
+  // pas de deux livraisons APNs, car `passesUpdatedSince` rattrape l'état courant du pass.
   const wave2Opts = opts?.collapseId
     ? { ...opts, collapseId: `${opts.collapseId}~w2`.slice(0, 64) }
     : opts;

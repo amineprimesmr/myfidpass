@@ -3,7 +3,6 @@
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
-import { formatUtcSqlWithMs } from "./datetime-sql.js";
 
 const db = getDb();
 const TEST_DEVICE_ID = "test-device-123";
@@ -138,9 +137,17 @@ export function unregisterPassDevice(deviceLibraryIdentifier, passTypeIdentifier
   ).run(deviceLibraryIdentifier, passTypeIdentifier, serialNumber);
 }
 
-function parsePassUpdatedAt(str) {
-  if (!str || typeof str !== "string") return 0;
-  const s = str.trim();
+export function parsePassKitUpdateTag(value) {
+  if (value == null) return 0;
+  const s = String(value).trim();
+  if (!s) return 0;
+
+  const msMatch = s.match(/^(?:ms:)?(\d{10,})$/);
+  if (msMatch) {
+    const n = Number(msMatch[1]);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }
+
   const iso = s.replace(" ", "T").replace(/Z?$/, "Z");
   const t = Date.parse(iso);
   return Number.isNaN(t) ? 0 : t;
@@ -154,12 +161,17 @@ export function effectivePassKitRowUpdateTs(row) {
   const passMs = Number(row.pass_last_modified_ms);
   const passMsOk = Number.isFinite(passMs) && passMs > 0 ? passMs : 0;
   return Math.max(
-    parsePassUpdatedAt(row.last_visit_at),
-    parsePassUpdatedAt(row.last_broadcast_at),
-    parsePassUpdatedAt(row.created_at),
-    parsePassUpdatedAt(row.notification_pass_layout_at),
+    parsePassKitUpdateTag(row.last_visit_at),
+    parsePassKitUpdateTag(row.last_broadcast_at),
+    parsePassKitUpdateTag(row.created_at),
+    parsePassKitUpdateTag(row.notification_pass_layout_at),
     passMsOk
   );
+}
+
+function formatPassKitUpdateTag(ms) {
+  const n = Number(ms);
+  return Number.isFinite(n) && n > 0 ? `ms:${Math.floor(n)}` : `ms:${Date.now()}`;
 }
 
 export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passesUpdatedSince = null) {
@@ -172,15 +184,15 @@ export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passe
   ).all(deviceId, passTypeId);
   let list = base;
   if (passesUpdatedSince && String(passesUpdatedSince).trim()) {
-    const sinceTs = parsePassUpdatedAt(String(passesUpdatedSince));
+    const sinceTs = parsePassKitUpdateTag(String(passesUpdatedSince));
     list = base.filter((r) => effectivePassKitRowUpdateTs(r) > sinceTs);
   }
   const serialNumbers = list.map((r) => r.serial_number);
-  let lastUpdated = formatUtcSqlWithMs(new Date());
+  let lastUpdated = formatPassKitUpdateTag(Date.now());
   if (list.length > 0) {
     const maxTs = list.reduce((acc, r) => Math.max(acc, effectivePassKitRowUpdateTs(r)), 0);
     if (maxTs > 0) {
-      lastUpdated = formatUtcSqlWithMs(maxTs);
+      lastUpdated = formatPassKitUpdateTag(maxTs);
     }
   }
   return { serialNumbers, lastUpdated };

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { effectivePassKitRowUpdateTs } from "./passes.js";
+import { effectivePassKitRowUpdateTs, parsePassKitUpdateTag } from "./passes.js";
 
 describe("effectivePassKitRowUpdateTs (PassKit passesUpdatedSince)", () => {
   it("utilise last_broadcast_at quand last_visit_at est absent", () => {
@@ -49,5 +49,12 @@ describe("effectivePassKitRowUpdateTs (PassKit passesUpdatedSince)", () => {
       pass_last_modified_ms: iconMs,
     });
     expect(ts).toBe(iconMs);
+  });
+
+  it("parse les nouveaux update tags opaques ms:... et les anciens tags date", () => {
+    const ms = Date.parse("2026-08-20T10:00:00.500Z");
+    expect(parsePassKitUpdateTag(`ms:${ms}`)).toBe(ms);
+    expect(parsePassKitUpdateTag(String(ms))).toBe(ms);
+    expect(parsePassKitUpdateTag("2026-08-20 10:00:00.500")).toBe(ms);
   });
 });

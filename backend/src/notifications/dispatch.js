@@ -265,11 +265,11 @@ export async function deliverCustomerBroadcast({
   // du pass peut rester cohérent avec un ancien envoi alors que l’icône notif vient d’être changée
   // (max(timestamp) ne bat pas le cache Wallet / refetch).
   bumpBusinessPassRefreshTimestamp(business.id);
-  // Relire la ligne commerce APRÈS bump → on capture `pass_last_modified_ms` frais pour le collapseId
-  // unique à cette campagne (évite la coalescence APNs avec un push précédent de changement d'icône).
+  // Relire la ligne commerce APRÈS bump → on capture `pass_last_modified_ms` frais pour le tag
+  // PassKit. APNs peut coalescer les invalidations ; le webservice doit donc porter l'état exact.
   const businessAfterBump = getBusinessById(business.id) || businessFresh;
   const passMs = Number(businessAfterBump?.pass_last_modified_ms) || Date.now();
-  // collapse-id court (ASCII, ≤ 64 octets) — 1 par campagne → pas de fusion avec le push post-PATCH icône.
+  // Conservé pour compatibilité d'appel ; sendPassKitUpdate l'ignore côté Wallet pour laisser APNs coalescer.
   const broadcastCollapseId = `bcast-${passMs}`;
   let sentPassKit = 0;
   if (passKitTokens.length > 0) {

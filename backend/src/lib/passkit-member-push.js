@@ -25,7 +25,7 @@ export function sendPassKitUpdateIfCustomerAlertsAllowed(business, deviceToken, 
 /**
  * @param {string} businessId
  * @param {string} memberId — serial_number PassKit (= id membre)
- * @param {string} [reason] — préfixe collapse-id (scan, points_add, …)
+ * @param {string} [reason] — raison métier pour logs / compatibilité d'appel
  * @returns {Promise<{ tokens: number, sent: number, skipped?: boolean }>}
  */
 export async function pushPassKitUpdateForMember(businessId, memberId, reason = "mutation") {
