@@ -1,6 +1,17 @@
 import { memberIdToQrDataUrl } from "./lib/member-qr-dataurl.js";
 
 const closeMap = new WeakMap();
+const openUnlockedMap = new WeakMap();
+
+/**
+ * Ouvre la modale QR caisse (récompense débloquée) depuis une autre UI (célébration palier).
+ * @param {HTMLElement} rootEl
+ * @param {{ label: string; costLine: string }} p
+ */
+export function openRewardRedeemUnlocked(rootEl, p) {
+  const fn = openUnlockedMap.get(rootEl);
+  if (typeof fn === "function") void fn(p);
+}
 
 /**
  * @param {HTMLElement} rootEl
@@ -77,6 +88,8 @@ export function bindRewardRedeemUi({ rootEl, getState, signal }) {
       fineEl.textContent = `Récompense : ${label} · ${costLine}. Ouvre ta carte Wallet pour te faire scanner, ou communique ton identifiant au personnel.`;
     }
   }
+
+  openUnlockedMap.set(rootEl, openUnlocked);
 
   function openLocked({ label, need, unitPhrase }) {
     if (!unlockedEl || !lockedEl || !lockedHead || !lockedBody) return;

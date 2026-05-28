@@ -43,7 +43,13 @@ import {
 } from "./delivery-receipt-scan-overlay.js";
 import { bindMissionsSheet, closeMissionsSheet } from "./missions-sheet-ui.js";
 import { bindRewardRedeemUi, closeRewardRedeemModal } from "./bind-reward-redeem-ui.js";
+import {
+  bindRewardCelebrationUi,
+  maybeScheduleRewardCelebrations,
+} from "./bind-reward-celebration-ui.js";
+import { memberProgramBalance } from "./lib/member-reward-celebrations.js";
 import { deliveryReceiptSuccessMessage, engagementClaimSuccessMessage } from "./lib/program-copy.js";
+import { isQrGameEntryIntent, markQrGameSession } from "./lib/client-entry-intent.js";
 
 function genIdempotencyKey() {
   return `fid-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -99,6 +105,9 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   let disposeQrUi = () => {};
   /** Photo ticket livraison (data URL) — réinitialisé à chaque `bindEvents`. */
   let deliveryReceiptDataUrl = null;
+  /** Solde connu avant dernier refresh — détection paliers franchis. */
+  let lastTrackedMemberBalance = null;
+  let pendingWelcomeBonusGranted = null;
 
   fidelityDocumentListenersAbort?.abort();
   fidelityDocumentListenersAbort = new AbortController();
@@ -154,11 +163,26 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     await hydrateMemberExtras(memberId);
   }
 
-  /** Complète le store sans bloquer l’overlay de chargement initial. */
+  /** Complète le store après le premier rendu (refresh, retour onglet). */
   function scheduleHydrateMemberExtras(memberId) {
     void hydrateMemberExtras(memberId).then(() => {
       if (isSpinning || isQrModalOpen()) return;
       rerender();
+    });
+  }
+
+  function clearStoredGuestSession() {
+    try {
+      localStorage.removeItem(memberStorageKey(slug));
+    } catch (_) {}
+    store.patch({
+      member: null,
+      tickets: null,
+      engagementActions: [],
+      games: [],
+      roulette_segments: [],
+      matchPredictions: { enabled: false, matches: [] },
+      wallet: null,
     });
   }
 
@@ -177,7 +201,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     if (!mid) return false;
     try {
       await hydrateMemberCore(mid);
-      scheduleHydrateMemberExtras(mid);
+      await hydrateMemberExtras(mid);
       localStorage.setItem(memberStorageKey(slug), JSON.stringify({ memberId: mid, createdAt: Date.now() }));
       if (typeof history !== "undefined" && history.replaceState) {
         history.replaceState(null, "", `/fidelity/${encodeURIComponent(slug)}${window.location.hash || ""}`);
@@ -188,32 +212,52 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     }
   }
 
-  async function ensureGuestSession() {
-    if (await tryHydrateMemberFromPassLink()) return;
+  /**
+   * Session client : lien pass ?m=, membre stocké, ou invité QR uniquement si parcours jeu (?qr=1 / session).
+   * Sans compte et sans intent QR → pas de membre (écran inscription), pas de flash « Invité ».
+   */
+  async function resolveClientSession() {
+    if (await tryHydrateMemberFromPassLink()) {
+      const mid = store.get().member?.id;
+      if (mid) await hydrateMemberExtras(mid);
+      return;
+    }
+
     const raw = localStorage.getItem(memberStorageKey(slug));
     if (raw) {
       try {
         const parsed = JSON.parse(raw);
         if (parsed?.memberId && Date.now() - (parsed.createdAt || 0) < SUCCESS_MAX_AGE_MS) {
           await hydrateMemberCore(parsed.memberId);
-          scheduleHydrateMemberExtras(parsed.memberId);
+          await hydrateMemberExtras(parsed.memberId);
+          if (isGuestMember(store.get().member)) {
+            if (!isQrGameEntryIntent(slug)) {
+              clearStoredGuestSession();
+            } else {
+              markQrGameSession(slug);
+            }
+          }
           return;
         }
       } catch (_) {}
     }
+
+    if (!isQrGameEntryIntent(slug)) return;
+
     const email = `guest-${crypto.randomUUID()}@guest.invalid`;
     const data = await api.createMember(slug, { name: "Invité", email });
     const memberId = data.memberId || data.member?.id;
     if (!memberId) throw new Error("Session invitée impossible");
+    markQrGameSession(slug);
     localStorage.setItem(memberStorageKey(slug), JSON.stringify({ memberId, createdAt: Date.now() }));
     await hydrateMemberCore(memberId);
-    scheduleHydrateMemberExtras(memberId);
+    await hydrateMemberExtras(memberId);
   }
 
   try {
-    await ensureGuestSession();
+    await resolveClientSession();
   } catch (e) {
-    console.error("[fidelity] ensureGuestSession", e);
+    console.error("[fidelity] resolveClientSession", e);
   }
 
   function syncWheelLabelsFromStore() {
@@ -309,6 +353,30 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     if (!profileOpen) document.body.style.overflow = "";
   }
 
+  function celebrationCtx() {
+    return {
+      rootEl,
+      slug,
+      getState: () => store.get(),
+      getPreviousBalance: () => lastTrackedMemberBalance,
+      setPreviousBalance: (n) => {
+        lastTrackedMemberBalance = n;
+      },
+      welcomeBonusJustGranted: pendingWelcomeBonusGranted,
+      signal,
+    };
+  }
+
+  function afterMemberUiCelebrations() {
+    if (isQrModalOpen()) return;
+    const granted = pendingWelcomeBonusGranted;
+    pendingWelcomeBonusGranted = null;
+    maybeScheduleRewardCelebrations({
+      ...celebrationCtx(),
+      welcomeBonusJustGranted: granted,
+    });
+  }
+
   function rerender() {
     document.body.style.overflow = "";
     renderClientPage(rootEl, store.get(), { slug, apiBase });
@@ -321,6 +389,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     if (!isSpinning) {
       initRouletteWheel();
     }
+    afterMemberUiCelebrations();
   }
 
   function isQrModalOpen() {
@@ -331,6 +400,10 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   async function refreshMemberData() {
     const state = store.get();
     if (!state.member?.id) return;
+    const programType = String(state.business?.program_type || "points").toLowerCase();
+    if (lastTrackedMemberBalance == null) {
+      lastTrackedMemberBalance = memberProgramBalance(state.member, programType);
+    }
     await hydrateMember(state.member.id);
     ensureQrGateAlignedWithServer(store.get().member, slug);
     if (isSpinning) {
@@ -400,6 +473,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       const data = await api.createMember(slug, { name, email });
       const memberId = data.memberId || data.member?.id;
       if (!memberId) throw new Error("Création impossible");
+      pendingWelcomeBonusGranted = data.welcome_bonus_granted ?? data.welcomeBonusGranted ?? null;
+      lastTrackedMemberBalance = 0;
       localStorage.setItem(memberStorageKey(slug), JSON.stringify({ memberId, createdAt: Date.now() }));
       await hydrateMember(memberId);
       rerender();
@@ -1007,6 +1082,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       signal,
     });
 
+    bindRewardCelebrationUi(celebrationCtx());
+
     disposeQrUi = bindQrGameUi({
       rootEl,
       api,
@@ -1015,6 +1092,13 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       rerender,
       refreshMemberData,
       messageUtilisateurPourErreur,
+      onGuestIdentityClaimed: (claimRes) => {
+        const st = store.get();
+        const programType = String(st.business?.program_type || "points").toLowerCase();
+        lastTrackedMemberBalance = memberProgramBalance(st.member, programType);
+        pendingWelcomeBonusGranted =
+          claimRes?.welcome_bonus_granted ?? claimRes?.welcomeBonusGranted ?? null;
+      },
       signal,
     });
   }
@@ -1045,6 +1129,12 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       const redeemModal = rootEl.querySelector("#fidelity-reward-redeem-modal");
       if (redeemModal?.classList.contains("fidelity-reward-redeem-modal--open")) {
         closeRewardRedeemModal(rootEl);
+      }
+      const celeb = rootEl.querySelector("#fidelity-reward-celebration-modal");
+      if (celeb && !celeb.classList.contains("hidden")) {
+        celeb.classList.add("hidden");
+        celeb.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
       }
     },
     { signal }

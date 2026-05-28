@@ -25,7 +25,9 @@ import {
   businessUsesTicketBonuses,
   mergeBusinessAssetsForPass,
   hasMemberCompletedEngagementAction,
+  isGuestPlaceholderEmail,
 } from "../../db.js";
+import { grantWelcomeBonusIfEligible } from "../../db/welcome-bonus.js";
 import { devPaymentBypass } from "../../lib/dev-payment-bypass.js";
 import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
 import { generatePass } from "../../pass.js";
@@ -103,15 +105,21 @@ router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res
   }
   const existing = getMemberByEmailForBusiness(business.id, normEmail);
   if (existing) {
+    let welcome_bonus_granted = null;
+    if (!isGuestPlaceholderEmail(existing.email)) {
+      welcome_bonus_granted = grantWelcomeBonusIfEligible(business, existing.id, { source: "web_signup" });
+    }
+    const fresh = getMemberForBusiness(existing.id, business.id) || existing;
     return res.status(200).json({
-      memberId: existing.id,
+      memberId: fresh.id,
       member: {
-        id: existing.id,
-        email: existing.email,
-        name: existing.name,
-        points: existing.points,
+        id: fresh.id,
+        email: fresh.email,
+        name: fresh.name,
+        points: fresh.points,
       },
       reused: true,
+      welcome_bonus_granted: welcome_bonus_granted ?? undefined,
     });
   }
 
@@ -123,6 +131,12 @@ router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res
       name: normName,
     });
 
+    let welcome_bonus_granted = null;
+    if (!isGuestPlaceholderEmail(normEmail)) {
+      welcome_bonus_granted = grantWelcomeBonusIfEligible(business, member.id, { source: "web_signup" });
+    }
+    const fresh = getMemberForBusiness(member.id, business.id) || member;
+
     try {
       scheduleCampaignEventJobsForMember({ business, memberId: member.id });
     } catch (e) {
@@ -131,13 +145,14 @@ router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res
     scheduleMerchantDashboardSyncForBusiness(business.id, "member_created");
 
     res.status(201).json({
-      memberId: member.id,
+      memberId: fresh.id,
       member: {
-        id: member.id,
-        email: member.email,
-        name: member.name,
-        points: member.points,
+        id: fresh.id,
+        email: fresh.email,
+        name: fresh.name,
+        points: fresh.points,
       },
+      welcome_bonus_granted: welcome_bonus_granted ?? undefined,
     });
   } catch (e) {
     console.error(e);

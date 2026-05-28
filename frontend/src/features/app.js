@@ -60,6 +60,7 @@ import {
 } from "./app-card-rules-point-tiers.js";
 import { geocodeAddress, formatPhotonAddress, photonGeocodeFeatures } from "../utils/geocoding.js";
 import { initAppFlyerQr } from "./app-flyer-qr.js";
+import { buildFidelityClientUrl } from "../client-fidelity/lib/client-entry-intent.js";
 import {
   applyCommerceIosHomeState,
   wireCommerceIosShell,
@@ -3215,10 +3216,12 @@ function initAppDashboard(slug) {
       const fidelityUrlEl = document.getElementById("app-engagement-fidelity-url");
       const fidelityGameOrigin =
         typeof window !== "undefined" && window.location?.origin ? window.location.origin : "https://myfidpass.fr";
-      const fidelityPublicGameUrl = slug ? `${fidelityGameOrigin}/fidelity/${encodeURIComponent(slug)}` : "";
+      const fidelityPublicGameUrl = slug
+        ? buildFidelityClientUrl(fidelityGameOrigin, slug, { qrGame: true })
+        : "";
       if (fidelityUrlEl && slug) {
         fidelityUrlEl.href = fidelityPublicGameUrl;
-        fidelityUrlEl.textContent = `${fidelityGameOrigin}/fidelity/${slug}`;
+        fidelityUrlEl.textContent = fidelityPublicGameUrl;
       }
       for (const el of [
         document.getElementById("app-sidebar-fidelity-program-link"),
@@ -3548,7 +3551,7 @@ function initAppDashboard(slug) {
     const previewIframe = document.getElementById("app-engagement-preview-iframe");
     if (previewIframe && slug) {
       const base = typeof window !== "undefined" && window.location?.origin ? window.location.origin : "";
-      previewIframe.src = base ? `${base}/fidelity/${encodeURIComponent(slug)}` : "";
+      previewIframe.src = base ? buildFidelityClientUrl(base, slug, { qrGame: true }) : "";
     }
   }
   window.addEventListener("app-section-change", (e) => {

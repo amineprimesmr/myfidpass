@@ -25,7 +25,10 @@ export function getRoute() {
     const slug = legacyJeux[1];
     path = `/fidelity/${slug}`;
     if (typeof history !== "undefined" && history.replaceState) {
-      history.replaceState(null, "", path + window.location.search + window.location.hash);
+      const sp = new URLSearchParams(window.location.search);
+      if (!sp.has("qr") && !sp.has("jeu")) sp.set("qr", "1");
+      const qs = sp.toString();
+      history.replaceState(null, "", path + (qs ? `?${qs}` : "") + window.location.hash);
     }
   }
   const match = path.match(/^\/fidelity\/([^/]+)$/);

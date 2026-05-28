@@ -27,6 +27,7 @@ import {
 import { balanceUnitShort, stampsStepSectionTitle } from "../lib/program-copy.js";
 import { renderDeliveryReceiptFabAndModalMarkup } from "./delivery-receipt-intro-markup.js";
 import { renderRewardRedeemModalMarkup } from "./reward-redeem-modal-markup.js";
+import { renderRewardCelebrationModalMarkup } from "./reward-celebration-modal-markup.js";
 import { renderPoweredByMyfidpassMarkup } from "./powered-by-markup.js";
 import { renderMatchPredictionsMarkup } from "./match-predictions-markup.js";
 
@@ -305,6 +306,7 @@ export function renderClientPage(root, state, options = {}) {
     ${hasMember ? renderPoweredByMyfidpassMarkup(esc, "fidelity-powered-by--member") : ""}
 
     ${hasMember ? renderRewardRedeemModalMarkup(esc) : ""}
+    ${hasMember && !isGuestPlaceholder ? renderRewardCelebrationModalMarkup(esc) : ""}
 
     ${deliveryReceiptEnabled ? renderDeliveryReceiptFabAndModalMarkup(esc, programType) : ""}
 

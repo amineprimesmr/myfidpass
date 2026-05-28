@@ -77,6 +77,9 @@ html.fidpass-fidelity-route body.fidpass-fidelity-route:not(:has(main.fidelity-q
 }
 
 #fidelity-app.fidelity-page:not(:has(> main.fidelity-qr-game)) > footer.fidelity-v2-footer--dark .fidelity-powered-by--in-pro-footer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
   padding: 0 1rem;
   margin-top: 0.15rem;
   order: 2;

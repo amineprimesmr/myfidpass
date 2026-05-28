@@ -2,6 +2,7 @@
  * Page Flyer QR — aperçu canvas, personnalisation, export PNG.
  */
 import { API_BASE } from "../config.js";
+import { buildFidelityClientUrl } from "../client-fidelity/lib/client-entry-intent.js";
 import { FLYER_EXPORT, mergeFlyerState, scopedFlyerStorageKey } from "./app-flyer-qr-presets.js";
 import {
   readFlyerStateFromForm,
@@ -228,7 +229,7 @@ export function initAppFlyerQr(slug, opts) {
     if (panelToggle) panelToggle.setAttribute("aria-expanded", "true");
   }
 
-  const shareUrl = () => (opts.getShareLink ? opts.getShareLink() : `${opts.pageOrigin}/fidelity/${slug}`);
+  const shareUrl = () => buildFidelityClientUrl(opts.pageOrigin, slug, { qrGame: true });
 
   let state = loadStoredFlyerState(flyerStorageKey);
   const flyerAssets = createFlyerAssetState();

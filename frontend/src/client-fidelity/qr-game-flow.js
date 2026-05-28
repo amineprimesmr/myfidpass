@@ -357,7 +357,17 @@ export function bindQrGameUi(ctx) {
   qrResumeListenersAbort?.abort();
   qrResumeListenersAbort = null;
 
-  const { rootEl, api, slug, getState, rerender, refreshMemberData, messageUtilisateurPourErreur, signal } = ctx;
+  const {
+    rootEl,
+    api,
+    slug,
+    getState,
+    rerender,
+    refreshMemberData,
+    messageUtilisateurPourErreur,
+    onGuestIdentityClaimed,
+    signal,
+  } = ctx;
   ensureQrGateAlignedWithServer(getState().member, slug);
   const modalRoot = rootEl.querySelector("#fidelity-qr-modal-root");
   if (!modalRoot) return () => {};
@@ -689,7 +699,8 @@ export function bindQrGameUi(ctx) {
       if (submitBtn) submitBtn.disabled = true;
       try {
         const st = getState();
-        await api.claimGuestIdentity(slug, st.member.id, { name, email });
+        const claimRes = await api.claimGuestIdentity(slug, st.member.id, { name, email });
+        onGuestIdentityClaimed?.(claimRes);
         closeQrModalRoot(rootEl);
         await refreshMemberData();
         rerender();

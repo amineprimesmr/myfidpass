@@ -111,6 +111,9 @@ export function publicInfo(req, res) {
       business.delivery_receipt_max_age_days != null ? Number(business.delivery_receipt_max_age_days) : 14,
     /** Lien avis Google (page jeu QR / 1er spin) — absent si non configuré côté commerce. */
     google_review_write_url: google_review_write_url ?? undefined,
+    welcome_bonus_enabled: Number(business.welcome_bonus_enabled) === 1,
+    welcome_bonus_amount:
+      business.welcome_bonus_amount != null ? Number(business.welcome_bonus_amount) : 10,
   });
 }
 
