@@ -11,11 +11,6 @@ import {
   getPendingEstablishment,
 } from "../config.js";
 import { escapeHtmlForServer, getApiErrorMessage, showApiError } from "../utils/apiError.js";
-import {
-  formatNotificationSendResult,
-  notificationSendErrorMessage,
-  pollLatestNotificationBatch,
-} from "./notification-send-feedback.js";
 import { slugify } from "../utils/slugify.js";
 import { CARD_TEMPLATES, BUILDER_DRAFT_KEY } from "../constants/builder.js";
 import { detectWalletPlatform } from "../utils/walletPlatform.js";
@@ -5989,40 +5984,6 @@ function initAppDashboard(slug) {
     });
   }
 
-  async function applyNotificationSendFeedback(apiFn, res, data, feedbackEl, startedAt) {
-    if (!feedbackEl) return;
-    feedbackEl.classList.remove("hidden");
-    if (!res.ok) {
-      feedbackEl.textContent = notificationSendErrorMessage(data);
-      feedbackEl.classList.remove("success");
-      feedbackEl.classList.add("error");
-      return;
-    }
-    if (data.accepted || data.async_delivery) {
-      feedbackEl.textContent = "Envoi en cours…";
-      feedbackEl.classList.remove("error");
-      feedbackEl.classList.add("success");
-      const polled = await pollLatestNotificationBatch(apiFn, { startedAt });
-      if (polled?.summary) {
-        const msg = formatNotificationSendResult(polled.summary);
-        feedbackEl.textContent = msg;
-        const sent = Number(polled.summary.sent);
-        if (Number.isFinite(sent) && sent === 0) {
-          feedbackEl.classList.remove("success");
-          feedbackEl.classList.add("error");
-        }
-      } else {
-        feedbackEl.textContent =
-          data.message || "Envoi lancé — consultez l’historique des campagnes pour le détail.";
-      }
-      return;
-    }
-    feedbackEl.textContent = formatNotificationSendResult(data);
-    const sent = Number(data.sent);
-    feedbackEl.classList.toggle("error", Number.isFinite(sent) && sent === 0);
-    feedbackEl.classList.toggle("success", !(Number.isFinite(sent) && sent === 0));
-  }
-
   async function loadAppNotificationStats() {
     try {
       const res = await api("/notifications/stats");
@@ -6366,7 +6327,6 @@ function initAppDashboard(slug) {
         "Enregistrement des textes impossible — envoi de la campagne quand même. Vérifie la connexion ou réessaie.";
     }
 
-      const sendStartedAt = Date.now();
       const res = await api("/notifications/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -6377,7 +6337,42 @@ function initAppDashboard(slug) {
         }),
       });
       const data = await res.json().catch(() => ({}));
-      await applyNotificationSendFeedback(api, res, data, notifFeedbackEl, sendStartedAt);
+      if (notifFeedbackEl) {
+        notifFeedbackEl.classList.remove("hidden");
+        if (res.ok) {
+          if (data.accepted || data.async_delivery) {
+            notifFeedbackEl.textContent = data.message || "Envoi lancé sur le serveur — consultez l’historique des campagnes pour le détail.";
+            notifFeedbackEl.classList.remove("error");
+            notifFeedbackEl.classList.add("success");
+          } else {
+          const sent = data.sent != null ? data.sent : 0;
+          const wp = data.sentWebPush != null ? data.sentWebPush : 0;
+          const pk = data.sentPassKit != null ? data.sentPassKit : 0;
+          if (sent === 0) notifFeedbackEl.textContent = data.message || "Aucun appareil n'a reçu la notification.";
+          else {
+            const ma = data.sentMerchantApp != null ? data.sentMerchantApp : 0;
+            let msg = pk > 0 && wp > 0 ? `Notification envoyée à ${sent} appareil(s) (dont ${pk} Apple Wallet, ${wp} navigateur).` : pk > 0 ? `Notification envoyée à ${sent} appareil(s) (Apple Wallet).` : `Notification envoyée à ${sent} appareil(s).`;
+            if (ma > 0) msg += ` Accusé sur votre app : ${ma}.`;
+            if (data.batch_id) msg += ` ID lot : ${data.batch_id.slice(0, 8)}…`;
+            if (data.failed > 0 && data.errors?.length) msg += ` ${data.failed} échec(s).`;
+            notifFeedbackEl.textContent = msg;
+            const prevTip = notifFeedbackEl.nextElementSibling?.classList?.contains("app-notif-feedback-tip") ? notifFeedbackEl.nextElementSibling : null;
+            if (prevTip) prevTip.remove();
+            if (pk > 0) {
+              const tip = document.createElement("p");
+              tip.className = "app-notif-feedback-tip";
+              tip.textContent = "";
+              notifFeedbackEl.after(tip);
+            }
+          }
+          notifFeedbackEl.classList.remove("error");
+          notifFeedbackEl.classList.add("success");
+          }
+        } else {
+          notifFeedbackEl.textContent = data.error || "Erreur";
+          notifFeedbackEl.classList.add("error");
+        }
+      }
       if (res.ok) loadAppNotificationStats();
     } catch (_) {
       if (notifFeedbackEl) {
@@ -6612,7 +6607,6 @@ function initAppDashboard(slug) {
     if (campaignModalFeedback) { campaignModalFeedback.classList.add("hidden"); campaignModalFeedback.textContent = ""; }
     try {
       const titleEl = document.getElementById("app-notification-banner-title");
-      const sendStartedAt = Date.now();
       const res = await api("/notifications/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -6620,11 +6614,22 @@ function initAppDashboard(slug) {
       });
       const data = await res.json().catch(() => ({}));
       if (campaignModalFeedback) {
-        await applyNotificationSendFeedback(api, res, data, campaignModalFeedback, sendStartedAt);
+        campaignModalFeedback.classList.remove("hidden");
         if (res.ok) {
+          if (data.accepted || data.async_delivery) {
+            campaignModalFeedback.textContent = data.message || "Envoi lancé sur le serveur — consultez l’historique des campagnes pour le détail.";
+          } else {
+            const sent = data.sent ?? 0;
+            campaignModalFeedback.textContent = sent > 0 ? `Envoyé à ${sent} appareil(s).` : (data.message || "Aucun appareil n'a reçu la notification.");
+          }
+          campaignModalFeedback.classList.remove("error");
+          campaignModalFeedback.classList.add("success");
           loadAppNotificationStats();
           loadCampaignSegments();
           setTimeout(closeCampaignModal, 1500);
+        } else {
+          campaignModalFeedback.textContent = data.error || "Erreur";
+          campaignModalFeedback.classList.add("error");
         }
       }
     } catch (_) {

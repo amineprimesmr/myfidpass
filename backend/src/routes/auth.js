@@ -23,7 +23,6 @@ import {
   getSubscriptionByUserId,
   hasStripeBackedActiveSubscription,
   hasPaidMerchantSubscription,
-  hasOperationalMerchantAccess,
   setPasswordResetToken,
   getPasswordResetByToken,
   deletePasswordResetToken,
@@ -163,11 +162,10 @@ function authSubscriptionPayload(userId) {
       const ownerSubRow = getSubscriptionByUserId(ownerIdStr);
       const ownerSubPayload = subscriptionPayloadForAuth(ownerIdStr, ownerSubRow);
       const ownerPaying = hasPaidMerchantSubscription(ownerIdStr);
-      const ownerAccess = hasOperationalMerchantAccess(ownerIdStr);
       const ownerEntitlements = getMerchantBusinessEntitlements(ownerIdStr);
       return {
         subscription: ownerSubPayload,
-        has_active_subscription: ownerAccess,
+        has_active_subscription: ownerPaying,
         has_paid_merchant_subscription: ownerPaying,
         entitlements: {
           ...ownerEntitlements,
@@ -180,7 +178,7 @@ function authSubscriptionPayload(userId) {
   const paying = hasPaidMerchantSubscription(userId);
   return {
     subscription: subPayload,
-    has_active_subscription: hasOperationalMerchantAccess(userId),
+    has_active_subscription: paying,
     has_paid_merchant_subscription: paying,
     entitlements,
     merchant_trial_ends_at: null,

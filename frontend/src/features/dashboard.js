@@ -4,11 +4,6 @@
  */
 import { API_BASE } from "../config.js";
 import { escapeHtmlForServer } from "../utils/apiError.js";
-import {
-  formatNotificationSendResult,
-  notificationSendErrorMessage,
-  pollLatestNotificationBatch,
-} from "./notification-send-feedback.js";
 
 export function initDashboardPage() {
   const params = new URLSearchParams(window.location.search);
@@ -366,7 +361,6 @@ export function initDashboardPage() {
     if (btn) btn.disabled = true;
     if (feedbackEl) feedbackEl.classList.add("hidden");
     try {
-      const sendStartedAt = Date.now();
       const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/notifications/send?token=${encodeURIComponent(token)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -375,28 +369,35 @@ export function initDashboardPage() {
       const data = await res.json().catch(() => ({}));
       if (feedbackEl) {
         feedbackEl.classList.remove("hidden");
-        if (!res.ok) {
-          feedbackEl.textContent = notificationSendErrorMessage(data);
-          feedbackEl.classList.remove("success");
-          feedbackEl.classList.add("error");
-        } else if (data.accepted || data.async_delivery) {
-          feedbackEl.textContent = "Envoi en cours…";
+        if (res.ok) {
+          if (data.accepted || data.async_delivery) {
+            feedbackEl.textContent = data.message || "Envoi lancé sur le serveur — consultez l’historique des campagnes pour le détail.";
+            feedbackEl.classList.remove("error");
+            feedbackEl.classList.add("success");
+          } else {
+          const sent = data.sent != null ? data.sent : 0;
+          const wp = data.sentWebPush != null ? data.sentWebPush : 0;
+          const pk = data.sentPassKit != null ? data.sentPassKit : 0;
+          if (sent === 0) feedbackEl.textContent = data.message || "Aucun appareil n'a reçu la notification.";
+          else {
+            let msg = pk > 0 && wp > 0 ? `Notification envoyée à ${sent} appareil(s) (dont ${pk} Apple Wallet, ${wp} navigateur).` : pk > 0 ? `Notification envoyée à ${sent} appareil(s) (Apple Wallet).` : `Notification envoyée à ${sent} appareil(s).`;
+            if (data.failed > 0 && data.errors?.length) msg += ` ${data.failed} échec(s).`;
+            feedbackEl.textContent = msg;
+            const prevTip = feedbackEl.nextElementSibling?.classList?.contains("dashboard-notif-feedback-tip") ? feedbackEl.nextElementSibling : null;
+            if (prevTip) prevTip.remove();
+            if (pk > 0) {
+              const tip = document.createElement("p");
+              tip.className = "dashboard-notif-feedback-tip";
+              tip.textContent = "";
+              feedbackEl.after(tip);
+            }
+          }
           feedbackEl.classList.remove("error");
           feedbackEl.classList.add("success");
-          const polled = await pollLatestNotificationBatch(api, { startedAt: sendStartedAt });
-          if (polled?.summary) {
-            feedbackEl.textContent = formatNotificationSendResult(polled.summary);
-            const sent = Number(polled.summary.sent);
-            feedbackEl.classList.toggle("error", Number.isFinite(sent) && sent === 0);
-            feedbackEl.classList.toggle("success", !(Number.isFinite(sent) && sent === 0));
-          } else {
-            feedbackEl.textContent = data.message || "Envoi lancé — consultez l’historique des campagnes.";
           }
         } else {
-          feedbackEl.textContent = formatNotificationSendResult(data);
-          const sent = Number(data.sent);
-          feedbackEl.classList.toggle("error", Number.isFinite(sent) && sent === 0);
-          feedbackEl.classList.toggle("success", !(Number.isFinite(sent) && sent === 0));
+          feedbackEl.textContent = data.error || "Erreur";
+          feedbackEl.classList.add("error");
         }
       }
       if (res.ok) loadNotificationStats();
