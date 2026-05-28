@@ -246,8 +246,7 @@ export async function deliverCustomerBroadcast({
   bumpBusinessPassRefreshTimestamp(business.id);
   const businessAfterBump = getBusinessById(business.id) || businessAfterSync || business;
   const passMs = Number(businessAfterBump?.pass_last_modified_ms) || Date.now();
-  /** 1 collapse-id par campagne (aligné version stable mai 2025 : `bcast-{ms}` + retry distinct). */
-  const broadcastCollapseId = `bcast-${passMs}`.slice(0, 64);
+  const broadcastSeq = Number(businessAfterBump?.broadcast_send_seq) || 0;
 
   // Relire la ligne commerce : évite une ligne `req.business` ou un snapshot légèrement vieux si icône
   // vient d’être PATCH juste avant l’envoi ; les timestamps alimentent le `?v=` ci-dessous.
@@ -284,15 +283,21 @@ export async function deliverCustomerBroadcast({
         }
       }
     }
-    let waveResults = await sendPassKitPushWaves(passKitTokens, { collapseId: broadcastCollapseId });
-    // 2ᵉ tentative ~400 ms (même stratégie que PATCH icône) — sans attendre l’utilisateur.
-    await new Promise((r) => setTimeout(r, 400));
-    const retryCollapseId = `${broadcastCollapseId}~r`.slice(0, 64);
-    const retryResults = await sendPassKitPushWaves(passKitTokens, { collapseId: retryCollapseId });
-    waveResults = retryResults.map((w2, i) => {
-      if (!w2.result.sent && waveResults[i]?.result?.sent) return waveResults[i];
-      return w2;
-    });
+    logger.info(
+      { businessId: business.id, batchId, passMs, broadcastSeq, passKitCount: passKitTokens.length },
+      "[dispatch] push PassKit campagne"
+    );
+    // Sans collapse-id : apns-id unique par push (évite fusion silencieuse campagne B après A).
+    const pushOpts = { collapseId: null };
+    let waveResults = await sendPassKitPushWaves(passKitTokens, pushOpts);
+    for (const delayMs of [400, 900]) {
+      await new Promise((r) => setTimeout(r, delayMs));
+      const retryResults = await sendPassKitPushWaves(passKitTokens, pushOpts);
+      waveResults = retryResults.map((w2, i) => {
+        if (!w2.result.sent && waveResults[i]?.result?.sent) return waveResults[i];
+        return w2;
+      });
+    }
     for (const { row, result } of waveResults) {
       if (result.sent) {
         sentPassKit++;

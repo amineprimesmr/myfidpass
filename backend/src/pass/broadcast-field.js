@@ -75,12 +75,12 @@ export function buildBroadcastUniquenessSuffix(rawBroadcast, lastBroadcastAt, br
 }
 
 /**
- * Suffixe visible minimal pour l’alerte `%@` (à partir du 2ᵉ envoi).
- * Sans delta visible, iOS peut mettre à jour le pass sans bannière écran verrouillé.
+ * Suffixe visible pour l’alerte `%@` — **chaque** envoi (seq ≥ 1).
+ * iOS ignore parfois la 2ᵉ alerte si seuls des ZWSP changent ; le compteur visible force le delta.
  */
 export function buildBroadcastAlertVisibleSuffix(broadcastSendSeq) {
   const seq = Number(broadcastSendSeq);
-  if (!Number.isFinite(seq) || seq < 2) return "";
+  if (!Number.isFinite(seq) || seq < 1) return "";
   return `\u00B7${seq}`;
 }
 
