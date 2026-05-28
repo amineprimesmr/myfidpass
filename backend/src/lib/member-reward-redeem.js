@@ -2,6 +2,7 @@
  * Utilisation récompense (points ou tampons) — partagé routes membre + scan intégration.
  */
 import { deductPoints, resetMemberPoints, createTransaction } from "../db.js";
+import { resolvePointsRewardFromQr } from "./reward-redeem-qr.js";
 
 /**
  * @param {object} business
@@ -57,23 +58,21 @@ export function executeMemberRewardRedeem(business, member, opts) {
   let rewardLabel = null;
 
   if (tierIndex != null && tierIndex >= 0) {
-    let tiers = business.points_reward_tiers;
-    if (typeof tiers === "string" && tiers.trim()) {
-      try {
-        tiers = JSON.parse(tiers);
-      } catch {
-        tiers = [];
-      }
+    const resolved = resolvePointsRewardFromQr(business, {
+      mode: "points",
+      tierIndex,
+      points: opts.points,
+    });
+    pointsToDeduct = resolved.pointsRequired;
+    rewardLabel = resolved.label;
+    if (pointsToDeduct <= 0) {
+      return {
+        ok: false,
+        status: 400,
+        code: "REDEEM_POINTS_OR_TIER",
+        error: "Palier ou nombre de points invalide.",
+      };
     }
-    if (!Array.isArray(tiers) || tierIndex >= tiers.length) {
-      return { ok: false, status: 400, code: "INVALID_TIER", error: "Palier de récompense invalide." };
-    }
-    const tier = tiers[tierIndex];
-    const tierPoints = Math.max(0, Math.floor(Number(tier?.points) || 0));
-    const qrPoints = Math.max(0, Math.floor(Number(opts.points) || 0));
-    // QR caisse = source de vérité pour le débit (palier DB peut être vide ou réordonné).
-    pointsToDeduct = qrPoints > 0 ? qrPoints : tierPoints;
-    rewardLabel = String(tier?.label || "").trim() || `Récompense ${pointsToDeduct} pts`;
   }
 
   if (pointsToDeduct <= 0) {

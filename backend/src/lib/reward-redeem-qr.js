@@ -65,3 +65,60 @@ export function parseMerchantScanCode(raw) {
   const memberId = uuidMatch ? uuidMatch[0] : String(raw || "").trim();
   return { memberId, rewardRedeem: null };
 }
+
+/** @param {unknown} raw */
+export function parseBusinessPointTiers(raw) {
+  let tiers = raw;
+  if (typeof tiers === "string" && tiers.trim()) {
+    try {
+      tiers = JSON.parse(tiers);
+    } catch {
+      tiers = [];
+    }
+  }
+  return Array.isArray(tiers) ? tiers : [];
+}
+
+/**
+ * Coût + libellé depuis le QR (points = source de vérité) — l’index palier DB peut être décalé vs l’UI client triée.
+ * @param {object} business
+ * @param {{ mode: string; tierIndex?: number; points?: number }} rewardRedeem
+ */
+export function resolvePointsRewardFromQr(business, rewardRedeem) {
+  const qrPoints = Math.max(0, Math.floor(Number(rewardRedeem?.points) || 0));
+  const tiers = parseBusinessPointTiers(business?.points_reward_tiers);
+  const tierIndex =
+    Number.isInteger(rewardRedeem?.tierIndex) && rewardRedeem.tierIndex >= 0
+      ? rewardRedeem.tierIndex
+      : null;
+
+  let pointsRequired = qrPoints;
+  let label = "";
+
+  if (qrPoints > 0) {
+    const match = tiers.find(
+      (t) => Math.max(0, Math.floor(Number(t?.points) || 0)) === qrPoints,
+    );
+    if (match) {
+      label = String(match.label || "").trim();
+    }
+  }
+
+  if (!label && tierIndex != null && tierIndex < tiers.length) {
+    const tier = tiers[tierIndex];
+    label = String(tier?.label || "").trim();
+    if (!pointsRequired) {
+      pointsRequired = Math.max(0, Math.floor(Number(tier?.points) || 0));
+    }
+  }
+
+  if (!pointsRequired && tierIndex != null && tierIndex < tiers.length) {
+    pointsRequired = Math.max(0, Math.floor(Number(tiers[tierIndex]?.points) || 0));
+  }
+
+  if (!label) {
+    label = pointsRequired > 0 ? `Récompense ${pointsRequired} pts` : "Récompense";
+  }
+
+  return { pointsRequired, label, tierIndex, qrPoints };
+}

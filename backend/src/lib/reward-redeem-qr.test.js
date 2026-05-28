@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { buildRewardRedeemQrPayload, parseRewardRedeemQrPayload } from "./reward-redeem-qr.js";
+import {
+  buildRewardRedeemQrPayload,
+  parseRewardRedeemQrPayload,
+  resolvePointsRewardFromQr,
+} from "./reward-redeem-qr.js";
 
 const MEMBER = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
 
@@ -24,5 +28,22 @@ describe("reward-redeem-qr", () => {
   it("encode tampons", () => {
     const raw = buildRewardRedeemQrPayload({ memberId: MEMBER, programType: "stamps" });
     expect(parseRewardRedeemQrPayload(raw)).toEqual({ memberId: MEMBER, mode: "stamps" });
+  });
+
+  it("resolve coût/libellé via points QR quand l’index DB a 0 pt", () => {
+    const business = {
+      points_reward_tiers: [
+        { points: 0, label: "Début du jeu" },
+        { points: 10, label: "Cadeau offert" },
+        { points: 50, label: "Un café offert" },
+      ],
+    };
+    const resolved = resolvePointsRewardFromQr(business, {
+      mode: "points",
+      tierIndex: 1,
+      points: 10,
+    });
+    expect(resolved.pointsRequired).toBe(10);
+    expect(resolved.label).toBe("Cadeau offert");
   });
 });

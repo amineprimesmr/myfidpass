@@ -39,7 +39,7 @@ function renderRewardCard(t, unlocked, costLine, esc, displayImageUrl, tierIndex
   return `          <li class="fid-reward-card ${mod}" role="listitem">
             <button type="button" class="fid-reward-card__surface" data-fid-reward-trigger
               data-reward-unlocked="${unlocked ? "1" : "0"}"
-              data-reward-tier-index="${String(tierIndex)}"
+              data-reward-tier-index="${String(typeof t.dbTierIndex === "number" && t.dbTierIndex >= 0 ? t.dbTierIndex : tierIndex)}"
               data-reward-points="${String(t.threshold)}"
               data-reward-threshold="${String(t.threshold)}"
               data-reward-label="${labelEnc}"

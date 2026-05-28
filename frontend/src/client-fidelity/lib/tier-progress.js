@@ -19,7 +19,8 @@ function parsePointTiersRaw(raw) {
   }
   if (!Array.isArray(tiers)) return [];
   const out = [];
-  for (const t of tiers) {
+  for (let dbTierIndex = 0; dbTierIndex < tiers.length; dbTierIndex += 1) {
+    const t = tiers[dbTierIndex];
     if (t == null) continue;
     const threshold = parseInt(String(t.points ?? t.points_required), 10);
     const label = String(t.label ?? "").trim() || "Récompense";
@@ -27,7 +28,12 @@ function parsePointTiersRaw(raw) {
     const imgRaw = t.image_url ?? t.imageUrl ?? t.image;
     const imageUrl =
       typeof imgRaw === "string" && imgRaw.trim() ? String(imgRaw).trim() : "";
-    out.push({ threshold, label, ...(imageUrl ? { imageUrl } : {}) });
+    out.push({
+      threshold,
+      label,
+      dbTierIndex,
+      ...(imageUrl ? { imageUrl } : {}),
+    });
   }
   out.sort((a, b) => a.threshold - b.threshold);
   return out;
@@ -46,9 +52,10 @@ export function parsePointTiers(business) {
   const hasSignup = parsed.some((t) => t.threshold === SIGNUP_REWARD_POINTS);
   if (hasSignup) return parsed;
   const label = signupLabel || "Récompense de bienvenue";
-  return [{ threshold: SIGNUP_REWARD_POINTS, label }, ...parsed].sort(
-    (a, b) => a.threshold - b.threshold,
-  );
+  return [
+    { threshold: SIGNUP_REWARD_POINTS, label, dbTierIndex: -1 },
+    ...parsed,
+  ].sort((a, b) => a.threshold - b.threshold);
 }
 
 /**

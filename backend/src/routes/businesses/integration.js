@@ -16,7 +16,7 @@ import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
 import { pushPassKitAfterMemberBalanceChange } from "../../lib/wallet-reward-tier-notify.js";
 import { syncGoogleWalletObjectForMember } from "../../google-wallet.js";
 import { ensureOperationalSubscription, getApiBase } from "./shared.js";
-import { parseMerchantScanCode } from "../../lib/reward-redeem-qr.js";
+import { parseMerchantScanCode, resolvePointsRewardFromQr } from "../../lib/reward-redeem-qr.js";
 import { executeMemberRewardRedeem } from "../../lib/member-reward-redeem.js";
 import {
   computeRawPointsForCredit,
@@ -47,27 +47,13 @@ function resolveRewardRedeemPreview(business, member, rewardRedeem) {
       eligible: balance >= requiredStamps,
     };
   }
-  let tiers = business.points_reward_tiers;
-  if (typeof tiers === "string" && tiers.trim()) {
-    try {
-      tiers = JSON.parse(tiers);
-    } catch {
-      tiers = [];
-    }
-  }
-  const tierIndex = rewardRedeem.tierIndex ?? 0;
-  const tier = Array.isArray(tiers) ? tiers[tierIndex] : null;
-  const qrPoints = Math.max(0, Math.floor(Number(rewardRedeem.points) || 0));
-  const tierPoints = Math.max(0, Math.floor(Number(tier?.points) || 0));
-  const pointsRequired = qrPoints > 0 ? qrPoints : tierPoints;
-  const label =
-    String(tier?.label || "").trim() ||
-    (pointsRequired > 0 ? `Récompense ${pointsRequired} pts` : "Récompense");
+  const resolved = resolvePointsRewardFromQr(business, rewardRedeem);
   const balance = Number(member.points) || 0;
+  const pointsRequired = resolved.pointsRequired;
   return {
     mode: "points",
-    tier_index: tierIndex,
-    label,
+    tier_index: resolved.tierIndex ?? rewardRedeem.tierIndex ?? 0,
+    label: resolved.label,
     points_required: pointsRequired,
     points_balance: balance,
     eligible: balance >= pointsRequired && pointsRequired > 0,
