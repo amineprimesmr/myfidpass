@@ -4,6 +4,9 @@
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
 import { getUserById } from "./users.js";
+import { isProductionEnvironment } from "../lib/production-env.js";
+
+export { isProductionEnvironment } from "../lib/production-env.js";
 
 const db = getDb();
 
@@ -265,10 +268,11 @@ export function hasStripeBackedActiveSubscription(userId) {
     .toLowerCase();
   if (!(st === "active" || st === "trialing" || st === "past_due")) return false;
   const sid = sub.stripe_subscription_id ? String(sub.stripe_subscription_id).trim() : "";
-  return /^sub_[A-Za-z0-9]+$/.test(sid);
+  if (!/^sub_[A-Za-z0-9]+$/.test(sid)) return false;
+  return isSubscriptionPeriodStillValid(sub);
 }
 
-/** Abonnement App Store actif (`apple_iap:<originalTransactionId>`). */
+/** Abonnement App Store actif (`apple_iap:<originalTransactionId>`) — période non expirée. */
 export function hasAppleBackedActiveSubscription(userId) {
   const sub = getSubscriptionByUserId(userId);
   if (!sub) return false;
@@ -277,7 +281,15 @@ export function hasAppleBackedActiveSubscription(userId) {
     .toLowerCase();
   if (!(st === "active" || st === "trialing" || st === "past_due")) return false;
   const sid = sub.stripe_subscription_id ? String(sub.stripe_subscription_id).trim() : "";
-  return sid.startsWith(APPLE_IAP_SUBSCRIPTION_PREFIX);
+  if (!sid.startsWith(APPLE_IAP_SUBSCRIPTION_PREFIX)) return false;
+  return isSubscriptionPeriodStillValid(sub);
+}
+
+function isSubscriptionPeriodStillValid(sub) {
+  if (!sub?.current_period_end) return true;
+  const endMs = Date.parse(String(sub.current_period_end));
+  if (!Number.isFinite(endMs)) return true;
+  return endMs > Date.now();
 }
 
 /** Ligne créée par POST `/dashboard/dev-simulate-payment` (test sans Stripe / App Store). */
@@ -296,13 +308,14 @@ export function hasDevSimulatedActiveSubscription(userId) {
   return st === "active" || st === "trialing" || st === "past_due";
 }
 
-/** Abonnement encaissé (Stripe, App Store ou simulation dev active). */
+/** Abonnement encaissé (Stripe, App Store ou simulation dev active en local uniquement). */
 export function hasPaidMerchantSubscription(userId) {
-  return (
-    hasStripeBackedActiveSubscription(userId) ||
-    hasAppleBackedActiveSubscription(userId) ||
-    hasDevSimulatedActiveSubscription(userId)
-  );
+  const paidViaStore =
+    hasStripeBackedActiveSubscription(userId) || hasAppleBackedActiveSubscription(userId);
+  if (isProductionEnvironment()) {
+    return paidViaStore;
+  }
+  return paidViaStore || hasDevSimulatedActiveSubscription(userId);
 }
 
 /**

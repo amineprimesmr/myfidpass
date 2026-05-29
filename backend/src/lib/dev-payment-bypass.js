@@ -1,7 +1,9 @@
 /**
  * Bypass paiement / abonnement réservé au développement local (jamais en production).
- * Aligné sur X-Dev-Bypass-Payment: 1 + DEV_BYPASS_PAYMENT=true.
  */
+import { isProductionEnvironment } from "./production-env.js";
+
 export function devPaymentBypass(req) {
+  if (isProductionEnvironment()) return false;
   return process.env.DEV_BYPASS_PAYMENT === "true" && req.get("X-Dev-Bypass-Payment") === "1";
 }

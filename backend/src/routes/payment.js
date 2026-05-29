@@ -29,10 +29,60 @@ import { requireAuth } from "../middleware/auth.js";
 import { notifyAdminsPlatformEvent } from "../lib/admin-notify.js";
 import {
   syncAppleSubscriptionForUser,
-  hasAppleBackedActiveSubscription,
+  reconcileAppleSubscriptionForUser,
   isAppStoreServerApiConfigured,
+  handleAppleServerNotification,
 } from "../lib/apple-iap.js";
+import { isProductionEnvironment } from "../lib/production-env.js";
 import { isDevSimulatedSubscriptionRow } from "../db/subscriptions.js";
+
+/** Limite sync Apple : 20 req / minute / utilisateur. */
+const appleSyncRateByUser = new Map();
+
+function assertAppleSyncRateLimit(userId) {
+  const key = String(userId || "").trim();
+  if (!key) return;
+  const now = Date.now();
+  let entry = appleSyncRateByUser.get(key);
+  if (!entry || now > entry.resetAt) {
+    entry = { count: 0, resetAt: now + 60_000 };
+  }
+  entry.count += 1;
+  appleSyncRateByUser.set(key, entry);
+  if (entry.count > 20) {
+    const err = new Error("rate_limit");
+    err.code = "apple_sync_rate_limited";
+    throw err;
+  }
+}
+
+function appleSyncErrorResponse(e, res) {
+  const code = e?.code || "apple_sync_failed";
+  console.error("[payment] apple sync:", e?.message || e);
+  const messages = {
+    apple_bundle_mismatch: "Transaction Apple non valide pour cette app.",
+    transaction_id_mismatch: "Identifiant de transaction incohérent.",
+    apple_transaction_invalid: e.message || "Transaction illisible.",
+    apple_transaction_owned_by_other_user:
+      "Cet abonnement App Store est déjà lié à un autre compte MyFidpass.",
+    apple_app_account_token_mismatch:
+      "Cet achat App Store appartient à un autre compte MyFidpass.",
+    apple_unknown_product: "Produit App Store non reconnu.",
+    apple_api_required: "Validation App Store indisponible. Réessayez plus tard.",
+    missing_apple_transaction_id: "Identifiant de transaction requis.",
+    apple_sync_rate_limited: "Trop de tentatives. Réessayez dans une minute.",
+  };
+  const status =
+    code === "apple_sync_rate_limited"
+      ? 429
+      : code === "apple_api_required" || code === "apple_transaction_invalid"
+        ? 503
+        : 400;
+  return res.status(status).json({
+    error: messages[code] || "Impossible de valider l’abonnement App Store.",
+    code,
+  });
+}
 
 const router = Router();
 const stripe =
@@ -1130,28 +1180,28 @@ router.post("/apple/sync-transaction", requireAuth, async (req, res) => {
       code: "missing_apple_transaction",
     });
   }
+  if (isProductionEnvironment() && !transactionId) {
+    return res.status(400).json({
+      error: "transaction_id requis en production.",
+      code: "missing_apple_transaction_id",
+    });
+  }
   try {
+    assertAppleSyncRateLimit(req.user.id);
     const result = await syncAppleSubscriptionForUser(req.user.id, {
       signedTransactionInfo: signed,
       transactionId,
     });
     return res.json({
       ok: true,
-      source: isAppStoreServerApiConfigured() ? "app_store_server_api" : "storekit_jws",
+      source: result.source || (isAppStoreServerApiConfigured() ? "app_store_server_api" : "storekit_jws"),
       subscription_status: result.subscription_status,
       has_active_subscription: result.has_active_subscription,
+      has_paid_merchant_subscription: result.has_paid_merchant_subscription,
       original_transaction_id: result.original_transaction_id,
     });
   } catch (e) {
-    const code = e?.code || "apple_sync_failed";
-    console.error("[payment] apple/sync-transaction:", e?.message || e);
-    if (code === "apple_bundle_mismatch" || code === "transaction_id_mismatch") {
-      return res.status(400).json({ error: "Transaction Apple non valide pour cette app.", code });
-    }
-    if (code === "apple_transaction_invalid") {
-      return res.status(400).json({ error: e.message || "Transaction illisible.", code });
-    }
-    return res.status(500).json({ error: "Impossible de valider l’abonnement App Store.", code });
+    return appleSyncErrorResponse(e, res);
   }
 });
 
@@ -1160,37 +1210,66 @@ router.post("/apple/sync-transaction", requireAuth, async (req, res) => {
  * Réaligne l’accès sur la dernière transaction Apple déjà stockée (restauration achats).
  */
 router.post("/apple/reconcile-subscription", requireAuth, async (req, res) => {
-  if (hasAppleBackedActiveSubscription(req.user.id)) {
-    return res.json({
-      ok: true,
-      has_active_subscription: hasOperationalMerchantAccess(req.user.id),
-      source: "local_row",
-    });
+  try {
+    assertAppleSyncRateLimit(req.user.id);
+    const reconciled = await reconcileAppleSubscriptionForUser(req.user.id);
+    if (reconciled) {
+      return res.json({
+        ok: true,
+        has_active_subscription: reconciled.has_active_subscription,
+        has_paid_merchant_subscription: reconciled.has_paid_merchant_subscription,
+        source: "app_store_server_api",
+        subscription_status: reconciled.subscription_status,
+      });
+    }
+  } catch (e) {
+    return appleSyncErrorResponse(e, res);
   }
+
   const signed = req.body?.signed_transaction_info ?? req.body?.signedTransactionInfo;
   const transactionId = req.body?.transaction_id ?? req.body?.transactionId;
-  if (!signed && !transactionId) {
-    return res.json({
-      ok: false,
-      has_active_subscription: hasPaidMerchantSubscription(req.user.id) || isUserInMerchantTrial(req.user.id),
-      message: "Aucune transaction Apple à synchroniser.",
-    });
+  if (signed || transactionId) {
+    try {
+      assertAppleSyncRateLimit(req.user.id);
+      const result = await syncAppleSubscriptionForUser(req.user.id, {
+        signedTransactionInfo: signed,
+        transactionId,
+      });
+      return res.json({
+        ok: true,
+        has_active_subscription: result.has_active_subscription,
+        has_paid_merchant_subscription: result.has_paid_merchant_subscription,
+        source: result.source || "apple_sync",
+        subscription_status: result.subscription_status,
+      });
+    } catch (e) {
+      return appleSyncErrorResponse(e, res);
+    }
   }
-  try {
-    const result = await syncAppleSubscriptionForUser(req.user.id, {
-      signedTransactionInfo: signed,
-      transactionId,
-    });
-    return res.json({
-      ok: true,
-      has_active_subscription: result.has_active_subscription,
-      source: "apple_sync",
-      subscription_status: result.subscription_status,
-    });
-  } catch (e) {
-    console.error("[payment] apple/reconcile-subscription:", e?.message || e);
-    return res.status(500).json({ error: "Impossible de synchroniser avec l’App Store." });
-  }
+
+  return res.json({
+    ok: hasPaidMerchantSubscription(req.user.id),
+    has_active_subscription: hasPaidMerchantSubscription(req.user.id),
+    has_paid_merchant_subscription: hasPaidMerchantSubscription(req.user.id),
+    source: "local_row_validated",
+    message: "Aucune transaction Apple à resynchroniser.",
+  });
 });
+
+/**
+ * Webhook App Store Server Notifications v2.
+ * Production URL : https://<api>/api/payment/apple-webhook
+ */
+export async function applePaymentWebhookHandler(req, res) {
+  try {
+    const result = await handleAppleServerNotification(req.body);
+    return res.json({ received: true, ...result });
+  } catch (e) {
+    console.error("[payment] apple webhook:", e?.message || e);
+    const code = e?.code || "apple_webhook_failed";
+    const status = code === "missing_signed_payload" || code === "invalid_signed_payload" ? 400 : 500;
+    return res.status(status).json({ error: "Impossible de traiter la notification Apple.", code });
+  }
+}
 
 export default router;

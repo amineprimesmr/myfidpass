@@ -45,8 +45,10 @@ export function humanizeEmailSendError(rawError) {
 }
 
 function buildOtpBodies(code, introText, introHtml) {
-  const otpLineText = `MyFidpass : votre code de connexion est ${code}. Il expire dans 5 minutes.`;
-  const otpLineHtml = `<p>MyFidpass : votre code de connexion est <strong style="font-size:20px;letter-spacing:2px">${code}</strong>.</p><p>Il expire dans 5 minutes.</p>`;
+  const autofillHintText = `@myfidpass.fr #${code}`;
+  const autofillHintHtml = `<p style="color:#888;font-size:12px;margin-top:16px">${autofillHintText}</p>`;
+  const otpLineText = `MyFidpass : votre code de connexion est ${code}. Il expire dans 5 minutes.\n\n${autofillHintText}`;
+  const otpLineHtml = `<p>MyFidpass : votre code de connexion est <strong style="font-size:20px;letter-spacing:2px">${code}</strong>.</p><p>Il expire dans 5 minutes.</p>${autofillHintHtml}`;
   return {
     rich: {
       text: `${introText}\n\n${otpLineText}\n\n— MyFidpass`,

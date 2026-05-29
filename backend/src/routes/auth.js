@@ -1368,8 +1368,8 @@ router.post("/email/send-code", validate(schemas.emailSend), async (req, res) =>
     const mailResult = await sendMail({
       to: emailNorm,
       subject: "Votre code MyFidpass",
-      text: `MyFidpass : votre code de connexion est ${code}. Il expire dans 5 minutes.`,
-      html: `<p>MyFidpass : votre code de connexion est <strong>${code}</strong>.</p><p>Il expire dans 5 minutes.</p>`,
+      text: `MyFidpass : votre code de connexion est ${code}. Il expire dans 5 minutes.\n\n@myfidpass.fr #${code}`,
+      html: `<p>MyFidpass : votre code de connexion est <strong>${code}</strong>.</p><p>Il expire dans 5 minutes.</p><p style="color:#888;font-size:12px">@myfidpass.fr #${code}</p>`,
     });
     if (!mailResult.sent) {
       console.error("[email/send-code] sendMail failed for", emailNorm, mailResult.error || "");

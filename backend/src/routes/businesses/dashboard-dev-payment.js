@@ -18,6 +18,15 @@ const router = Router({ mergeParams: true });
 
 const DEV_SUB_ID = "dev_simulated";
 
+import { isProductionEnvironment } from "../../lib/production-env.js";
+
+router.use((req, res, next) => {
+  if (isProductionEnvironment()) {
+    return res.status(404).json({ error: "Not found" });
+  }
+  next();
+});
+
 function ensureOwner(req, res) {
   const business = getBusinessBySlug(req.params.slug);
   const r = checkDashboardIdentity(business, req);

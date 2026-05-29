@@ -9,6 +9,7 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import logger from "./lib/logger.js";
+import { isProductionEnvironment } from "./lib/production-env.js";
 import {
   DATA_DIR_PATH,
   DB_FILE_PATH,
@@ -49,7 +50,7 @@ import placeCategoryRouter from "./routes/place-category.js";
 import findPlaceRouter from "./routes/find-place.js";
 import placeEnrichmentRouter from "./routes/place-enrichment.js";
 import placesRouter from "./routes/places.js";
-import paymentRouter, { paymentWebhookHandler } from "./routes/payment.js";
+import paymentRouter, { paymentWebhookHandler, applePaymentWebhookHandler } from "./routes/payment.js";
 import webhooksGbpPubsubRouter from "./routes/webhooks-gbp-pubsub.js";
 import adminRouter from "./routes/admin.js";
 import passesRouter from "./routes/passes.js";
@@ -107,8 +108,7 @@ async function handlePassDemo(req, res) {
 dotenv.config({ path: join(__dirname, "..", ".env") });
 logAdminBootstrap();
 
-const isProduction = process.env.NODE_ENV === "production";
-if (isProduction) {
+if (isProductionEnvironment()) {
   console.log("[startup] Production — vérification des variables critiques…");
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
     console.error("[startup] ERREUR: En production, JWT_SECRET doit être défini et faire au moins 32 caractères. Railway → Variables → ajoute JWT_SECRET puis redéploie. Voir docs/RAILWAY-CRASH-DEPANNAGE.md");
@@ -239,6 +239,7 @@ app.post("/api/payment/webhook", paymentWebhookHandler);
 // Flyer IA : logo + jusqu’à 3 images de référence (base64) peuvent dépasser 8 Mo en JSON.
 app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ extended: true, limit: "64kb" }));
+app.post("/api/payment/apple-webhook", applePaymentWebhookHandler);
 
 // Logging structuré HTTP (toutes les requêtes) — JSON en prod, pretty en dev
 // Exclure les health checks + sampling 10% sur GET 2xx hot paths pour ne pas saturer les logs
