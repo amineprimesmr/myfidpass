@@ -2,6 +2,8 @@ import {
   DEFAULT_REVENUE_SECTOR_ID,
   getRevenueSectorConfig,
   MYFIDPASS_MONTHLY_COST,
+  REVENUE_GOOGLE_REVIEW_FROM_LOYAL_RATE,
+  REVENUE_LOYAL_CLIENT_RATE,
 } from "./fintap-revenue-simulator-data.js";
 
 /** Jours ouvrés moyens par mois pour l'estimation. */
