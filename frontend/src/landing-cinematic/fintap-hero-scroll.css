@@ -486,8 +486,12 @@
     max-width: 352px;
     padding-right: 0.36rem;
   }
+  /* Le champ est au-dessus du mockup : on compense le padding bas retiré avec l’ancien bloc CTA sous l’iPhone */
+  .fintap-hero-iphone.fintap-hero-iphone--scroll {
+    --fintap-hero-bottom-bleed: clamp(3.5rem, 11vw, 6.5rem);
+  }
   .fintap-hero-iphone__scene {
-    padding-bottom: clamp(2.5rem, 7vw, 4rem);
+    padding-bottom: clamp(6.5rem, 18vw, 9.5rem);
   }
   .fintap-hero-iphone__btn--primary { display: none; }
   .fintap-hero-iphone__search-input { padding-right: 0.25rem; }
