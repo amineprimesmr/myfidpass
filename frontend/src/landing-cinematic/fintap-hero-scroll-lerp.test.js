@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   clamp,
   computeFintapHeroPhoneStyle,
+  computeFintapHeroPhoneStyleMobile,
   fintapHeroScrollRatio,
   fintapHeroScrollRatioFromViewport,
   getFintapCommerceScrollDelta,
@@ -73,6 +74,15 @@ describe("computeFintapHeroPhoneStyle", () => {
     expect(s.rotateZ).toBe(0);
     expect(s.scale).toBe(1);
     expect(s.translateY).toBe(176);
+  });
+});
+
+describe("computeFintapHeroPhoneStyleMobile", () => {
+  it("descend moins qu’en desktop à ratio 1 (mockup dans le panneau bleu)", () => {
+    const desktop = computeFintapHeroPhoneStyle(1);
+    const mobile = computeFintapHeroPhoneStyleMobile(1);
+    expect(mobile.translateY).toBeLessThan(desktop.translateY);
+    expect(mobile.translateY).toBe(36);
   });
 });
 

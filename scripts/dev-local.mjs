@@ -162,8 +162,20 @@ async function up() {
     frontendUp = await isPortOpen(5174);
   }
 
+  // PID vivant mais port fermé = boot bloqué ou crash silencieux → on nettoie avant relance.
+  if (!backendUp && backendPid && isPidAlive(backendPid)) {
+    stopPid(backendPid);
+    await new Promise((r) => setTimeout(r, 500));
+    backendPid = null;
+  }
+  if (!frontendUp && frontendPid && isPidAlive(frontendPid)) {
+    stopPid(frontendPid);
+    await new Promise((r) => setTimeout(r, 500));
+    frontendPid = null;
+  }
+
   if (!backendUp) {
-    backendPid = spawnDetached(nodeCmd, ["--watch", "backend/src/index.js"], backendLog);
+    backendPid = spawnDetached(nodeCmd, ["backend/src/index.js"], backendLog);
     writePid(backendPidFile, backendPid);
   }
   if (!frontendUp) {
@@ -171,7 +183,7 @@ async function up() {
     writePid(frontendPidFile, frontendPid);
   }
 
-  const backendReady = await waitForPort(3001, 40000);
+  const backendReady = await waitForPort(3001, 180000);
   const frontendReady = await waitForPort(5174, 40000);
 
   const backPidStatus = backendPid

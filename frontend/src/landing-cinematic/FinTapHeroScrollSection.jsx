@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   computeFintapHeroPhoneStyle,
+  computeFintapHeroPhoneStyleMobile,
   fintapHeroScrollRatio,
   FINTAP_SCROLL_TO_COMMERCE_EVENT,
   getFintapCommerceScrollDelta,
@@ -153,7 +154,10 @@ export function FinTapHeroScrollSection() {
     const paint = (ratio) => {
       if (Math.abs(ratio - lastAppliedRatioRef.current) < 0.0009) return;
       lastAppliedRatioRef.current = ratio;
-      const style = computeFintapHeroPhoneStyle(ratio);
+      const style =
+        window.innerWidth >= 1024
+          ? computeFintapHeroPhoneStyle(ratio)
+          : computeFintapHeroPhoneStyleMobile(ratio);
       if (window.innerWidth >= 1024) {
         style.translateX = lerp(0, -260, ratio);
         style.scale = lerp(4.45, 1, ratio);

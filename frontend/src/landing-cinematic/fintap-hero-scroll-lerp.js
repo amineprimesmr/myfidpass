@@ -38,6 +38,8 @@ const TRANSLATE_Y_END_REST = 0;
 /** Marge haute de la scène (fixe en CSS) — l’ancienne animation marginTop 24→200 est dans le translateY. */
 const FINTAP_SCENE_LAYOUT_MARGIN_PX = 24;
 const GAP_MOTION_PX = 200 - FINTAP_SCENE_LAYOUT_MARGIN_PX;
+/** Mobile : descente scroll réduite pour garder le mockup dans le panneau bleu. */
+const MOBILE_GAP_MOTION_PX = 36;
 
 /**
  * @param {number} scrollY scroll courant
@@ -132,5 +134,22 @@ export function computeFintapHeroPhoneStyle(scrollRatio) {
     translateY:
       lerp(TRANSLATE_Y_START_HIGH, TRANSLATE_Y_END_REST, t) +
       lerp(0, GAP_MOTION_PX, t),
+  };
+}
+
+/**
+ * Variante mobile : même tilt/zoom de base, mais ~4× moins de translateY en fin de scroll.
+ * @param {number} scrollRatio
+ */
+export function computeFintapHeroPhoneStyleMobile(scrollRatio) {
+  const t = clamp(scrollRatio, 0, 1);
+  return {
+    rotateX: TILT_X_DEG * (1 - t),
+    rotateY: TILT_Y_DEG * (1 - t),
+    rotateZ: TILT_Z_DEG * (1 - t),
+    scale: lerp(SCALE_ZOOMED, SCALE_REST, t),
+    translateY:
+      lerp(TRANSLATE_Y_START_HIGH, TRANSLATE_Y_END_REST, t) +
+      lerp(0, MOBILE_GAP_MOTION_PX, t),
   };
 }

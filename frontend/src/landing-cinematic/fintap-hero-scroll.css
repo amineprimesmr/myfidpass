@@ -491,7 +491,7 @@
     --fintap-hero-bottom-bleed: clamp(3.5rem, 11vw, 6.5rem);
   }
   .fintap-hero-iphone__scene {
-    padding-bottom: clamp(6.5rem, 18vw, 9.5rem);
+    padding-bottom: clamp(4.5rem, 12vw, 6.5rem);
   }
   .fintap-hero-iphone__btn--primary { display: none; }
   .fintap-hero-iphone__search-input { padding-right: 0.25rem; }
