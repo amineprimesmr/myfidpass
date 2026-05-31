@@ -78,9 +78,8 @@ export function computeRevenueSimulation(input) {
  */
 export function buildRevenueSimulatorDisclaimer(results) {
   return (
-    `* D'après les résultats obtenus par nos clients dans le secteur « ${results.sectorLabel} ». ` +
-    `En moyenne +${results.visitUpliftPercent} % de visites en plus et +${results.basketUpliftPercent} % sur le panier moyen. ` +
-    `Abonnement Pro à ${formatEuro(MYFIDPASS_MONTHLY_COST, { maximumFractionDigits: 2 })}/mois déduit du gain net.`
+    `* D'après nos clients en « ${results.sectorLabel} » : ` +
+    `+${results.visitUpliftPercent} % de visites et +${results.basketUpliftPercent} % de panier en moyenne.`
   );
 }
 
