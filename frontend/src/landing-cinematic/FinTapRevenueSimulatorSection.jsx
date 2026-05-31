@@ -160,26 +160,20 @@ export function FinTapRevenueSimulatorSection() {
                   <strong>+{results.extraGoogleReviewsPerMonth} / mois</strong>
                 </li>
                 <li>
-                  <span className="fintap-revenue-simulator__stat-label">CA mensuel actuel</span>
-                  <strong>{formatEuro(results.baseMonthlyRevenue)}</strong>
-                </li>
-                <li>
                   <span className="fintap-revenue-simulator__stat-label">Investissement / mois</span>
                   <strong>
                     {formatEuro(results.subscriptionMonthly, { maximumFractionDigits: 2 })}
                   </strong>
                 </li>
-                <li>
-                  <span className="fintap-revenue-simulator__stat-label">Retour sur abonnement</span>
-                  <strong>×{results.roiMultiple}</strong>
-                </li>
-                <li>
-                  <span className="fintap-revenue-simulator__stat-label">Gain net mensuel*</span>
-                  <strong>+{formatEuro(results.netMonthly)}</strong>
-                </li>
-                <li>
-                  <span className="fintap-revenue-simulator__stat-label">Gain net annuel*</span>
-                  <strong>{formatEuro(results.netAnnual)}</strong>
+                <li className="fintap-revenue-simulator__stat--net">
+                  <div className="fintap-revenue-simulator__stat-net-row">
+                    <span className="fintap-revenue-simulator__stat-label">Gain net mensuel*</span>
+                    <strong>+{formatEuro(results.netMonthly)}</strong>
+                  </div>
+                  <div className="fintap-revenue-simulator__stat-net-row">
+                    <span className="fintap-revenue-simulator__stat-label">Gain net annuel*</span>
+                    <strong>{formatEuro(results.netAnnual)}</strong>
+                  </div>
                 </li>
               </ul>
 

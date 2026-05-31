@@ -241,6 +241,21 @@
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
+.fintap-revenue-simulator__stat--net {
+  gap: 0.55rem;
+}
+
+.fintap-revenue-simulator__stat-net-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.fintap-revenue-simulator__stat-net-row + .fintap-revenue-simulator__stat-net-row {
+  padding-top: 0.55rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
 .fintap-revenue-simulator__stat-label {
   font-size: 0.68rem;
   color: var(--fintap-rev-muted);
