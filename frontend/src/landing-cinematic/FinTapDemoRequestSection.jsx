@@ -108,7 +108,6 @@ export function FinTapDemoRequestSection() {
       <div className="fintap-demo__inner">
         <div className="fintap-demo__layout">
           <ScrollReveal className="fintap-demo__aside" variant="slide-left">
-            <p className="fintap-demo__eyebrow">On vous guide</p>
             <h2 id="fintap-demo-heading" className="fintap-demo__title">
               Demander une démo
             </h2>
