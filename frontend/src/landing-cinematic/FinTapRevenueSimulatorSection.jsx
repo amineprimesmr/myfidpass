@@ -122,22 +122,6 @@ export function FinTapRevenueSimulatorSection() {
             </div>
 
             <div className="fintap-revenue-simulator__compare" aria-live="polite">
-              <div className="fintap-revenue-simulator__compare-row fintap-revenue-simulator__compare-row--gain">
-                <span className="fintap-revenue-simulator__compare-label">
-                  Revenu additionnel estimé
-                </span>
-                <strong className="fintap-revenue-simulator__compare-value">
-                  +{formatEuro(results.additionalMonthly)} /mois
-                </strong>
-              </div>
-              <div className="fintap-revenue-simulator__compare-row fintap-revenue-simulator__compare-row--cost">
-                <span className="fintap-revenue-simulator__compare-label">
-                  Investissement Myfidpass
-                </span>
-                <strong className="fintap-revenue-simulator__compare-value">
-                  {formatEuro(MYFIDPASS_MONTHLY_COST, { maximumFractionDigits: 2 })} /mois
-                </strong>
-              </div>
               <div className="fintap-revenue-simulator__compare-net">
                 <div>
                   <span className="fintap-revenue-simulator__compare-label">Gain net estimé</span>
@@ -149,9 +133,6 @@ export function FinTapRevenueSimulatorSection() {
                   ×{results.roiMultiple} votre investissement
                 </span>
               </div>
-              <span className="fintap-revenue-simulator__sim-pill">
-                {clientsPerDay} clients/j
-              </span>
             </div>
 
             <div className="fintap-revenue-simulator__sim-details">

@@ -136,49 +136,9 @@
 }
 
 .fintap-revenue-simulator__compare {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
   margin-top: 1.5rem;
   padding-top: 1.25rem;
   border-top: 1px solid var(--fintap-rev-line);
-}
-
-.fintap-revenue-simulator__compare-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.35rem 1rem;
-  padding: 0.7rem 0.85rem;
-  border-radius: 0.85rem;
-}
-
-.fintap-revenue-simulator__compare-row--gain {
-  background: rgba(39, 243, 169, 0.12);
-  border: 1px solid rgba(39, 243, 169, 0.35);
-}
-
-.fintap-revenue-simulator__compare-row--cost {
-  background: #f5f5f7;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.fintap-revenue-simulator__compare-label {
-  font-size: 0.8125rem;
-  color: var(--fintap-rev-muted);
-}
-
-.fintap-revenue-simulator__compare-value {
-  font-size: clamp(1.05rem, 3.2vw, 1.25rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-  color: var(--fintap-rev-ink);
-}
-
-.fintap-revenue-simulator__compare-row--gain .fintap-revenue-simulator__compare-value {
-  color: #047857;
 }
 
 .fintap-revenue-simulator__compare-net {
@@ -191,6 +151,11 @@
   border-radius: 0.95rem;
   background: #0a0a0a;
   color: #fff;
+}
+
+.fintap-revenue-simulator__compare-label {
+  font-size: 0.8125rem;
+  color: var(--fintap-rev-muted);
 }
 
 .fintap-revenue-simulator__compare-net .fintap-revenue-simulator__compare-label {
