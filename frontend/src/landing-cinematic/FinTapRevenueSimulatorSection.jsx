@@ -8,6 +8,7 @@ import {
   REVENUE_SIMULATOR_DEFAULTS,
 } from "./fintap-revenue-simulator-data.js";
 import {
+  buildRevenueSimulatorDisclaimer,
   computeRevenueSimulation,
   formatEuro,
 } from "./fintap-revenue-simulator.js";
@@ -190,9 +191,7 @@ export function FinTapRevenueSimulatorSection() {
               </ul>
 
               <p className="fintap-revenue-simulator__disclaimer">
-                * Estimation indicative — secteur «&nbsp;{results.sectorLabel}&nbsp;».
-                Abonnement Pro à {formatEuro(MYFIDPASS_MONTHLY_COST, { maximumFractionDigits: 2 })}
-                /mois déduit du gain net.
+                {buildRevenueSimulatorDisclaimer(results)}
               </p>
 
               <a href="/app?fromLandingOnboarding=1" className="fintap-revenue-simulator__start">

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildRevenueSimulatorDisclaimer,
   computeRevenueSimulation,
   formatEuro,
   REVENUE_WORKING_DAYS_PER_MONTH,
@@ -45,6 +46,21 @@ describe("mapSuggestedCategoryToSectorId", () => {
     expect(mapSuggestedCategoryToSectorId("coiffure")).toBe("coiffure");
     expect(mapSuggestedCategoryToSectorId("unknown")).toBe("fastfood");
     expect(mapSuggestedCategoryToSectorId(null)).toBe("fastfood");
+  });
+});
+
+describe("buildRevenueSimulatorDisclaimer", () => {
+  it("mentionne le secteur et les hausses moyennes observées", () => {
+    const results = computeRevenueSimulation({
+      clientsPerDay: 60,
+      avgBasket: 22,
+      sectorId: "fastfood",
+    });
+    const text = buildRevenueSimulatorDisclaimer(results);
+    expect(text).toContain("Restauration / Fast-food");
+    expect(text).toContain("+22 % de visites");
+    expect(text).toContain("+8 % sur le panier moyen");
+    expect(text).toContain("49,99");
   });
 });
 

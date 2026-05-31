@@ -49,10 +49,14 @@ export function computeRevenueSimulation(input) {
     subscriptionAnnual > 0
       ? Math.round((additionalAnnual / subscriptionAnnual) * 10) / 10
       : 0;
+  const visitUpliftPercent = Math.round(sector.visitUplift * 100);
+  const basketUpliftPercent = Math.round(sector.basketUplift * 100);
 
   return {
     sectorId: sector.id,
     sectorLabel: sector.label,
+    visitUpliftPercent,
+    basketUpliftPercent,
     clientsPerDay,
     avgBasket: basket,
     visitsPerMonth,
@@ -66,6 +70,18 @@ export function computeRevenueSimulation(input) {
     roiMultiple,
     extraVisitsPerMonth: Math.round(visitsPerMonth * sector.visitUplift),
   };
+}
+
+/**
+ * @param {ReturnType<typeof computeRevenueSimulation>} results
+ * @returns {string}
+ */
+export function buildRevenueSimulatorDisclaimer(results) {
+  return (
+    `* D'après les résultats obtenus par nos clients dans le secteur « ${results.sectorLabel} ». ` +
+    `En moyenne +${results.visitUpliftPercent} % de visites en plus et +${results.basketUpliftPercent} % sur le panier moyen. ` +
+    `Abonnement Pro à ${formatEuro(MYFIDPASS_MONTHLY_COST, { maximumFractionDigits: 2 })}/mois déduit du gain net.`
+  );
 }
 
 /**
