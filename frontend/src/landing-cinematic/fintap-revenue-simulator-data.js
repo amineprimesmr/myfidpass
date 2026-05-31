@@ -61,11 +61,8 @@ export const REVENUE_SIMULATOR_DEFAULTS = {
   avgBasket: 22,
 };
 
-/** Part estimée des passages mensuels convertis en clients fidélisés. */
-export const REVENUE_LOYAL_CLIENT_RATE = 0.14;
-
-/** Part des clients fidélisés générant un avis Google supplémentaire / mois. */
-export const REVENUE_GOOGLE_REVIEW_FROM_LOYAL_RATE = 0.1;
+/** Part des clients fidélisés laissant un avis Google en plus / mois. */
+export const REVENUE_GOOGLE_REVIEW_FROM_LOYAL_RATE = 0.12;
 
 /**
  * @param {string | null | undefined} categoryId

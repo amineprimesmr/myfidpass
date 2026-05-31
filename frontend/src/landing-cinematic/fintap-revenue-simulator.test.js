@@ -23,6 +23,16 @@ describe("computeRevenueSimulation", () => {
     expect(result.roiMultiple).toBeGreaterThan(1);
   });
 
+  it("aligne les clients fidélisés sur clients/jour (≈38 pour 60/j)", () => {
+    const result = computeRevenueSimulation({
+      clientsPerDay: 60,
+      avgBasket: 22,
+      sectorId: "fastfood",
+    });
+    expect(result.loyalClientsPerMonth).toBe(38);
+    expect(result.extraGoogleReviewsPerMonth).toBe(5);
+  });
+
   it("utilise le panier par défaut du secteur si absent", () => {
     const result = computeRevenueSimulation({
       clientsPerDay: 30,

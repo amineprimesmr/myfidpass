@@ -3,11 +3,20 @@ import {
   getRevenueSectorConfig,
   MYFIDPASS_MONTHLY_COST,
   REVENUE_GOOGLE_REVIEW_FROM_LOYAL_RATE,
-  REVENUE_LOYAL_CLIENT_RATE,
 } from "./fintap-revenue-simulator-data.js";
 
 /** Jours ouvrés moyens par mois pour l'estimation. */
 export const REVENUE_WORKING_DAYS_PER_MONTH = 26;
+
+/**
+ * Clients fidélisés / mois — indexé sur clients/jour (≈38 pour 60/j en restauration).
+ * @param {number} clientsPerDay
+ * @param {number} visitUplift
+ */
+export function estimateLoyalClientsPerMonth(clientsPerDay, visitUplift) {
+  const ratio = 0.55 + visitUplift * 0.4;
+  return Math.max(1, Math.round(clientsPerDay * ratio));
+}
 
 /**
  * @param {number} value
@@ -53,7 +62,7 @@ export function computeRevenueSimulation(input) {
       : 0;
   const visitUpliftPercent = Math.round(sector.visitUplift * 100);
   const basketUpliftPercent = Math.round(sector.basketUplift * 100);
-  const loyalClientsPerMonth = Math.max(1, Math.round(visitsPerMonth * REVENUE_LOYAL_CLIENT_RATE));
+  const loyalClientsPerMonth = estimateLoyalClientsPerMonth(clientsPerDay, sector.visitUplift);
   const extraGoogleReviewsPerMonth = Math.max(
     1,
     Math.round(loyalClientsPerMonth * REVENUE_GOOGLE_REVIEW_FROM_LOYAL_RATE)
