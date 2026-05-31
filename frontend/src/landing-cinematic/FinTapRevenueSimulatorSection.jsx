@@ -3,6 +3,7 @@ import { FinTapLiquidSlider } from "./FinTapLiquidSlider.jsx";
 import { ScrollReveal } from "./ScrollReveal.jsx";
 import {
   DEFAULT_REVENUE_SECTOR_ID,
+  MYFIDPASS_MONTHLY_COST,
   REVENUE_SECTOR_OPTIONS,
   REVENUE_SIMULATOR_DEFAULTS,
 } from "./fintap-revenue-simulator-data.js";
@@ -119,13 +120,32 @@ export function FinTapRevenueSimulatorSection() {
               />
             </div>
 
-            <div className="fintap-revenue-simulator__sim-foot" aria-live="polite">
-              <div>
-                <span className="fintap-revenue-simulator__sim-payout-label">
+            <div className="fintap-revenue-simulator__compare" aria-live="polite">
+              <div className="fintap-revenue-simulator__compare-row fintap-revenue-simulator__compare-row--gain">
+                <span className="fintap-revenue-simulator__compare-label">
                   Revenu additionnel estimé
                 </span>
-                <span className="fintap-revenue-simulator__sim-payout-value">
+                <strong className="fintap-revenue-simulator__compare-value">
                   +{formatEuro(results.additionalMonthly)} /mois
+                </strong>
+              </div>
+              <div className="fintap-revenue-simulator__compare-row fintap-revenue-simulator__compare-row--cost">
+                <span className="fintap-revenue-simulator__compare-label">
+                  Investissement Myfidpass
+                </span>
+                <strong className="fintap-revenue-simulator__compare-value">
+                  {formatEuro(MYFIDPASS_MONTHLY_COST, { maximumFractionDigits: 2 })} /mois
+                </strong>
+              </div>
+              <div className="fintap-revenue-simulator__compare-net">
+                <div>
+                  <span className="fintap-revenue-simulator__compare-label">Gain net estimé</span>
+                  <strong className="fintap-revenue-simulator__compare-net-value">
+                    +{formatEuro(results.netMonthly)} /mois
+                  </strong>
+                </div>
+                <span className="fintap-revenue-simulator__compare-roi">
+                  ×{results.roiMultiple} votre investissement
                 </span>
               </div>
               <span className="fintap-revenue-simulator__sim-pill">
@@ -135,8 +155,9 @@ export function FinTapRevenueSimulatorSection() {
 
             <div className="fintap-revenue-simulator__sim-details">
               <p className="fintap-revenue-simulator__results-sub">
-                Soit {formatEuro(results.additionalAnnual)} par an grâce à plus de visites
-                et un panier moyen en hausse.
+                Pour seulement {formatEuro(MYFIDPASS_MONTHLY_COST, { maximumFractionDigits: 2 })}
+                /mois, soit {formatEuro(results.additionalAnnual)} par an de revenus additionnels
+                — {results.roiMultiple}&nbsp;fois votre investissement.
               </p>
 
               <ul className="fintap-revenue-simulator__stats">
@@ -149,8 +170,18 @@ export function FinTapRevenueSimulatorSection() {
                   <strong>{formatEuro(results.baseMonthlyRevenue)}</strong>
                 </li>
                 <li>
+                  <span className="fintap-revenue-simulator__stat-label">Investissement / mois</span>
+                  <strong>
+                    {formatEuro(results.subscriptionMonthly, { maximumFractionDigits: 2 })}
+                  </strong>
+                </li>
+                <li>
                   <span className="fintap-revenue-simulator__stat-label">Retour sur abonnement</span>
                   <strong>×{results.roiMultiple}</strong>
+                </li>
+                <li>
+                  <span className="fintap-revenue-simulator__stat-label">Gain net mensuel*</span>
+                  <strong>+{formatEuro(results.netMonthly)}</strong>
                 </li>
                 <li>
                   <span className="fintap-revenue-simulator__stat-label">Gain net annuel*</span>
@@ -160,7 +191,8 @@ export function FinTapRevenueSimulatorSection() {
 
               <p className="fintap-revenue-simulator__disclaimer">
                 * Estimation indicative — secteur «&nbsp;{results.sectorLabel}&nbsp;».
-                Abonnement Pro 49,99&nbsp;€/mois déduit du gain net.
+                Abonnement Pro à {formatEuro(MYFIDPASS_MONTHLY_COST, { maximumFractionDigits: 2 })}
+                /mois déduit du gain net.
               </p>
 
               <a href="/app?fromLandingOnboarding=1" className="fintap-revenue-simulator__start">

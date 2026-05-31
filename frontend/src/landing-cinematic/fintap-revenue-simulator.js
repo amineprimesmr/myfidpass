@@ -41,7 +41,9 @@ export function computeRevenueSimulation(input) {
     visitsPerMonth * (1 + sector.visitUplift) * basket * sector.basketUplift;
   const additionalMonthly = Math.round(extraFromVisits + extraFromBasket);
   const additionalAnnual = additionalMonthly * 12;
-  const subscriptionAnnual = Math.round(MYFIDPASS_MONTHLY_COST * 12);
+  const subscriptionMonthly = MYFIDPASS_MONTHLY_COST;
+  const subscriptionAnnual = Math.round(subscriptionMonthly * 12);
+  const netMonthly = Math.round(additionalMonthly - subscriptionMonthly);
   const netAnnual = additionalAnnual - subscriptionAnnual;
   const roiMultiple =
     subscriptionAnnual > 0
@@ -57,7 +59,9 @@ export function computeRevenueSimulation(input) {
     baseMonthlyRevenue: Math.round(baseMonthlyRevenue),
     additionalMonthly,
     additionalAnnual,
+    subscriptionMonthly,
     subscriptionAnnual,
+    netMonthly,
     netAnnual,
     roiMultiple,
     extraVisitsPerMonth: Math.round(visitsPerMonth * sector.visitUplift),

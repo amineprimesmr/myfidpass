@@ -16,6 +16,7 @@ describe("computeRevenueSimulation", () => {
     expect(result.visitsPerMonth).toBe(50 * REVENUE_WORKING_DAYS_PER_MONTH);
     expect(result.additionalMonthly).toBeGreaterThan(0);
     expect(result.additionalAnnual).toBe(result.additionalMonthly * 12);
+    expect(result.netMonthly).toBe(Math.round(result.additionalMonthly - 49.99));
     expect(result.roiMultiple).toBeGreaterThan(1);
   });
 
