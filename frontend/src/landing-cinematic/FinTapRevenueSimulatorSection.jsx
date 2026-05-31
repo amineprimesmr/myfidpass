@@ -183,10 +183,12 @@ export function FinTapRevenueSimulatorSection() {
                 {buildRevenueSimulatorDisclaimer(results)}
               </p>
 
-              <a href="/app?fromLandingOnboarding=1" className="fintap-revenue-simulator__start">
-                Créer ma carte fidélité
-                <span aria-hidden>→</span>
-              </a>
+              <div className="fintap-revenue-simulator__cta-wrap">
+                <a href="/get" className="fintap-revenue-simulator__start">
+                  Télécharger l&apos;app
+                  <span aria-hidden>→</span>
+                </a>
+              </div>
             </div>
           </div>
         </div>
