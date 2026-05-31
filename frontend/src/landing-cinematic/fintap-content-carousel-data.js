@@ -1,7 +1,6 @@
-/** Images carousel hero — assets/content (n).jpg */
+/** Images carousel — versions légères 520px (/assets/carousel/) */
 export const FINTAP_CONTENT_CAROUSEL_IMAGES = Array.from({ length: 10 }, (_, i) => {
-  const name = `content (${i + 1}).jpg`;
-  return `/assets/${encodeURIComponent(name)}`;
+  return `/assets/carousel/content-${i + 1}.jpg`;
 });
 
 /**
