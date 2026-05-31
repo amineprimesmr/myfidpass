@@ -51,6 +51,11 @@ export function computeRevenueSimulation(input) {
       : 0;
   const visitUpliftPercent = Math.round(sector.visitUplift * 100);
   const basketUpliftPercent = Math.round(sector.basketUplift * 100);
+  const loyalClientsPerMonth = Math.max(1, Math.round(visitsPerMonth * REVENUE_LOYAL_CLIENT_RATE));
+  const extraGoogleReviewsPerMonth = Math.max(
+    1,
+    Math.round(loyalClientsPerMonth * REVENUE_GOOGLE_REVIEW_FROM_LOYAL_RATE)
+  );
 
   return {
     sectorId: sector.id,
@@ -68,7 +73,8 @@ export function computeRevenueSimulation(input) {
     netMonthly,
     netAnnual,
     roiMultiple,
-    extraVisitsPerMonth: Math.round(visitsPerMonth * sector.visitUplift),
+    loyalClientsPerMonth,
+    extraGoogleReviewsPerMonth,
   };
 }
 

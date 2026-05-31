@@ -152,8 +152,12 @@ export function FinTapRevenueSimulatorSection() {
 
               <ul className="fintap-revenue-simulator__stats">
                 <li>
-                  <span className="fintap-revenue-simulator__stat-label">Visites en plus</span>
-                  <strong>+{results.extraVisitsPerMonth} / mois</strong>
+                  <span className="fintap-revenue-simulator__stat-label">Clients fidélisés</span>
+                  <strong>{results.loyalClientsPerMonth}</strong>
+                </li>
+                <li>
+                  <span className="fintap-revenue-simulator__stat-label">Avis Google en plus</span>
+                  <strong>+{results.extraGoogleReviewsPerMonth} / mois</strong>
                 </li>
                 <li>
                   <span className="fintap-revenue-simulator__stat-label">CA mensuel actuel</span>
