@@ -107,15 +107,15 @@ function initLandingHeroAnim() {
 }
 
 export function initLandingAnimations() {
-  if (document.getElementById("landing-cinematic-root")) {
-    return;
+  const cinematicRoot = document.getElementById("landing-cinematic-root");
+  if (!cinematicRoot) {
+    initLandingReveal();
+    if (document.getElementById("landing-main")?.classList.contains("hidden") === false) {
+      initLandingHeroAnim();
+      import("./landing-mockup-notif.js").then((m) => m.initLandingMockupNotif());
+      import("./landing-gradient-carousel.js").then((m) => m.mountLandingGradientCarousel());
+      import("../helmet/index.jsx").then((m) => m.mountHelmet());
+    }
   }
-  initLandingReveal();
-  if (document.getElementById("landing-main")?.classList.contains("hidden") === false) {
-    initLandingHeroAnim();
-    initLandingFaq();
-    import("./landing-mockup-notif.js").then((m) => m.initLandingMockupNotif());
-    import("./landing-gradient-carousel.js").then((m) => m.mountLandingGradientCarousel());
-    import("../helmet/index.jsx").then((m) => m.mountHelmet());
-  }
+  initLandingFaq();
 }

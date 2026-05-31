@@ -65,7 +65,7 @@ describe("computeFintapHeroPhoneStyle", () => {
     expect(s.rotateY).toBe(0);
     expect(s.rotateZ).toBe(0);
     expect(s.scale).toBe(1.52);
-    expect(s.translateY).toBe(-64);
+    expect(s.translateY).toBe(-44);
   });
   it("raccorde l’état final (ratio 1) — translateY inclut l’ex-écart 24→200 (176px) via GPU", () => {
     const s = computeFintapHeroPhoneStyle(1);

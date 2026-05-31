@@ -1,0 +1,282 @@
+/* Simulateur revenus — fond site unifié + carte blanche */
+
+.fintap-revenue-simulator {
+  --fintap-rev-ink: #0a0a0a;
+  --fintap-rev-muted: #5c5c5c;
+  --fintap-rev-line: rgba(0, 0, 0, 0.08);
+  --fintap-rev-mint: #27f3a9;
+  --fintap-steps-nav-clear: max(6.5rem, calc(env(safe-area-inset-top, 0px) + 5.35rem));
+  position: relative;
+  overflow: visible;
+  padding: clamp(3rem, 8vw, 5rem) 0 clamp(3.5rem, 9vw, 6rem);
+  scroll-margin-top: var(--fintap-steps-nav-clear);
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: var(--fintap-rev-ink);
+  background: var(--fidpass-surface, #f5f5f7);
+}
+
+.fintap-revenue-simulator__hero {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 0 clamp(1.25rem, 4vw, 2rem) clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.fintap-revenue-simulator__title {
+  margin: 0 auto;
+  max-width: min(100%, 38rem);
+  font-size: clamp(2rem, 6.8vw, 3.05rem);
+  font-weight: 560;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  text-wrap: balance;
+  background: linear-gradient(142deg, #01040d 0%, #0b1120 34%, #334155 68%, #f1f5f9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.fintap-revenue-simulator__lead {
+  margin: 1rem auto 0;
+  max-width: 28rem;
+  font-size: clamp(0.92rem, 2.2vw, 1.02rem);
+  line-height: 1.55;
+  color: var(--fintap-rev-muted);
+}
+
+.fintap-revenue-simulator__sim-wrap {
+  position: relative;
+  z-index: 2;
+  max-width: min(100%, 52rem);
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 1.5rem);
+}
+
+.fintap-revenue-simulator__sim {
+  position: relative;
+  border-radius: clamp(1.25rem, 2.5vw, 1.75rem);
+  padding: 1.25rem 1.35rem 1.4rem;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.35s ease;
+}
+
+@media (min-width: 640px) {
+  .fintap-revenue-simulator__sim {
+    padding: 1.5rem 1.75rem 1.65rem;
+  }
+}
+
+.fintap-revenue-simulator__sim.is-active {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 12px 32px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(39, 243, 169, 0.22);
+}
+
+.fintap-revenue-simulator__sim-head {
+  margin: 0 0 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.fintap-revenue-simulator__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.fintap-revenue-simulator__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: #334155;
+}
+
+.fintap-revenue-simulator__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.fintap-revenue-simulator__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #065f46;
+  background: rgba(39, 243, 169, 0.45);
+}
+
+.fintap-revenue-simulator__select,
+.fintap-revenue-simulator__input {
+  width: 100%;
+  min-height: 2.85rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #fff;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #0f172a;
+  outline: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.fintap-revenue-simulator__select:focus,
+.fintap-revenue-simulator__input:focus {
+  border-color: rgba(10, 152, 255, 0.45);
+  box-shadow: 0 0 0 3px rgba(10, 152, 255, 0.12);
+}
+
+.fintap-revenue-simulator__slider-block {
+  margin-top: 0.75rem;
+}
+
+.fintap-revenue-simulator__slider-label {
+  margin: 0 0 0.15rem;
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: #334155;
+}
+
+.fintap-revenue-simulator__sim-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3.25rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--fintap-rev-line);
+}
+
+.fintap-revenue-simulator__sim-payout-label {
+  font-size: 0.8125rem;
+  color: var(--fintap-rev-muted);
+}
+
+.fintap-revenue-simulator__sim-payout-value {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: clamp(1.35rem, 4vw, 1.65rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--fintap-rev-ink);
+}
+
+.fintap-revenue-simulator__sim-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #334155;
+  background: #f5f5f7;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.fintap-revenue-simulator__sim-details {
+  margin-top: 1.25rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid var(--fintap-rev-line);
+}
+
+.fintap-revenue-simulator__results-sub {
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--fintap-rev-muted);
+}
+
+.fintap-revenue-simulator__stats {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.fintap-revenue-simulator__stats li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.75rem;
+  background: #f5f5f7;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.fintap-revenue-simulator__stat-label {
+  font-size: 0.68rem;
+  color: var(--fintap-rev-muted);
+}
+
+.fintap-revenue-simulator__stats strong {
+  font-size: 0.95rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  color: var(--fintap-rev-ink);
+}
+
+.fintap-revenue-simulator__disclaimer {
+  margin: 0 0 1rem;
+  font-size: 0.68rem;
+  line-height: 1.4;
+  color: #71717a;
+}
+
+.fintap-revenue-simulator__start {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.85rem;
+  padding: 0.65rem 1.35rem;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+  background: #0a0a0a;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+  transition: transform 0.16s ease, box-shadow 0.2s ease;
+}
+
+.fintap-revenue-simulator__start:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+@media (max-width: 479px) {
+  .fintap-revenue-simulator__stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fintap-revenue-simulator__start:hover {
+    transform: none;
+  }
+}

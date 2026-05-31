@@ -81,11 +81,9 @@ function navigateAfterSuccessfulPayment(isAppEmbed) {
   window.location.href = "/app?subscription_paid=1";
 }
 
-/** Montant affiché dans la feuille Apple Pay / Google Pay (centimes), aligné sur « Total à payer » du parcours. */
-function walletSheetAmountCents(isAnnual, trialDaysResolved) {
-  if (!isAnnual) return 100;
-  if (trialDaysResolved === 0) return 100;
-  return 0;
+/** Montant affiché dans la feuille Apple Pay / Google Pay (centimes) — 1 €. */
+function walletSheetAmountCents() {
+  return 100;
 }
 
 export default function SaasProPaymentPage() {
@@ -138,8 +136,6 @@ export default function SaasProPaymentPage() {
   const paymentRequestButtonElementRef = useRef(null);
   const liquidGlassSwitcherRef = useRef(null);
   const [authHandoffTick, setAuthHandoffTick] = useState(0);
-  /** Jours d’essai Stripe renvoyés par l’API (`null` = pas encore chargé). */
-  const [stripeTrialDays, setStripeTrialDays] = useState(null);
   /** Sans JWT : pas d’appel Stripe — évite d’afficher des champs « fantômes » non montés. */
   const [needsLoginForPayment, setNeedsLoginForPayment] = useState(() =>
     typeof window !== "undefined" && isPaymentRoute ? !getAuthToken() : false
@@ -174,7 +170,6 @@ export default function SaasProPaymentPage() {
       setSuccess("");
       setElementsReady(false);
       setSessionReady(false);
-      setStripeTrialDays(null);
       setStripeFieldsLive(false);
       setWalletBtnMounted(null);
 
@@ -233,11 +228,6 @@ export default function SaasProPaymentPage() {
         if (cancelled) return;
         clientSecretRef.current = clientSecret;
         setConfirmMode(nextMode);
-        if (typeof data.trial_days === "number" && !Number.isNaN(data.trial_days)) {
-          setStripeTrialDays(data.trial_days);
-        }
-        const trialDaysResolved =
-          typeof data.trial_days === "number" && !Number.isNaN(data.trial_days) ? data.trial_days : null;
         const confirmModeForSession = nextMode;
 
         try {
@@ -324,7 +314,7 @@ export default function SaasProPaymentPage() {
 
         const mountAppleGooglePayWhenReady = async () => {
           try {
-            const walletCents = walletSheetAmountCents(annual, trialDaysResolved);
+            const walletCents = walletSheetAmountCents();
             const paymentRequest = stripe.paymentRequest({
               country: "FR",
               currency: "eur",
@@ -408,7 +398,6 @@ export default function SaasProPaymentPage() {
         void mountAppleGooglePayWhenReady();
       } catch (err) {
         if (!cancelled) {
-          setStripeTrialDays(null);
           setStripeFieldsLive(false);
           setError(err?.message || "Impossible de charger le module de paiement sécurisé.");
         }
@@ -445,35 +434,8 @@ export default function SaasProPaymentPage() {
       : "Sans engagement, annulable à tout moment\u202f!";
     const renewAmount = annual ? "34 € /mois" : "49,99 € /mois";
 
-    if (!annual) {
-      return [
-        { title: "Aujourd’hui", subtitle: "Offre premier mois", amount: "Payez 1€", icon: "lock" },
-        {
-          title: formatDateFr(renewAnchor),
-          subtitle: renewSubtitle,
-          amount: renewAmount,
-          icon: "check",
-        },
-      ];
-    }
-    if (stripeTrialDays === 0) {
-      return [
-        { title: "Aujourd’hui", subtitle: "Offre premier mois", amount: "Payez 1€", icon: "lock" },
-        {
-          title: formatDateFr(renewAnchor),
-          subtitle: renewSubtitle,
-          amount: renewAmount,
-          icon: "check",
-        },
-      ];
-    }
     return [
-      {
-        title: "Aujourd’hui",
-        subtitle: "Essai gratuit — enregistrement de carte, aucun prélèvement",
-        amount: "0€",
-        icon: "lock",
-      },
+      { title: "Aujourd’hui", subtitle: "Offre premier mois", amount: "Payez 1€", icon: "lock" },
       {
         title: formatDateFr(renewAnchor),
         subtitle: renewSubtitle,
@@ -481,7 +443,7 @@ export default function SaasProPaymentPage() {
         icon: "check",
       },
     ];
-  }, [annual, stripeTrialDays]);
+  }, [annual]);
 
   const priceLine = annual
     ? { main: "399€", detail: "facturé annuellement" }
@@ -551,13 +513,9 @@ export default function SaasProPaymentPage() {
           <h1>DÉBLOQUEZ TOUT</h1>
           <p className="saas-pay-checkout-trust-lead">
             {annual ? (
-              stripeTrialDays === 0 ? (
-                <>
-                  Commencez pour <strong>1&nbsp;€</strong>, puis <strong>399&nbsp;€&nbsp;/&nbsp;an</strong>
-                </>
-              ) : (
-                <>Essayez gratuitement pendant 1&nbsp;mois</>
-              )
+              <>
+                Commencez pour <strong>1&nbsp;€</strong>, puis <strong>399&nbsp;€&nbsp;/&nbsp;an</strong>
+              </>
             ) : (
               <>Commencez à fidéliser dès aujourd&apos;hui pour 1&nbsp;€</>
             )}
@@ -780,8 +738,6 @@ export default function SaasProPaymentPage() {
                   "Paiement en cours..."
                 ) : initializing ? (
                   "Chargement du module..."
-                ) : annual && stripeTrialDays !== 0 && stripeTrialDays !== null ? (
-                  <span className="saas-pay-continue-label">Commencer le mois offert</span>
                 ) : (
                   <span className="saas-pay-continue-label">Commencer pour 1€</span>
                 )}

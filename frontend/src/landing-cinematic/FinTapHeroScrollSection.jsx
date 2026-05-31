@@ -19,6 +19,8 @@ import {
 import "./fintap-hero-scroll.css";
 import "./fintap-hero-blue-surface.css";
 import { FinTapHeroDeskCtas } from "./FinTapHeroDeskCtas.jsx";
+import { FinTapHeroMobileLogo } from "./FinTapHeroMobileLogo.jsx";
+import { FinTapHeroMediaBadge } from "./FinTapHeroMediaBadge.jsx";
 
 const HERO_IPHONE_IMG = "/assets/iphone-custom-clean.png";
 const HERO_IPHONE_IMG_MOBILE = "/assets/iphone-custom-clean-mobile.png";
@@ -377,7 +379,7 @@ export function FinTapHeroScrollSection() {
   }, []);
 
   useEffect(() => {
-    if (!ctaVisible && !isMobile) {
+    if (isMobile || !ctaVisible) {
       setPlacesSearching(false);
       return;
     }
@@ -540,6 +542,7 @@ export function FinTapHeroScrollSection() {
       className="hero fintap-hero-iphone fintap-hero-iphone--scroll"
       ref={sectionRef}
     >
+      <FinTapHeroMobileLogo />
       <FinTapHeroDeskCtas />
       <div className="hero__text fintap-hero-iphone__text">
         <h1 className="fintap-hero-iphone__h1">
@@ -548,8 +551,9 @@ export function FinTapHeroScrollSection() {
           DE FIDÉLITÉ
         </h1>
         <p className="fintap-hero-iphone__lead">
-          Une carte de fidélité simple à déployer, simple à utiliser, pensée
-          pour les commerçants.
+          {isMobile
+            ? "Vos clients scannent une fois. Votre carte reste dans leur poche."
+            : "Une carte de fidélité simple à déployer, simple à utiliser, pensée pour les commerçants."}
         </p>
       </div>
       <div className="fintap-hero-iphone__experience">
@@ -586,92 +590,116 @@ export function FinTapHeroScrollSection() {
             <br />
             votre commerce ?
           </p>
-          <label className="fintap-hero-iphone__search" aria-label="Nom de votre commerce" ref={searchWrapRef}>
-            <span className="fintap-hero-iphone__search-icon" aria-hidden="true">
-              <img src="/assets/logos/google.png" alt="" width="18" height="18" loading="lazy" />
-            </span>
-            <input
-              ref={searchInputRef}
-              type="text"
-              className="fintap-hero-iphone__search-input"
-              placeholder="Nom de votre commerce"
-              autoComplete="organization"
-              value={shopQuery}
-              onFocus={() => {
-                if (placePredictions.length > 0) setPredictionsOpen(true);
-              }}
-              onChange={(e) => {
-                setShopQuery(e.target.value);
-                setShopPlaceId("");
-                setNoSuggestionsVisible(false);
-                setShopPlaceConflictError("");
-              }}
-            />
-            {placesSearching || placeProbeBusy ? (
-              <span
-                className="fintap-hero-iphone__search-cta fintap-hero-iphone__search-cta--busy"
-                aria-live="polite"
-                aria-label="Recherche en cours"
-                role="status"
-              >
-                <span className="fintap-hero-iphone__search-cta__spinner" aria-hidden="true" />
-              </span>
-            ) : (
-              <a
-                href={startHref}
-                className="fintap-hero-iphone__search-cta"
-                aria-label="Commencer"
-                title="Commencer"
-                onClick={onStartCtaClick}
-              >
-                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-                  <path
-                    d="M4.5 10h9m0 0-3.5-3.5M13.5 10l-3.5 3.5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+          {isMobile ? (
+            <div className="fintap-hero-iphone__download-wrap">
+              <a href="/get" className="fintap-hero-iphone__download-app">
+                <span className="fintap-hero-iphone__download-app-label">Télécharger l&apos;app</span>
+                <span className="fintap-hero-iphone__download-app-arrow" aria-hidden="true">
+                  <svg viewBox="0 0 20 20" focusable="false">
+                    <path
+                      d="M4.5 10h9m0 0-3.5-3.5M13.5 10l-3.5 3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
               </a>
-            )}
-            {predictionsOpen && placePredictions.length > 0 ? (
-              <div className="fintap-hero-iphone__search-dropdown" role="listbox" aria-label="Suggestions commerces">
-                {placePredictions.map((pred, idx) => (
-                  <button
-                    key={`${pred.place_id || pred.description || "pred"}-${idx}`}
-                    type="button"
-                    className="fintap-hero-iphone__search-option"
-                    onPointerDown={(e) => {
-                      e.preventDefault();
-                      applyPrediction(pred);
-                    }}
+              <p className="fintap-hero-iphone__download-caption">+130 commerces équipés</p>
+            </div>
+          ) : (
+            <>
+              <label className="fintap-hero-iphone__search" aria-label="Nom de votre commerce" ref={searchWrapRef}>
+                <span className="fintap-hero-iphone__search-icon" aria-hidden="true">
+                  <img src="/assets/logos/google.png" alt="" width="18" height="18" loading="lazy" />
+                </span>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  className="fintap-hero-iphone__search-input"
+                  placeholder="Nom de votre commerce"
+                  autoComplete="organization"
+                  value={shopQuery}
+                  onFocus={() => {
+                    if (placePredictions.length > 0) setPredictionsOpen(true);
+                  }}
+                  onChange={(e) => {
+                    setShopQuery(e.target.value);
+                    setShopPlaceId("");
+                    setNoSuggestionsVisible(false);
+                    setShopPlaceConflictError("");
+                  }}
+                />
+                {placesSearching || placeProbeBusy ? (
+                  <span
+                    className="fintap-hero-iphone__search-cta fintap-hero-iphone__search-cta--busy"
+                    aria-live="polite"
+                    aria-label="Recherche en cours"
+                    role="status"
                   >
-                    <span className="fintap-hero-iphone__search-option-main">
-                      {pred.main_text || pred.description}
-                    </span>
-                    {pred.secondary_text ? (
-                      <span className="fintap-hero-iphone__search-option-sub">{pred.secondary_text}</span>
-                    ) : null}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </label>
-          {shopPlaceConflictError ? (
-            <p className="fintap-hero-iphone__search-conflict" role="alert">
-              {shopPlaceConflictError}
-            </p>
-          ) : null}
-          {noSuggestionsVisible && shopQuery.trim().length >= 2 && !placesSearching ? (
-            <p className="fintap-hero-iphone__search-empty-hint" role="status">
-              Aucun commerce trouvé pour l’instant. Précisez le nom ou ajoutez la ville, puis choisissez une suggestion
-              dans la liste.
-            </p>
-          ) : null}
+                    <span className="fintap-hero-iphone__search-cta__spinner" aria-hidden="true" />
+                  </span>
+                ) : (
+                  <a
+                    href={startHref}
+                    className="fintap-hero-iphone__search-cta"
+                    aria-label="Commencer"
+                    title="Commencer"
+                    onClick={onStartCtaClick}
+                  >
+                    <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                      <path
+                        d="M4.5 10h9m0 0-3.5-3.5M13.5 10l-3.5 3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </a>
+                )}
+                {predictionsOpen && placePredictions.length > 0 ? (
+                  <div className="fintap-hero-iphone__search-dropdown" role="listbox" aria-label="Suggestions commerces">
+                    {placePredictions.map((pred, idx) => (
+                      <button
+                        key={`${pred.place_id || pred.description || "pred"}-${idx}`}
+                        type="button"
+                        className="fintap-hero-iphone__search-option"
+                        onPointerDown={(e) => {
+                          e.preventDefault();
+                          applyPrediction(pred);
+                        }}
+                      >
+                        <span className="fintap-hero-iphone__search-option-main">
+                          {pred.main_text || pred.description}
+                        </span>
+                        {pred.secondary_text ? (
+                          <span className="fintap-hero-iphone__search-option-sub">{pred.secondary_text}</span>
+                        ) : null}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </label>
+              {shopPlaceConflictError ? (
+                <p className="fintap-hero-iphone__search-conflict" role="alert">
+                  {shopPlaceConflictError}
+                </p>
+              ) : null}
+              {noSuggestionsVisible && shopQuery.trim().length >= 2 && !placesSearching ? (
+                <p className="fintap-hero-iphone__search-empty-hint" role="status">
+                  Aucun commerce trouvé pour l’instant. Précisez le nom ou ajoutez la ville, puis choisissez une suggestion
+                  dans la liste.
+                </p>
+              ) : null}
+            </>
+          )}
         </div>
       </div>
+      <FinTapHeroMediaBadge placement="bottom" />
     </section>
   );
 }

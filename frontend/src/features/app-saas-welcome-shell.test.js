@@ -56,18 +56,15 @@ describe("app-saas-welcome-shell", () => {
     document.body.innerHTML = "";
   });
 
-  it("applySaaSFrcMessaging affiche le mode essai actif", () => {
-    const future = new Date(Date.now() + 864e5 * 3).toISOString();
+  it("applySaaSFrcMessaging affiche l’offre 1 € pour les comptes non abonnés", () => {
     applySaaSFrcMessaging({
       paid: false,
-      trialHero: true,
       showSubscribeStrip: true,
-      trialEndRaw: future,
-      formatEndingHeadline: () => "L’essai prend fin dans 3 jours",
     });
     const cta = document.getElementById("app-saas-frc-cta");
     expect(cta?.classList.contains("hidden")).toBe(false);
-    expect(document.getElementById("app-saas-frc-strip-status")?.textContent).toContain("3 jours");
+    expect(document.getElementById("app-saas-frc-strip-status")?.textContent).toContain("1 €");
+    expect(document.getElementById("app-saas-frc-subtitle")?.textContent).toContain("1 €");
     expect(document.getElementById("app-app")?.classList.contains("app-saas-trial-chrome-active")).toBe(true);
   });
 
@@ -99,7 +96,7 @@ describe("app-saas-welcome-shell", () => {
     expect(document.getElementById("app-app")?.classList.contains("app-saas-welcome-active")).toBe(true);
   });
 
-  it("syncSaaSWelcomeChrome garde le cluster actif quand le chrome trial est forcé", () => {
+  it("syncSaaSWelcomeChrome garde le cluster actif quand le chrome abonnement est forcé", () => {
     const root = document.getElementById("app-app");
     root?.classList.add("app-saas-trial-chrome-active");
     syncSaaSWelcomeChrome();

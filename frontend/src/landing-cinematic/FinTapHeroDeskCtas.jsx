@@ -1,31 +1,13 @@
-import { useLayoutEffect } from "react";
-import { updateAuthNavLinks } from "../router/index.js";
 import "./fintap-hero-desk-ctas.css";
+import { FinTapHeroMediaBadge } from "./FinTapHeroMediaBadge.jsx";
 
-const IOS_APP_DEFAULT = "6759921605";
-
-function iosAppStoreUrl() {
-  const raw =
-    typeof import.meta !== "undefined" ? import.meta.env?.VITE_IOS_APP_STORE_ID : "";
-  const id = String(raw || "").trim() || IOS_APP_DEFAULT;
-  return `https://apps.apple.com/fr/app/id${id}`;
-}
-
-/**
- * Boutons hero (mobile + desktop) : dans le panneau bleu, scrollent avec le hero (pas fixed).
- */
+/** Bouton télécharger (desktop) + badge TF1 en haut à droite. */
 export function FinTapHeroDeskCtas() {
-  useLayoutEffect(() => {
-    updateAuthNavLinks();
-  }, []);
-
   return (
     <div className="fintap-hero-desk-ctas">
       <a
         className="fintap-hero-desk-cta fintap-hero-desk-cta--app"
-        href={iosAppStoreUrl()}
-        target="_blank"
-        rel="noopener noreferrer"
+        href="/get"
       >
         <svg
           className="fintap-hero-desk-cta__icon fintap-hero-desk-cta__icon--apple"
@@ -40,12 +22,7 @@ export function FinTapHeroDeskCtas() {
         </svg>
         <span className="fintap-hero-desk-cta__label">télécharger l&apos;app</span>
       </a>
-      <a
-        className="fintap-hero-desk-cta fintap-hero-desk-cta--login landing-nav-login-link"
-        href="/creer-ma-carte?mode=login&redirect=/app"
-      >
-        <span className="fintap-hero-desk-cta__label">se connecter</span>
-      </a>
+      <FinTapHeroMediaBadge placement="top" />
     </div>
   );
 }

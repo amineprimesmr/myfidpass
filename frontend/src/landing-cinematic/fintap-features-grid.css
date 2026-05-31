@@ -9,7 +9,7 @@
   --fintap-steps-nav-clear: max(6.5rem, calc(env(safe-area-inset-top, 0px) + 5.35rem));
   position: relative;
   overflow: visible;
-  padding: clamp(3.25rem, 8vw, 5.5rem) 0;
+  padding: clamp(2rem, 5.5vw, 4rem) 0 clamp(3rem, 7vw, 4.75rem);
   background: var(--fintap-features-bg);
   scroll-margin-top: var(--fintap-steps-nav-clear);
 }
@@ -29,6 +29,21 @@
 .fintap-features-grid__header .fintap-features-grid__intro {
   margin-bottom: clamp(2rem, 5vw, 3rem);
   max-width: min(38ch, 100%);
+}
+
+@media (max-width: 767.98px) {
+  .fintap-features-grid__header .fintap-features-grid__intro {
+    margin-bottom: clamp(1.15rem, 4vw, 1.65rem);
+  }
+}
+
+.fintap-features-grid .fintap-var-cards--embedded {
+  padding-top: 0;
+  padding-bottom: clamp(0.5rem, 2vw, 1rem);
+  background: transparent;
+  margin-inline: calc(-1 * clamp(1.25rem, 4vw, 2.5rem));
+  width: calc(100% + 2 * clamp(1.25rem, 4vw, 2.5rem));
+  max-width: 100vw;
 }
 
 .fintap-features-grid__list {
@@ -145,6 +160,46 @@
   font-size: clamp(0.9rem, 1.6vw, 0.98rem);
   line-height: 1.55;
   color: var(--fintap-muted, #636363);
+}
+
+.fintap-features-grid__cta-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(1.75rem, 4.5vw, 2.75rem);
+}
+
+.fintap-features-grid__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.85rem;
+  padding: 0.65rem 1.45rem;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: #fff;
+  text-decoration: none;
+  background: #0a0a0a;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  transition: transform 0.16s ease, box-shadow 0.2s ease;
+}
+
+.fintap-features-grid__cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+}
+
+.fintap-features-grid__cta:focus-visible {
+  outline: 2px solid rgba(10, 152, 255, 0.45);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fintap-features-grid__cta:hover {
+    transform: none;
+  }
 }
 
 /* Survol souris : relief + halo marque + zoom image (désactivé tactile / reduced motion) */

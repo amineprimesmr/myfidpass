@@ -93,11 +93,11 @@ const stripe =
 const FRONTEND_URL = (process.env.FRONTEND_URL || "https://myfidpass.fr").replace(/\/$/, "");
 /** Prix mensuel (renouvellement 49,99 € / mois) — rétrocompat : `STRIPE_PRICE_ID_STARTER`. */
 const PRICE_ID_MONTHLY = process.env.STRIPE_PRICE_ID_MONTHLY || process.env.STRIPE_PRICE_ID_STARTER || null;
-/** Facturation annuelle 399 € / an (même essai 3 j que le mensuel). */
+/** Facturation annuelle 399 € / an. */
 const PRICE_ID_ANNUAL = process.env.STRIPE_PRICE_ID_ANNUAL || null;
 /** Rétrocompat : anciens scripts qui lisent `PRICE_ID_STARTER`. */
 const PRICE_ID_STARTER = PRICE_ID_MONTHLY;
-const STRIPE_SUBSCRIPTION_TRIAL_DAYS = Math.max(0, parseInt(String(process.env.STRIPE_SUBSCRIPTION_TRIAL_DAYS || "3"), 10) || 0);
+const STRIPE_SUBSCRIPTION_TRIAL_DAYS = Math.max(0, parseInt(String(process.env.STRIPE_SUBSCRIPTION_TRIAL_DAYS || "0"), 10) || 0);
 /** Essai sur l’offre annuelle (jours). Si non défini → même valeur que `STRIPE_SUBSCRIPTION_TRIAL_DAYS`. Ex. `30` ≈ 1er mois sans prélèvement puis 399 €/an. */
 const RAW_STRIPE_SUBSCRIPTION_TRIAL_DAYS_ANNUAL = process.env.STRIPE_SUBSCRIPTION_TRIAL_DAYS_ANNUAL;
 /** Coupon Stripe (durée `once`) : réduit le 1er prélèvement post-essai à 1 € sur le prix mensuel (ex. 48,99 € de remise sur 49,99 €). */

@@ -65,6 +65,7 @@ export function getRoute() {
   if (path === "/cookies") return { type: "legal", page: "cookies" };
   if (path === "/supprimer-compte") return { type: "legal", page: "delete-account" };
   if (path === "/contact") return { type: "contact" };
+  if (path === "/get" || path === "/telecharger") return { type: "get-app" };
   const seoRoute = matchSeoContentRoute(path);
   if (seoRoute) return seoRoute;
   if (path === "") {
@@ -196,8 +197,13 @@ export async function initRouting() {
   }
   document.body.classList.toggle(
     "page-landing-subpage",
-    route.type === "legal" || route.type === "seo-content" || route.type === "contact"
+    route.type === "legal" ||
+      route.type === "seo-content" ||
+      route.type === "contact" ||
+      route.type === "get-app"
   );
+  document.body.classList.toggle("page-get-app", route.type === "get-app");
+  document.documentElement.classList.toggle("page-get-app", route.type === "get-app");
   applyRouteSeoHead(route);
   syncSmartAppBanner();
   if (route.type !== "landing") {
@@ -342,6 +348,16 @@ export async function initRouting() {
     await page.init(route);
     ensureLandingLiquidNav();
     updateAuthNavLinks();
+    syncWhatsappFabVisibility();
+    return null;
+  }
+
+  if (route.type === "get-app" && c.landingMain && c.landingLegal && c.legalContent) {
+    if (c.landing) c.landing.classList.remove("hidden");
+    if (c.landingMain) c.landingMain.classList.add("hidden");
+    c.landingLegal.classList.remove("hidden");
+    const page = await loadPage("get-app");
+    await page.init(route);
     syncWhatsappFabVisibility();
     return null;
   }

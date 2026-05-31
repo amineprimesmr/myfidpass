@@ -99,9 +99,9 @@ export function getCgvHtml() {
     <p>Dernière mise à jour : mars 2026.</p>
     <p>Les présentes CGV s'appliquent aux abonnements et prestations proposés par ${e.name} sur le site ${e.site}.</p>
     <h2>1. Produits et offres</h2>
-    <p>Les offres (abonnement mensuel, essai gratuit) sont décrites sur le site au moment de la souscription. Les prix sont en euros TTC sauf mention contraire. Nous nous réservons le droit d'ajuster les tarifs en communiquant préalablement aux abonnés.</p>
+    <p>Les offres (abonnement mensuel ou annuel) sont décrites sur le site au moment de la souscription. Les prix sont en euros TTC sauf mention contraire. Nous nous réservons le droit d'ajuster les tarifs en communiquant préalablement aux abonnés.</p>
     <h2>2. Souscription et paiement</h2>
-    <p>La souscription se fait en ligne. Le paiement est sécurisé (partenaire type Stripe). En cas d'essai gratuit, le prélèvement débute à l'issue de la période d'essai sauf annulation. Vous vous engagez à maintenir un moyen de paiement valide.</p>
+    <p>La souscription se fait en ligne. Le paiement est sécurisé (partenaire type Stripe). Vous vous engagez à maintenir un moyen de paiement valide.</p>
     <h2>3. Droit de rétractation</h2>
     <p>Conformément à la loi, vous disposez de 14 jours à compter de la souscription pour exercer votre droit de rétractation, sans avoir à justifier de motif. Pour ce faire : <a href="mailto:${e.contact}">${e.contact}</a>. En cas de rétractation, les sommes déjà versées seront remboursées.</p>
     <h2>4. Résiliation et remboursement</h2>

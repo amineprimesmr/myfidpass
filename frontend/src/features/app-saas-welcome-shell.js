@@ -1,15 +1,18 @@
 /**
- * Shell visuel onboarding SaaS (héros + bandeau essai + feuille) — coordination affichage.
+ * Shell visuel onboarding SaaS (héros + bandeau abonnement + feuille) — coordination affichage.
  */
 import { initRouting } from "../router/index.js";
 import {
   buildPaymentPathWithAuthHandoff,
-  buildStripeSaasPaymentUrl,
   warmStripeJs,
   subscriptionUsesExternalStripePaymentLink,
   redirectToStripeSaasPayment,
   resolveSaasSubscriptionPaymentUrl,
 } from "../config.js";
+
+const PROMO_TITLE = "Profitez de l’offre Pro";
+const PROMO_SUBTITLE = "Premier mois à 1 €, puis 49,99 €/mois sans engagement.";
+const STRIP_STATUS = "1 € le 1er mois";
 
 /** @returns {HTMLElement | null} */
 function appShell() {
@@ -39,8 +42,8 @@ export function syncSaaSWelcomeChrome() {
 
   const gateVisible = gate && !gate.classList.contains("hidden");
   const readyVisible = readySplash && !readySplash.classList.contains("hidden");
-  const trialChromeVisible = !!root?.classList.contains("app-saas-trial-chrome-active");
-  const show = !!(emptyVisible || gateVisible || readyVisible || trialChromeVisible);
+  const subscribeChromeVisible = !!root?.classList.contains("app-saas-trial-chrome-active");
+  const show = !!(emptyVisible || gateVisible || readyVisible || subscribeChromeVisible);
 
   if (cluster) {
     cluster.classList.toggle("hidden", !show);
@@ -50,112 +53,24 @@ export function syncSaaSWelcomeChrome() {
 }
 
 /**
- * @typedef {(iso: string) => string} FormatEndingHeadline
- */
-
-/**
  * @param {{
  *   paid?: boolean;
- *   trialHero?: boolean;
  *   showSubscribeStrip?: boolean;
- *   trialEndRaw?: string | null;
- *   formatEndingHeadline?: FormatEndingHeadline;
- *   fallbackTitle?: string;
- *   fallbackSubtitle?: string;
+ *   hideSubscribeChrome?: boolean;
+ *   promoTitle?: string;
+ *   promoSubtitle?: string;
  * }} opts
  */
-const HERO_TITLE = "Votre essai a commencé";
-function trialHeroSupportHtml() {
+function subscribePromoSupportHtml() {
   const href = resolveSaasSubscriptionPaymentUrl();
   return `<span class="app-saas-frc-support-cta-wrap"><a href="${href}" id="app-saas-frc-support-cta" class="app-saas-frc-support-cta">Profiter de l’offre</a><span class="app-saas-frc-support-badge">-98%</span></span>`;
 }
-const TRIAL_HERO_COLLAPSED_KEY = "fidpass_saas_trial_hero_collapsed_v1";
-let heroCountdownTimer = 0;
 
-function clearHeroCountdownTimer() {
-  if (heroCountdownTimer) {
-    window.clearInterval(heroCountdownTimer);
-    heroCountdownTimer = 0;
-  }
-}
+const SUBSCRIBE_HERO_COLLAPSED_KEY = "fidpass_saas_trial_hero_collapsed_v1";
 
-function parseTrialEndMs(raw) {
-  const parsed = raw ? Date.parse(raw) : NaN;
-  if (Number.isFinite(parsed)) return parsed;
-  // Fallback visuel demandé : compte à rebours 3 jours.
-  return Date.now() + 3 * 24 * 60 * 60 * 1000;
-}
-
-function renderCountdownHTML(totalMs) {
-  const totalSec = Math.max(0, Math.floor(totalMs / 1000));
-  const days = Math.floor(totalSec / 86400);
-  const hours = Math.floor((totalSec % 86400) / 3600);
-  const minutes = Math.floor((totalSec % 3600) / 60);
-  const seconds = totalSec % 60;
-  const p2 = (n) => String(n).padStart(2, "0");
-  return `
-    <span class="app-saas-frc-countdown" aria-label="Compte à rebours de l'offre en cours">
-      <span class="app-saas-frc-countdown__item"><strong>${days}</strong><em>jours</em></span>
-      <span class="app-saas-frc-countdown__sep">:</span>
-      <span class="app-saas-frc-countdown__item"><strong>${p2(hours)}</strong><em>heures</em></span>
-      <span class="app-saas-frc-countdown__sep">:</span>
-      <span class="app-saas-frc-countdown__item"><strong>${p2(minutes)}</strong><em>min</em></span>
-      <span class="app-saas-frc-countdown__sep">:</span>
-      <span class="app-saas-frc-countdown__item"><strong>${p2(seconds)}</strong><em>sec</em></span>
-    </span>
-  `;
-}
-
-function renderCompactCountdownText(totalMs) {
-  const totalSec = Math.max(0, Math.floor(totalMs / 1000));
-  const days = Math.floor(totalSec / 86400);
-  const hours = Math.floor((totalSec % 86400) / 3600);
-  const minutes = Math.floor((totalSec % 3600) / 60);
-  const p2 = (n) => String(n).padStart(2, "0");
-  return `${days}j ${p2(hours)}h ${p2(minutes)}m`;
-}
-
-function renderTopbarCountdownHTML(totalMs) {
-  const totalSec = Math.max(0, Math.floor(totalMs / 1000));
-  const days = Math.floor(totalSec / 86400);
-  const hours = Math.floor((totalSec % 86400) / 3600);
-  const minutes = Math.floor((totalSec % 3600) / 60);
-  const seconds = totalSec % 60;
-  const p2 = (n) => String(n).padStart(2, "0");
-  return `
-    <span class="app-topbar-trial-countdown-grid" aria-hidden="true">
-      <span class="app-topbar-trial-countdown-cell"><strong>${days}</strong><em>jours</em></span>
-      <span class="app-topbar-trial-countdown-cell"><strong>${p2(hours)}</strong><em>heures</em></span>
-      <span class="app-topbar-trial-countdown-cell"><strong>${p2(minutes)}</strong><em>min</em></span>
-      <span class="app-topbar-trial-countdown-cell"><strong>${p2(seconds)}</strong><em>sec</em></span>
-    </span>
-  `;
-}
-
-function setupHeroCountdown(subtitleEl, trialEndRaw) {
-  if (!subtitleEl) return;
-  clearHeroCountdownTimer();
-  const stripStatusEl = document.getElementById("app-saas-frc-strip-status");
-  const topbarCountdownEl = document.getElementById("app-topbar-trial-countdown");
-  const endMs = parseTrialEndMs(trialEndRaw);
-  const tick = () => {
-    const left = Math.max(0, endMs - Date.now());
-    subtitleEl.innerHTML = renderCountdownHTML(left);
-    const compact = renderCompactCountdownText(left);
-    if (stripStatusEl) stripStatusEl.textContent = compact;
-    if (topbarCountdownEl) {
-      topbarCountdownEl.innerHTML = renderTopbarCountdownHTML(left);
-      topbarCountdownEl.setAttribute("aria-label", compact);
-    }
-    if (left <= 0) clearHeroCountdownTimer();
-  };
-  tick();
-  heroCountdownTimer = window.setInterval(tick, 1000);
-}
-
-function isTrialHeroPermanentlyCollapsed() {
+function isSubscribeHeroPermanentlyCollapsed() {
   try {
-    return localStorage.getItem(TRIAL_HERO_COLLAPSED_KEY) === "1";
+    return localStorage.getItem(SUBSCRIBE_HERO_COLLAPSED_KEY) === "1";
   } catch (_) {
     return false;
   }
@@ -175,24 +90,26 @@ export function applySaaSFrcMessaging(opts) {
   const topbarCtaWrap = document.getElementById("app-topbar-trial-cta-wrap");
 
   const paid = !!opts.paid;
-  const trialHero = !!opts.trialHero;
-  const persistedCompact = isTrialHeroPermanentlyCollapsed();
+  const hideSubscribeChrome = !!opts.hideSubscribeChrome;
+  const persistedCompact = isSubscribeHeroPermanentlyCollapsed();
   const showSubscribeStrip = persistedCompact || !!opts.showSubscribeStrip;
-  root?.classList.toggle("app-saas-trial-chrome-active", !paid && (trialHero || showSubscribeStrip));
+
+  root?.classList.toggle(
+    "app-saas-trial-chrome-active",
+    !paid && !hideSubscribeChrome
+  );
 
   cluster?.classList.toggle("app-saas-frc-cluster--paid", paid);
   cluster?.classList.toggle("app-saas-frc-cluster--unpaid", !paid);
-  cluster?.classList.toggle("app-saas-frc-cluster--trial", trialHero);
-  hero?.classList.toggle("app-saas-frc-hero--trial", trialHero);
+  cluster?.classList.remove("app-saas-frc-cluster--trial");
+  hero?.classList.remove("app-saas-frc-hero--trial");
 
-  if (titleEl && subtitleEl) {
-    titleEl.textContent = HERO_TITLE;
-    setupHeroCountdown(subtitleEl, opts.trialEndRaw ?? null);
-  }
+  if (titleEl) titleEl.textContent = opts.promoTitle || PROMO_TITLE;
+  if (subtitleEl) subtitleEl.textContent = opts.promoSubtitle || PROMO_SUBTITLE;
 
   supportEl?.classList.add("app-saas-frc-support--trial-hero");
   if (supportEl) {
-    supportEl.innerHTML = trialHeroSupportHtml();
+    supportEl.innerHTML = subscribePromoSupportHtml();
   }
 
   if (cta) {
@@ -200,12 +117,12 @@ export function applySaaSFrcMessaging(opts) {
     cta.setAttribute("aria-hidden", paid ? "true" : "false");
   }
 
-  const hideTrialChrome = !!opts.hideTrialChrome;
-  const showTopbarTrialUi = hideTrialChrome ? false : !paid;
-  topbarCountdownEl?.classList.toggle("hidden", !showTopbarTrialUi);
-  topbarCtaWrap?.classList.toggle("hidden", !showTopbarTrialUi);
+  topbarCountdownEl?.classList.add("hidden");
+  topbarCtaWrap?.classList.toggle("hidden", hideSubscribeChrome || paid);
 
-  if (strip && stripStatus) {
+  if (stripStatus) stripStatus.textContent = STRIP_STATUS;
+
+  if (strip) {
     strip.classList.toggle("hidden", !showSubscribeStrip);
     strip.classList.toggle("app-saas-frc-strip--visible", showSubscribeStrip);
     strip.setAttribute("aria-hidden", showSubscribeStrip ? "false" : "true");

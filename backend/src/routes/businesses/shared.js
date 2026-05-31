@@ -43,7 +43,7 @@ export function getIdempotencyKey(req) {
 
 const SUBSCRIPTION_REQUIRED_BODY = {
   error:
-    "Abonnement actif requis (ou période d’essai gratuite expirée). Les nouveaux comptes ont 3 j d’accès complet ; souscrivez via l’App Store ou Stripe pour continuer.",
+    "Abonnement actif requis. Souscrivez via l’App Store ou Stripe pour continuer.",
   code: "subscription_required",
 };
 

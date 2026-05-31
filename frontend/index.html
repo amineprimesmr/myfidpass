@@ -96,6 +96,7 @@
     <link rel="stylesheet" href="/src/fidelity-route-loading.css" />
     <link rel="stylesheet" href="/src/landing.css" />
     <link rel="stylesheet" href="/src/landing-subpage.css" />
+    <link rel="stylesheet" href="/src/get-app-page.css" />
     <link rel="stylesheet" href="/src/dashboard.css" />
     <link rel="stylesheet" href="/src/auth.css" />
     <link rel="stylesheet" href="/src/app.css" />
@@ -253,7 +254,7 @@
           <h1 class="auth-title">Créer un compte</h1>
           <p class="auth-subtitle">Choisissez d’abord votre commerce, puis créez votre compte commerçant.</p>
           <p id="auth-register-establishment" class="auth-success-msg hidden"></p>
-          <p class="auth-hint">3 j offerts, puis 1,00 € le 1er mois (mensuel) ou 399,00 €/an (annuel) — abonnement sans engagement.</p>
+          <p class="auth-hint">1,00 € le 1er mois (mensuel) ou 399,00 €/an (annuel) — abonnement sans engagement.</p>
           <form id="auth-register-form" class="auth-form">
             <label class="auth-label" for="auth-register-email">Email</label>
             <div class="auth-input-wrap">
@@ -383,8 +384,8 @@
           <div class="app-saas-frc-hero">
             <div class="app-saas-frc-hero-inner">
               <p class="app-saas-frc-kicker">Myfidpass</p>
-              <h2 id="app-saas-frc-title" class="app-saas-frc-title">Votre essai a commencé</h2>
-              <p id="app-saas-frc-subtitle" class="app-saas-frc-subtitle">3 jours gratuits, puis 1 €/mois pour continuer à créer.</p>
+              <h2 id="app-saas-frc-title" class="app-saas-frc-title">Profitez de l’offre Pro</h2>
+              <p id="app-saas-frc-subtitle" class="app-saas-frc-subtitle">Premier mois à 1 €, puis 49,99 €/mois sans engagement.</p>
               <button type="button" id="app-saas-frc-cta" class="app-saas-frc-btn-primary">S’abonner pour 1 €</button>
               <p id="app-saas-frc-support" class="app-saas-frc-support">
                 Une question ? <a href="tel:+33805980685">0&nbsp;805&nbsp;98&nbsp;06&nbsp;85</a> · <a href="mailto:contact@myfidpass.fr">contact@myfidpass.fr</a>
@@ -2218,125 +2219,100 @@
           <h2 id="landing-launch-heading" class="landing-launch-sf-heading">
             Lancez-vous rapidement
           </h2>
-          <div class="landing-launch-sf-grid">
-            <div class="landing-launch-sf-visual" aria-hidden="true">
-              <figure class="landing-launch-sf-fig landing-launch-sf-fig--primary">
-                <img
-                  class="landing-launch-sf-img"
-                  src="/assets/iphonepied.png"
-                  width="400"
-                  height="530"
-                  loading="lazy"
-                  decoding="async"
-                  alt=""
-                />
-              </figure>
-            </div>
-            <div class="landing-launch-sf-steps-wrap">
-              <ol class="landing-launch-sf-list">
-                <li class="landing-launch-sf-row">
-                  <span class="landing-launch-sf-num" aria-hidden="true">01</span>
-                  <h3 class="landing-launch-sf-step-title">Créez votre carte fidélité</h3>
-                </li>
-                <li class="landing-launch-sf-row">
-                  <span class="landing-launch-sf-num" aria-hidden="true">02</span>
-                  <h3 class="landing-launch-sf-step-title">Personnalisez votre espace</h3>
-                </li>
-                <li class="landing-launch-sf-row landing-launch-sf-row--dim">
-                  <span class="landing-launch-sf-num landing-launch-sf-num--soft" aria-hidden="true">03</span>
-                  <h3 class="landing-launch-sf-step-title">Diffusez votre flyer de jeu</h3>
-                </li>
-              </ol>
-              <a class="landing-launch-sf-cta" href="/creer-ma-carte?mode=login&amp;redirect=/app">Accéder à mon espace</a>
-            </div>
+          <div class="landing-launch-sf-body">
+            <ul class="landing-launch-sf-faq landing-faq-list">
+              <li class="landing-faq-item landing-launch-sf-faq-item">
+                <button type="button" class="landing-faq-question" aria-expanded="false">
+                  <span>Comment fonctionne Myfidpass&nbsp;?</span>
+                  <span class="landing-faq-icon" aria-hidden="true">+</span>
+                </button>
+                <div class="landing-faq-answer" aria-hidden="true">
+                  <p>
+                    Vous créez votre carte fidélité, vos clients la scannent une fois et l’ajoutent à
+                    Apple Wallet ou Google Wallet. Points, tampons et récompenses se mettent à jour
+                    automatiquement.
+                  </p>
+                </div>
+              </li>
+              <li class="landing-faq-item landing-launch-sf-faq-item">
+                <button type="button" class="landing-faq-question" aria-expanded="false">
+                  <span>Combien ça coûte&nbsp;?</span>
+                  <span class="landing-faq-icon" aria-hidden="true">+</span>
+                </button>
+                <div class="landing-faq-answer" aria-hidden="true">
+                  <p>
+                    Le premier mois est à 1&nbsp;€, puis 49,99&nbsp;€/mois sans engagement. Vous
+                    pouvez aussi choisir l’offre annuelle à 399&nbsp;€/an.
+                  </p>
+                </div>
+              </li>
+              <li class="landing-faq-item landing-launch-sf-faq-item">
+                <button type="button" class="landing-faq-question" aria-expanded="false">
+                  <span>Mes clients doivent-ils télécharger une app&nbsp;?</span>
+                  <span class="landing-faq-icon" aria-hidden="true">+</span>
+                </button>
+                <div class="landing-faq-answer" aria-hidden="true">
+                  <p>
+                    Non. Ils scannent votre QR code et ajoutent la carte directement dans leur
+                    Wallet — aucune application à installer pour eux.
+                  </p>
+                </div>
+              </li>
+              <li class="landing-faq-item landing-launch-sf-faq-item">
+                <button type="button" class="landing-faq-question" aria-expanded="false">
+                  <span>Puis-je personnaliser ma carte&nbsp;?</span>
+                  <span class="landing-faq-icon" aria-hidden="true">+</span>
+                </button>
+                <div class="landing-faq-answer" aria-hidden="true">
+                  <p>
+                    Oui : logo, couleurs, récompenses, notifications et flyers QR sont
+                    entièrement configurables depuis l’application commerçant.
+                  </p>
+                </div>
+              </li>
+              <li class="landing-faq-item landing-launch-sf-faq-item">
+                <button type="button" class="landing-faq-question" aria-expanded="false">
+                  <span>Puis-je annuler à tout moment&nbsp;?</span>
+                  <span class="landing-faq-icon" aria-hidden="true">+</span>
+                </button>
+                <div class="landing-faq-answer" aria-hidden="true">
+                  <p>
+                    Oui, l’abonnement est sans engagement. Vous gardez l’accès jusqu’à la fin de la
+                    période en cours.
+                  </p>
+                </div>
+              </li>
+            </ul>
+            <a href="/get" class="landing-launch-sf-download-app">
+              <span class="landing-launch-sf-download-app__label">Télécharger l&apos;app</span>
+              <span class="landing-launch-sf-download-app__arrow" aria-hidden="true">
+                <svg viewBox="0 0 20 20" focusable="false">
+                  <path
+                    d="M4.5 10h9m0 0-3.5-3.5M13.5 10l-3.5 3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+            </a>
           </div>
         </div>
+        <div id="landing-demo-root" class="landing-launch-sf-demo-root"></div>
       </section>
 
       <footer id="site-footer-myfidpass" class="landing-footer landing-footer--sf">
         <div class="landing-footer-sf-inner">
-          <div class="landing-footer-sf-top">
-            <a href="/" class="landing-footer-sf-mark" aria-label="Myfidpass — Accueil">
-              <img src="/assets/icone.png?v=20260416" alt="Myfidpass" width="120" height="120" decoding="async" />
-            </a>
-            <nav class="landing-footer-sf-col" aria-labelledby="footer-heading-myfidpass">
-              <h2 id="footer-heading-myfidpass" class="landing-footer-sf-col-title">Myfidpass</h2>
-              <ul class="landing-footer-sf-links">
-                <li><a href="/creer-ma-carte">Qu’est-ce que Myfidpass ?</a></li>
-                <li><a href="/#capabilities">Voir le produit</a></li>
-                <li><a href="/#testimonials">Témoignages & nouveautés</a></li>
-              </ul>
-            </nav>
-            <nav class="landing-footer-sf-col" aria-labelledby="footer-heading-ecosystem">
-              <h2 id="footer-heading-ecosystem" class="landing-footer-sf-col-title">Écosystème</h2>
-              <ul class="landing-footer-sf-links">
-                <li>
-                  <a href="mailto:contact@myfidpass.fr?subject=Documentation%20pour%20les%20développeurs">Documentation pour les développeurs</a>
-                </li>
-                <li><a href="/#capabilities">Modèles &amp; création carte</a></li>
-                <li><a href="/app">Espace commerçant</a></li>
-                <li><a href="mailto:contact@myfidpass.fr?subject=Partenaires">Partenaires</a></li>
-                <li><a href="mailto:contact@myfidpass.fr?subject=Affiliés">Affiliés</a></li>
-              </ul>
-            </nav>
-            <nav class="landing-footer-sf-col" aria-labelledby="footer-heading-ressources">
-              <h2 id="footer-heading-ressources" class="landing-footer-sf-col-title">Ressources</h2>
-              <ul class="landing-footer-sf-links">
-                <li><a href="/#testimonials">Blog &amp; inspirations</a></li>
-                <li><a href="/creer-ma-carte">Comparer les parcours</a></li>
-                <li><a href="/#comment-ca-marche">Découvrir sur mobile</a></li>
-                <li><a href="/cookies">Outils &amp; cookies</a></li>
-                <li><a href="/mentions-legales">Informations légales</a></li>
-              </ul>
-            </nav>
-            <nav class="landing-footer-sf-col" aria-labelledby="footer-heading-assistance">
-              <h2 id="footer-heading-assistance" class="landing-footer-sf-col-title">Assistance</h2>
-              <ul class="landing-footer-sf-links">
-                <li><a href="/contact">Nous contacter</a></li>
-                <li><a href="mailto:contact@myfidpass.fr?subject=Centre%20d’aide">Centre d’aide Myfidpass</a></li>
-                <li><a href="mailto:contact@myfidpass.fr?subject=Forum%20communauté">Forum communauté</a></li>
-                <li><a href="mailto:contact@myfidpass.fr?subject=Partner">Faire appel à un partenaire</a></li>
-                <li><a href="mailto:contact@myfidpass.fr?subject=Statut%20du%20service">Statut du service</a></li>
-              </ul>
-            </nav>
-          </div>
-          <hr class="landing-footer-sf-rule" />
+          <nav class="landing-footer-sf-nav" aria-label="Liens pied de page">
+            <a href="/cgu">CGU</a>
+            <a href="/mentions-legales">Mentions légales</a>
+            <a href="/politique-confidentialite">Confidentialité</a>
+            <a href="/cookies">Cookies</a>
+          </nav>
           <div class="landing-footer-sf-bot">
-            <button type="button" class="landing-footer-sf-locale-btn" aria-label="France, Français">
-              <svg class="landing-footer-sf-globe" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M2 12h20" />
-                <path d="M12 2c2.83 6.94 2.83 13.06 0 20-2.83-6.94-2.83-13.06 0-20z" />
-                <path d="M4 6.5h16M4 17.5h16" />
-              </svg>
-              <span>France | Français</span>
-              <svg class="landing-footer-sf-locale-chevr" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2">
-                <path d="M6 9l6 6 6-6" />
-              </svg>
-            </button>
-            <nav class="landing-footer-sf-legal" aria-label="Mentions légales et légalité">
-              <a href="/cgu">Conditions de service</a>
-              <span class="landing-footer-sf-legal-sep" aria-hidden="true">·</span>
-              <a href="/mentions-legales">Mentions légales</a>
-              <span class="landing-footer-sf-legal-sep" aria-hidden="true">·</span>
-              <a href="/politique-confidentialite">Politique de confidentialité</a>
-              <span class="landing-footer-sf-legal-sep" aria-hidden="true">·</span>
-              <a href="#site-footer-myfidpass">Plan du site</a>
-              <span class="landing-footer-sf-legal-sep" aria-hidden="true">·</span>
-              <span class="landing-footer-sf-privacy-row">
-                <a href="/cookies">Vos choix de confidentialité</a>
-                <svg class="landing-footer-sf-privacy-ico" width="20" height="12" viewBox="0 0 20 12" aria-hidden="true">
-                  <defs>
-                    <linearGradient id="fidpass-footer-privacy-fill" x1="0" y1="0" x2="8" y2="10" gradientUnits="userSpaceOnUse">
-                      <stop offset="0" stop-color="#60a5fa" />
-                      <stop offset="1" stop-color="#ffffff" />
-                    </linearGradient>
-                  </defs>
-                  <rect x="0.5" y="1" width="8" height="10" rx="1" fill="url(#fidpass-footer-privacy-fill)" stroke="rgba(255,255,255,0.85)" stroke-width="0.5" />
-                  <rect x="11.5" y="3" width="8" height="8" rx="1" fill="#3b82f6" opacity="0.95" />
-                </svg>
-              </span>
-            </nav>
+            <p class="landing-footer-sf-copy">© Myfidpass</p>
             <div class="landing-footer-sf-soc">
               <ul class="landing-footer-sf-soc-list" aria-label="Réseaux sociaux Myfidpass">
                 <li>

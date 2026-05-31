@@ -1,0 +1,205 @@
+import { useCallback, useMemo, useState } from "react";
+import { FinTapCommerceNameField } from "./FinTapCommerceNameField.jsx";
+import { FinTapLiquidSlider } from "./FinTapLiquidSlider.jsx";
+import { ScrollReveal } from "./ScrollReveal.jsx";
+import {
+  DEFAULT_REVENUE_SECTOR_ID,
+  mapSuggestedCategoryToSectorId,
+  REVENUE_SECTOR_OPTIONS,
+  REVENUE_SIMULATOR_DEFAULTS,
+} from "./fintap-revenue-simulator-data.js";
+import {
+  computeRevenueSimulation,
+  formatEuro,
+} from "./fintap-revenue-simulator.js";
+import "./fintap-revenue-simulator.css";
+
+const CLIENTS_MIN = 5;
+const CLIENTS_MAX = 500;
+const BASKET_MIN = 3;
+const BASKET_MAX = 200;
+
+/** Section simulateur — fond site unifié + carte blanche. */
+export function FinTapRevenueSimulatorSection() {
+  const [sectorId, setSectorId] = useState(DEFAULT_REVENUE_SECTOR_ID);
+  const [sectorAuto, setSectorAuto] = useState(false);
+  const [clientsPerDay, setClientsPerDay] = useState(REVENUE_SIMULATOR_DEFAULTS.clientsPerDay);
+  const [avgBasket, setAvgBasket] = useState("");
+  const [commerceValidated, setCommerceValidated] = useState(false);
+
+  const sectorConfig = useMemo(
+    () => REVENUE_SECTOR_OPTIONS.find((s) => s.id === sectorId),
+    [sectorId]
+  );
+
+  const onCategoryDetected = useCallback((categoryId) => {
+    const mapped = mapSuggestedCategoryToSectorId(categoryId);
+    setSectorId(mapped);
+    setSectorAuto(Boolean(categoryId));
+  }, []);
+
+  const onCommerceValidated = useCallback((validated) => {
+    setCommerceValidated(validated);
+  }, []);
+
+  const parsedBasket = avgBasket.trim() === "" ? null : Number(avgBasket.replace(",", "."));
+
+  const results = useMemo(() => {
+    if (!commerceValidated) return null;
+    return computeRevenueSimulation({
+      clientsPerDay,
+      avgBasket: parsedBasket,
+      sectorId,
+    });
+  }, [commerceValidated, clientsPerDay, parsedBasket, sectorId]);
+
+  return (
+    <section
+      className="fintap-revenue-simulator"
+      id="simulateur-revenus"
+      aria-labelledby="fintap-revenue-simulator-heading"
+    >
+      <header className="fintap-revenue-simulator__hero">
+        <ScrollReveal>
+          <h2 id="fintap-revenue-simulator-heading" className="fintap-revenue-simulator__title">
+            Combien Myfidpass peut vous rapporter&nbsp;?
+          </h2>
+          <p className="fintap-revenue-simulator__lead">
+            Estimez votre revenu additionnel en quelques secondes.
+          </p>
+        </ScrollReveal>
+      </header>
+
+      <ScrollReveal delay={0.08}>
+        <div className="fintap-revenue-simulator__sim-wrap">
+          <div
+            className={
+              "fintap-revenue-simulator__sim" +
+              (commerceValidated && results ? " is-active" : "")
+            }
+          >
+            <p className="fintap-revenue-simulator__sim-head">Simulateur de revenu</p>
+
+            <div className="fintap-revenue-simulator__form">
+              <FinTapCommerceNameField
+                id="fintap-revenue-commerce-name"
+                label="Nom de votre commerce"
+                placeholder="Recherchez votre établissement sur Google"
+                onCategoryDetected={onCategoryDetected}
+                onCommerceValidated={onCommerceValidated}
+              />
+
+              <div className="fintap-revenue-simulator__field">
+                <label className="fintap-revenue-simulator__label" htmlFor="fintap-revenue-sector">
+                  Secteur d&apos;activité
+                  {sectorAuto ? (
+                    <span className="fintap-revenue-simulator__badge">Détecté</span>
+                  ) : null}
+                </label>
+                <select
+                  id="fintap-revenue-sector"
+                  className="fintap-revenue-simulator__select"
+                  value={sectorId}
+                  onChange={(e) => {
+                    setSectorId(e.target.value);
+                    setSectorAuto(false);
+                  }}
+                >
+                  {REVENUE_SECTOR_OPTIONS.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="fintap-revenue-simulator__field">
+                <label className="fintap-revenue-simulator__label" htmlFor="fintap-revenue-basket">
+                  Panier moyen (€)
+                </label>
+                <input
+                  id="fintap-revenue-basket"
+                  type="number"
+                  className="fintap-revenue-simulator__input"
+                  min={BASKET_MIN}
+                  max={BASKET_MAX}
+                  step="0.5"
+                  placeholder={String(sectorConfig?.defaultBasket ?? 14)}
+                  value={avgBasket}
+                  onChange={(e) => setAvgBasket(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="fintap-revenue-simulator__slider-block">
+              <p className="fintap-revenue-simulator__slider-label">Clients par jour</p>
+              <FinTapLiquidSlider
+                min={CLIENTS_MIN}
+                max={CLIENTS_MAX}
+                value={clientsPerDay}
+                onChange={setClientsPerDay}
+                ariaLabel="Clients par jour"
+              />
+            </div>
+
+            <div className="fintap-revenue-simulator__sim-foot" aria-live="polite">
+              {results ? (
+                <>
+                  <div>
+                    <span className="fintap-revenue-simulator__sim-payout-label">
+                      Revenu additionnel estimé
+                    </span>
+                    <span className="fintap-revenue-simulator__sim-payout-value">
+                      +{formatEuro(results.additionalMonthly)} /mois
+                    </span>
+                  </div>
+                  <span className="fintap-revenue-simulator__sim-pill">
+                    {clientsPerDay} clients/j
+                  </span>
+                </>
+              ) : null}
+            </div>
+
+            {results ? (
+              <div className="fintap-revenue-simulator__sim-details">
+                <p className="fintap-revenue-simulator__results-sub">
+                  Soit {formatEuro(results.additionalAnnual)} par an grâce à plus de visites
+                  et un panier moyen en hausse.
+                </p>
+
+                <ul className="fintap-revenue-simulator__stats">
+                  <li>
+                    <span className="fintap-revenue-simulator__stat-label">Visites en plus</span>
+                    <strong>+{results.extraVisitsPerMonth} / mois</strong>
+                  </li>
+                  <li>
+                    <span className="fintap-revenue-simulator__stat-label">CA mensuel actuel</span>
+                    <strong>{formatEuro(results.baseMonthlyRevenue)}</strong>
+                  </li>
+                  <li>
+                    <span className="fintap-revenue-simulator__stat-label">Retour sur abonnement</span>
+                    <strong>×{results.roiMultiple}</strong>
+                  </li>
+                  <li>
+                    <span className="fintap-revenue-simulator__stat-label">Gain net annuel*</span>
+                    <strong>{formatEuro(results.netAnnual)}</strong>
+                  </li>
+                </ul>
+
+                <p className="fintap-revenue-simulator__disclaimer">
+                  * Estimation indicative — secteur «&nbsp;{results.sectorLabel}&nbsp;».
+                  Abonnement Pro 49,99&nbsp;€/mois déduit du gain net.
+                </p>
+
+                <a href="/app?fromLandingOnboarding=1" className="fintap-revenue-simulator__start">
+                  Créer ma carte fidélité
+                  <span aria-hidden>→</span>
+                </a>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </ScrollReveal>
+    </section>
+  );
+}

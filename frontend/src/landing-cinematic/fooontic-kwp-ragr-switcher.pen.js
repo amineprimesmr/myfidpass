@@ -1,30 +1,29 @@
-import { getAuthToken } from "../config.js";
+const WHATSAPP_URL = "https://wa.me/33782637720";
+
+/** @param {HTMLElement} switcher */
+function revertSwitcherToPrevious(switcher) {
+  const prev = switcher.getAttribute("c-previous") || "1";
+  const radio = switcher.querySelector(`input[c-option="${prev}"]`);
+  if (radio instanceof HTMLInputElement) radio.checked = true;
+}
+
+/** @param {HTMLElement} switcher */
+function openWhatsApp(switcher) {
+  window.open(WHATSAPP_URL, "_blank", "noopener,noreferrer");
+  revertSwitcherToPrevious(switcher);
+}
 
 /** CodePen fooontic/KwpRaGr — logique init (appelée après injection du HTML). */
 export function runFooonticKwpRaGrSwitcherPen() {
   const switcher = document.querySelector(".switcher");
   if (!switcher) return;
-  switcher.classList.toggle("switcher--authed", !!getAuthToken());
-
-  const SAAS_LOGIN = "/creer-ma-carte?mode=login&redirect=/app";
 
   const SCROLL_ACTIONS = {
-    "1": () => window.scrollTo({ top: 0, behavior: "smooth" }), // home → top of page
+    "1": () => window.scrollTo({ top: 0, behavior: "smooth" }),
     "2": () => {
-      const target = document.querySelector("#comment-ca-marche");
-      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.location.assign("/get");
     },
-    "3": () => {
-      const target = document.querySelector("#testimonials");
-      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-    },
-    "4": () => {
-      if (getAuthToken()) {
-        window.location.assign("/app");
-        return;
-      }
-      window.location.assign(SAAS_LOGIN);
-    },
+    "3": () => openWhatsApp(switcher),
   };
 
   const trackPrevious = (el) => {
@@ -53,13 +52,14 @@ export function runFooonticKwpRaGrSwitcherPen() {
 
   trackPrevious(switcher);
 
-  // Permet de relancer l'action "Démarrer" même si l'option 4 est déjà sélectionnée.
-  const commerceRadio = switcher.querySelector('input[c-option="4"]');
-  const commerceOption = commerceRadio?.closest(".switcher__option");
-  commerceOption?.addEventListener("click", () => {
-    if (commerceRadio?.checked) {
-      const action = SCROLL_ACTIONS["4"];
-      if (action) action();
-    }
+  switcher.querySelectorAll(".switcher__option--download, .switcher__option--whatsapp").forEach((option) => {
+    option.addEventListener("click", () => {
+      const radio = option.querySelector('input[type="radio"]');
+      if (radio?.checked) {
+        const optionId = radio.getAttribute("c-option");
+        const action = optionId ? SCROLL_ACTIONS[optionId] : null;
+        if (action) action();
+      }
+    });
   });
 }

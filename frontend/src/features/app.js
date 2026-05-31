@@ -159,44 +159,19 @@ function maybeShowFlyerCreditsSuccessBanner() {
 
 let fidpassCachedUserEmail = "";
 
-/** @param {string} isoEnd */
-function formatMerchantTrialEndingHeadline(isoEnd) {
-  const endMs = Date.parse(isoEnd);
-  if (!Number.isFinite(endMs)) return "L’essai se termine bientôt";
-  const secs = (endMs - Date.now()) / 1000;
-  if (secs <= 0) return "L’essai est terminé";
-  if (secs < 60) return "L’essai se termine dans moins d’1 min";
-  if (secs < 3600) {
-    const m = Math.floor(secs / 60);
-    return `L’essai se termine dans ${m <= 1 ? "1 min" : `${m} min`}`;
-  }
-  if (secs < 86400) {
-    const h = Math.floor(secs / 3600);
-    return `L’essai se termine dans ${h <= 1 ? "1 heure" : `${h} heures`}`;
-  }
-  const d = Math.floor(secs / 86400);
-  return `L’essai se termine dans ${d <= 1 ? "1 jour" : `${d} jours`}`;
-}
-
+/** @param {Record<string, unknown>} d */
 function updateMerchantTrialSubscribePillFromDetail(d) {
   const sidebarCard = document.getElementById("app-sidebar-trial-subscribe-card");
   const sidebarRemainEl = document.getElementById("app-sidebar-trial-subscribe-remaining");
-  const stripStatus = document.getElementById("app-saas-frc-strip-status");
   const hasSubscription = !!(d.has_active_subscription ?? d.hasActiveSubscription);
   const user = d?.user || {};
   const isAdmin = !!(user.is_admin ?? user.isAdmin);
-  const trialEndRaw = d?.merchant_trial_ends_at ?? d?.merchantTrialEndsAt ?? null;
 
   const fallbackTitle = "Configurez votre espace Myfidpass";
   const fallbackSubtitle = "Indiquez votre commerce, puis créez votre carte et votre flyer QR.";
 
   if (typeof window !== "undefined") {
     window.__fidpassLastAuthMeDetail = d;
-  }
-
-  if (typeof window !== "undefined" && window.__fidpassTrialPillTimer) {
-    clearInterval(window.__fidpassTrialPillTimer);
-    window.__fidpassTrialPillTimer = null;
   }
 
   /** @param {boolean} sidebarVisible */
@@ -207,17 +182,13 @@ function updateMerchantTrialSubscribePillFromDetail(d) {
     }
   };
 
-  /** Abonnement actif ou compte équipe : masque toute monetization */
   const clearSubscribeChrome = () => {
     syncSidebar(false);
     applySaaSFrcMessaging({
       paid: true,
-      trialHero: false,
       showSubscribeStrip: false,
-      trialEndRaw: trialEndRaw ?? null,
-      formatEndingHeadline: formatMerchantTrialEndingHeadline,
-      fallbackTitle,
-      fallbackSubtitle,
+      promoTitle: fallbackTitle,
+      promoSubtitle: fallbackSubtitle,
     });
   };
 
@@ -232,78 +203,23 @@ function updateMerchantTrialSubscribePillFromDetail(d) {
     syncSidebar(false);
     applySaaSFrcMessaging({
       paid: false,
-      trialHero: false,
       showSubscribeStrip: false,
-      hideTrialChrome: true,
-      trialEndRaw: null,
-      formatEndingHeadline: formatMerchantTrialEndingHeadline,
-      fallbackTitle,
-      fallbackSubtitle,
+      hideSubscribeChrome: true,
+      promoTitle: fallbackTitle,
+      promoSubtitle: fallbackSubtitle,
     });
     return;
   }
 
-  const trialEndMs = trialEndRaw ? Date.parse(trialEndRaw) : NaN;
-  const trialActive = !!(Number.isFinite(trialEndMs) && Date.now() < trialEndMs);
-
   syncSidebar(true);
+  if (sidebarRemainEl) {
+    sidebarRemainEl.textContent = "Abonnement Pro — 1 € le 1er mois";
+  }
 
   applySaaSFrcMessaging({
     paid: false,
-    trialHero: trialActive,
-    // Premier affichage: bloc héros complet, puis passage en bandeau compact au scroll.
     showSubscribeStrip: false,
-    trialEndRaw: trialActive ? trialEndRaw : null,
-    formatEndingHeadline: formatMerchantTrialEndingHeadline,
-    fallbackTitle,
-    fallbackSubtitle,
   });
-
-  const subscriptionLineFallback = () => "L’essai se termine bientôt";
-
-  const tick = () => {
-    if (!trialEndRaw) {
-      const line = subscriptionLineFallback();
-      if (sidebarRemainEl) sidebarRemainEl.textContent = line;
-      if (stripStatus) stripStatus.textContent = line;
-      return;
-    }
-    const end = Date.parse(trialEndRaw);
-    if (!Number.isFinite(end)) {
-      const line = subscriptionLineFallback();
-      if (sidebarRemainEl) sidebarRemainEl.textContent = line;
-      if (stripStatus) stripStatus.textContent = line;
-      return;
-    }
-    const headline = formatMerchantTrialEndingHeadline(trialEndRaw);
-    if (sidebarRemainEl) sidebarRemainEl.textContent = headline;
-    if (stripStatus) stripStatus.textContent = headline;
-
-    if (Date.now() >= end) {
-      const blocking =
-        typeof window !== "undefined" && window.__fidpassMerchantSetupComplete === false;
-      applySaaSFrcMessaging({
-        paid: false,
-        trialHero: false,
-        showSubscribeStrip: !blocking,
-        hideTrialChrome: blocking,
-        trialEndRaw: null,
-        formatEndingHeadline: formatMerchantTrialEndingHeadline,
-        fallbackTitle,
-        fallbackSubtitle,
-      });
-      if (stripStatus) stripStatus.textContent = headline;
-      if (typeof window !== "undefined" && window.__fidpassTrialPillTimer) {
-        clearInterval(window.__fidpassTrialPillTimer);
-        window.__fidpassTrialPillTimer = null;
-      }
-    }
-  };
-
-  tick();
-  if (typeof window !== "undefined") {
-    window.__fidpassTrialPillTimer = setInterval(tick, 30000);
-  }
 }
 
 let fidpassAuthMeListenerMounted = false;

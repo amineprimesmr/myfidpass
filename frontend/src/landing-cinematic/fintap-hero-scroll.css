@@ -460,13 +460,26 @@
 
 /* Conversion mobile : champ commerce sous l'accroche, AVANT l'iPhone, toujours visible */
 @media (max-width: 767.98px) {
+  .fintap-hero-iphone__text {
+    margin-bottom: 0.25rem;
+  }
+
+  .fintap-hero-iphone__h1 {
+    margin-bottom: 0.4rem;
+  }
+
+  .fintap-hero-iphone__lead {
+    margin-top: 0;
+    line-height: 1.32;
+  }
+
   .fintap-hero-iphone__experience {
     display: flex;
     flex-direction: column;
   }
   #fintap-commerce-onboarding.fintap-hero-iphone__actions {
     order: -1;
-    margin: 0.35rem auto 0.5rem;
+    margin: 1.65rem auto 2rem;
     padding-top: 0;
     padding-bottom: 0;
     opacity: 1;
@@ -474,26 +487,90 @@
     filter: none;
     pointer-events: auto;
     flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  .fintap-hero-iphone__download-wrap {
+    order: -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.7rem;
+    width: 100%;
+    max-width: none;
+    margin: 0 auto;
+  }
+  .fintap-hero-iphone.fintap-hero-iphone--scroll .fintap-hero-iphone__download-app,
+  .fintap-hero-iphone.fintap-hero-iphone--scroll .fintap-hero-iphone__download-app-label {
+    color: #fff;
+  }
+
+  .fintap-hero-iphone__download-app {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
     gap: 0.55rem;
+    width: auto;
+    max-width: min(100%, 17.5rem);
+    min-height: 2.85rem;
+    padding: 0.28rem 0.28rem 0.28rem 0.95rem;
+    border-radius: 999px;
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-decoration: none;
+    background: #000;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.2),
+      0 8px 20px rgba(0, 0, 0, 0.24);
+  }
+  .fintap-hero-iphone__download-app-label {
+    flex: 0 1 auto;
+    text-align: left;
+    padding-left: 0;
+    white-space: nowrap;
+  }
+  .fintap-hero-iphone__download-app-arrow {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background: #fff;
+    color: #000;
+  }
+  .fintap-hero-iphone__download-app-arrow svg {
+    width: 0.92rem;
+    height: 0.92rem;
+    display: block;
+  }
+  .fintap-hero-iphone__download-caption {
+    margin: 0;
+    max-width: 22ch;
+    font-size: 0.92rem;
+    font-weight: 500;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.96);
+    text-shadow: 0 1px 12px rgba(0, 45, 95, 0.22);
   }
   #fintap-commerce-onboarding .fintap-hero-iphone__actions-title {
     display: none;
   }
-  #fintap-commerce-onboarding .fintap-hero-iphone__search {
-    opacity: 1;
-    transform: none;
-    width: min(100%, 352px);
-    max-width: 352px;
-    padding-right: 0.36rem;
-  }
-  /* Le champ est au-dessus du mockup : on compense le padding bas retiré avec l’ancien bloc CTA sous l’iPhone */
+  /* Le champ est au-dessus du mockup : compacter le panneau bleu (badge en flux sous l’iPhone) */
   .fintap-hero-iphone.fintap-hero-iphone--scroll {
-    --fintap-hero-bottom-bleed: clamp(3.5rem, 11vw, 6.5rem);
+    --fintap-hero-bottom-bleed: clamp(0.75rem, 2.5vw, 1.35rem);
+    padding-bottom: clamp(0.35rem, 1.2vw, 0.65rem);
   }
   .fintap-hero-iphone__scene {
-    padding-bottom: clamp(4.5rem, 12vw, 6.5rem);
+    margin-top: clamp(5rem, 15vw, 6.75rem);
+    min-height: 0;
+    padding-top: 0.65rem;
+    padding-bottom: clamp(0.35rem, 1.5vw, 0.75rem);
   }
   .fintap-hero-iphone__btn--primary { display: none; }
-  .fintap-hero-iphone__search-input { padding-right: 0.25rem; }
-  .fintap-hero-iphone__search-cta { display: inline-flex; }
 }

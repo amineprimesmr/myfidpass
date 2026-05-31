@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { LandingCinematicApp } from "./LandingCinematicApp.jsx";
+import { FinTapDemoRequestSection } from "./FinTapDemoRequestSection.jsx";
 
 function installDevConsoleFilter() {
   if (!import.meta.env.DEV) return;
@@ -24,6 +25,7 @@ export function mountLandingCinematic() {
   const root = existingRoot || createRoot(el);
   if (!existingRoot) el.__landingCinematicRoot = root;
   root.render(<LandingCinematicApp />);
+  mountLandingDemoRequest();
   // Notify hero scroll component that landing is now visible so it can snap to correct position.
   // Two rAF frames give the browser time to finish scroll restoration before resyncing.
   if (existingRoot) {
@@ -33,4 +35,14 @@ export function mountLandingCinematic() {
       });
     });
   }
+}
+
+/** Monte la section démo sous la FAQ (#landing-demo-root). */
+export function mountLandingDemoRequest() {
+  const el = document.getElementById("landing-demo-root");
+  if (!el) return;
+  const existingRoot = el.__landingDemoRoot;
+  const root = existingRoot || createRoot(el);
+  if (!existingRoot) el.__landingDemoRoot = root;
+  root.render(<FinTapDemoRequestSection />);
 }

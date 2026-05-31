@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { fintapFeaturesGridItems } from "./fintap-features-data.js";
 import { FinTapEngagementMetricsVisual } from "./FinTapEngagementMetricsVisual.jsx";
+import { FinTapVarCardsSection } from "./FinTapVarCardsSection.jsx";
 import { ScrollReveal } from "./ScrollReveal.jsx";
 import "./fintap-features-grid.css";
 
@@ -7,6 +9,20 @@ import "./fintap-features-grid.css";
  * Grille 2×2 type « feature cards » (fond gris clair, cartes blanches arrondies).
  */
 export function FinTapFeaturesGridSection() {
+  const [isDesktop, setIsDesktop] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(min-width: 768px)").matches
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const onChange = () => setIsDesktop(mq.matches);
+    onChange();
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
   return (
     <section
       className="fintap-features-grid"
@@ -27,6 +43,9 @@ export function FinTapFeaturesGridSection() {
           </ScrollReveal>
         </header>
 
+        <FinTapVarCardsSection embedded />
+
+        {isDesktop ? (
         <ul className="fintap-features-grid__list">
           {fintapFeaturesGridItems.map((item, idx) => (
             <ScrollReveal
@@ -68,6 +87,15 @@ export function FinTapFeaturesGridSection() {
             </ScrollReveal>
           ))}
         </ul>
+        ) : null}
+
+        <div className="fintap-features-grid__cta-wrap">
+          <ScrollReveal delay={0.08}>
+            <a href="/get" className="fintap-features-grid__cta">
+              Télécharger l&apos;app
+            </a>
+          </ScrollReveal>
+        </div>
       </div>
     </section>
   );

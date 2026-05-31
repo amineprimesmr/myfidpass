@@ -19,7 +19,7 @@
   left: clamp(0.32rem, 1.2vw, 0.85rem);
   right: clamp(0.32rem, 1.2vw, 0.85rem);
   flex-wrap: nowrap;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   gap: clamp(0.3rem, 1.5vw, 0.5rem);
   box-sizing: border-box;
@@ -34,7 +34,7 @@
   justify-content: center;
   gap: 0.35rem;
   flex: 0 1 auto;
-  max-width: calc(50% - clamp(0.2rem, 1vw, 0.35rem));
+  max-width: none;
   min-width: 0;
   min-height: clamp(34px, 9vw, 40px);
   padding: 0.22rem 0.55rem 0.22rem 0.48rem;
@@ -70,9 +70,12 @@
     box-shadow 0.4s cubic-bezier(1, 0, 0.4, 1);
 }
 
-.fintap-hero-desk-ctas .fintap-hero-desk-cta--login {
-  padding-left: 0.65rem;
-  padding-right: 0.65rem;
+@media (min-width: 768px) {
+  .fintap-hero-desk-ctas .fintap-hero-desk-cta {
+    gap: 0.4rem;
+    padding: 0.3rem 0.75rem 0.3rem 0.65rem;
+    min-height: 40px;
+  }
 }
 
 .fintap-hero-desk-ctas .fintap-hero-desk-cta:hover {
@@ -106,14 +109,12 @@
 }
 
 @media (min-width: 768px) {
-  .fintap-hero-desk-ctas .fintap-hero-desk-cta {
-    gap: 0.4rem;
-    padding: 0.3rem 0.75rem 0.3rem 0.65rem;
-    min-height: 40px;
-  }
-
-  .fintap-hero-desk-ctas .fintap-hero-desk-cta--login {
-    padding-left: 0.85rem;
-    padding-right: 0.85rem;
+  .fintap-hero-desk-ctas .fintap-hero-media-badge-anchor--top {
+    margin-left: auto;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0;
+    width: auto;
+    pointer-events: auto;
   }
 }

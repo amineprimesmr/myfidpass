@@ -1,0 +1,146 @@
+/* Carousel cartes var1–3 — mobile only, style Tuyo (peek + bords pleine largeur) */
+
+.fintap-var-cards {
+  --fintap-var-slide-w: calc(100vw - 2.85rem);
+  --fintap-var-gap: clamp(0.55rem, 2.4vw, 0.7rem);
+  --fintap-var-peek: calc(100vw - var(--fintap-var-slide-w) - var(--fintap-var-gap));
+  position: relative;
+  display: block;
+  overflow: visible;
+  padding: clamp(1.35rem, 4.5vw, 1.85rem) 0 clamp(1.75rem, 5vw, 2.25rem);
+  background: #f5f5f7;
+}
+
+.fintap-var-cards--embedded {
+  background: transparent;
+}
+
+@media (min-width: 768px) {
+  .fintap-var-cards {
+    display: none;
+  }
+}
+
+.fintap-var-cards__glow {
+  display: none;
+}
+
+.fintap-var-cards__inner {
+  position: relative;
+  z-index: 1;
+}
+
+.fintap-var-cards__track-wrap {
+  position: relative;
+  overflow: visible;
+}
+
+.fintap-var-cards__track {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: var(--fintap-var-gap);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 0;
+  padding: 0.35rem 0 0.65rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+
+.fintap-var-cards__track::-webkit-scrollbar {
+  display: none;
+}
+
+.fintap-var-cards__slide {
+  flex: 0 0 var(--fintap-var-slide-w);
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.fintap-var-cards__slide:last-child {
+  scroll-snap-align: start;
+}
+
+.fintap-var-cards__track::after {
+  content: "";
+  flex: 0 0 max(var(--fintap-var-peek), 0px);
+}
+
+.fintap-var-cards__card {
+  position: relative;
+  border-radius: clamp(1.75rem, 5.2vw, 2rem);
+  overflow: hidden;
+  background: transparent;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+.fintap-var-cards__card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  vertical-align: middle;
+  border-radius: inherit;
+}
+
+.fintap-var-cards__chevron {
+  position: absolute;
+  z-index: 5;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.28);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: rgba(255, 255, 255, 0.95);
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fintap-var-cards__chevron--prev {
+  left: clamp(0.55rem, 2.8vw, 0.85rem);
+}
+
+.fintap-var-cards__chevron--next {
+  right: clamp(0.55rem, 2.8vw, 0.85rem);
+}
+
+.fintap-var-cards__chevron-svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.fintap-var-cards__chevron:active {
+  color: #fff;
+  background: rgba(0, 0, 0, 0.42);
+  transform: translateY(-50%) scale(0.94);
+}
+
+.fintap-var-cards__chevron:focus-visible {
+  outline: 2px solid rgba(10, 152, 255, 0.45);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fintap-var-cards__track {
+    scroll-behavior: auto;
+  }
+
+  .fintap-var-cards__chevron:active {
+    transform: translateY(-50%);
+  }
+}

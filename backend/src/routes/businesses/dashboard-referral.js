@@ -1,6 +1,6 @@
 /**
  * GET /:slug/dashboard/referral — infos de parrainage du commerçant connecté.
- * Accès : abonnement actif requis (pas pendant l'essai gratuit).
+ * Accès : abonnement actif requis.
  */
 import { Router } from "express";
 import { ensureDashboardAccess } from "./shared.js";

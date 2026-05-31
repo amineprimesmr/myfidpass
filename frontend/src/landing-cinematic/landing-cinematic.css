@@ -39,6 +39,7 @@ body:has(#landing-cinematic-root.landing-cinematic-shell) {
   margin: 0;
   padding: 0;
   overflow: visible;
+  background: var(--fidpass-surface, #f5f5f7);
 }
 
 #landing .landing-main-cinematic::before {

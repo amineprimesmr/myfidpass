@@ -3,13 +3,13 @@
 const ETAPE_ASSETS = [
   "/assets/etape1.png?v=20260206",
   "/assets/etape2.png?v=20260206",
-  "/assets/etape3.png?v=20260206",
+  "/assets/etape3.jpg?v=20260531",
 ];
 
 const ETAPE_ALTS = [
-  "Étape 1 : connectez votre commerce",
-  "Étape 2 : personnalisez votre carte",
-  "Étape 3 : fidélisez chaque client",
+  "Étape 1 : téléchargez l'app",
+  "Étape 2 : créez votre carte",
+  "Étape 3 : affichez votre flyer de jeu",
 ];
 
 /**

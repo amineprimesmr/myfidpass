@@ -1,5 +1,5 @@
 /**
- * Footer accueil — référence visuelle pied de page type Shopify FR (noir total, grille, barre inférieure).
+ * Footer accueil — compact.
  */
 
 #landing main + .landing-footer,
@@ -8,14 +8,10 @@
 }
 
 .landing-footer.landing-footer--sf {
-  --sf-bg: #000000;
-  --sf-green: #008060;
   --sf-text: #ffffff;
-  --sf-subtext: rgba(255, 255, 255, 0.78);
-  --sf-rule: rgba(255, 255, 255, 0.12);
   margin-top: 0;
-  padding: clamp(3.5rem, 6vw, 5rem) max(1.25rem, calc(50vw - 672px))
-    clamp(2rem, 4vw, 2.75rem);
+  padding: clamp(2.25rem, 5vw, 3.25rem) max(1.25rem, calc(50vw - 672px))
+    max(1.75rem, calc(env(safe-area-inset-bottom, 0px) + 5rem));
   width: 100vw;
   max-width: 100vw;
   margin-left: calc(-50vw + 50%);
@@ -29,189 +25,75 @@
     -apple-system,
     "Segoe UI",
     Roboto,
-    "Helvetica Neue",
-    Arial,
     sans-serif;
   -webkit-font-smoothing: antialiased;
   border-top: none !important;
   box-shadow: none !important;
-  margin-top: -1px;
 }
 
 .landing-footer-sf-inner {
-  max-width: 1344px;
-  margin: 0 auto;
-}
-
-/* Grille principale : marque à gauche + 4 colonnes */
-.landing-footer-sf-top {
-  display: grid;
-  grid-template-columns: minmax(56px, min(18vw, 120px)) repeat(4, minmax(0, 1fr));
-  gap: clamp(2rem, 4vw, 3.5rem) clamp(1.75rem, 3vw, 2.75rem);
-  align-items: start;
-}
-
-.landing-footer-sf-col {
-  min-width: 0;
-}
-
-.landing-footer-sf-mark {
+  max-width: 720px;
+  margin: 0;
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  justify-content: flex-start;
-  text-decoration: none;
+  gap: 1rem;
 }
 
-.landing-footer-sf-mark img {
-  display: block;
-  height: clamp(48px, 7vw, 72px);
-  width: auto;
-  max-width: 100%;
-  object-fit: contain;
+.landing-footer-sf-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.85rem;
+  width: 100%;
 }
 
-.landing-footer-sf-col-title {
-  margin: 0 0 1.1rem;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+.landing-footer-sf-nav a {
+  font-size: 0.8125rem;
+  font-weight: 500;
   line-height: 1.35;
-  color: var(--sf-text);
-}
-
-.landing-footer-sf-links {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.landing-footer-sf-links li {
-  margin: 0;
-  padding: 0;
-}
-
-.landing-footer-sf-links a {
-  display: inline-block;
-  padding: 0.28rem 0;
-  font-size: 0.875rem;
-  font-weight: 400;
-  line-height: 1.65;
-  letter-spacing: 0.005em;
-  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.72);
   text-decoration: none;
-  transition:
-    color 0.22s ease,
-    opacity 0.22s ease;
+  transition: color 0.2s ease;
 }
 
-.landing-footer-sf-links a:hover {
+.landing-footer-sf-nav a:hover {
   color: #fff;
-  opacity: 1;
 }
 
-.landing-footer-sf-links a:focus-visible {
-  outline: 2px solid var(--sf-green);
-  outline-offset: 3px;
+.landing-footer-sf-nav a:focus-visible {
+  outline: 2px solid #008060;
+  outline-offset: 2px;
   border-radius: 3px;
 }
 
-/* Séparateur */
-.landing-footer-sf-rule {
-  margin: clamp(2.25rem, 4vw, 3.25rem) 0 clamp(1.25rem, 2.5vw, 1.75rem);
-  border: none;
-  height: 1px;
-  background: var(--sf-rule);
-}
-
-/* Barre inférieure */
 .landing-footer-sf-bot {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem 1.5rem;
-  padding-bottom: 0.25rem;
+  gap: 0.75rem 1rem;
+  width: 100%;
 }
 
-.landing-footer-sf-locale-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.35rem 0.65rem;
-  margin: -0.35rem -0.65rem;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.88);
-  font: inherit;
-  font-size: 0.8125rem;
-  cursor: default;
-}
-
-.landing-footer-sf-locale-btn:hover {
-  color: #fff;
-}
-
-.landing-footer-sf-locale-btn svg:first-of-type {
-  flex-shrink: 0;
-}
-
-.landing-footer-sf-locale-chevr {
-  opacity: 0.75;
-}
-
-.landing-footer-sf-legal {
-  flex: 1 1 auto;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem 0.85rem;
-  min-width: 0;
+.landing-footer-sf-copy {
+  margin: 0;
   font-size: 0.75rem;
-  line-height: 1.65;
-}
-
-.landing-footer-sf-legal a {
-  color: rgba(255, 255, 255, 0.76);
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.landing-footer-sf-legal a:hover {
-  color: #fff;
-}
-
-.landing-footer-sf-legal-sep {
-  color: rgba(255, 255, 255, 0.32);
-  user-select: none;
-}
-
-.landing-footer-sf-privacy-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.landing-footer-sf-privacy-ico {
-  flex-shrink: 0;
-}
-
-.landing-footer-sf-soc {
-  flex-shrink: 0;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.42);
 }
 
 .landing-footer-sf-soc-list {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.55rem;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-/* Pastilles blanches + pictos noirs (référence Shopify) */
 .landing-footer-sf-soc__a {
   display: inline-flex;
   align-items: center;
@@ -233,10 +115,6 @@
     0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.landing-footer-sf-soc__a:active {
-  transform: translateY(0);
-}
-
 .landing-footer-sf-soc__a svg {
   width: 0.875rem;
   height: 0.875rem;
@@ -250,48 +128,21 @@
   filter: saturate(0) brightness(0.25);
 }
 
-@media (max-width: 1024px) {
-  .landing-footer-sf-top {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .landing-footer-sf-mark {
-    grid-column: 1 / -1;
-    justify-content: center;
-    padding-bottom: 0.5rem;
-  }
-
-  .landing-footer-sf-mark img {
-    height: clamp(44px, 11vw, 64px);
-  }
-}
-
 @media (max-width: 640px) {
-  .landing-footer-sf-top {
-    grid-template-columns: 1fr;
-    gap: 2rem;
+  .landing-footer.landing-footer--sf {
+    padding-bottom: max(5.75rem, calc(env(safe-area-inset-bottom, 0px) + 5.25rem));
   }
 
-  .landing-footer-sf-bot {
-    flex-direction: column;
-    align-items: stretch;
+  .landing-footer-sf-nav {
+    gap: 0.4rem 0.65rem;
   }
 
-  .landing-footer-sf-legal {
-    justify-content: flex-start;
-  }
-
-  .landing-footer-sf-soc {
-    justify-content: center;
-  }
-
-  .landing-footer-sf-soc-list {
-    justify-content: flex-start;
+  .landing-footer-sf-nav a {
+    font-size: 0.78rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing-footer-sf-links a,
   .landing-footer-sf-soc__a {
     transition: none;
   }
@@ -399,15 +250,8 @@ body.page-home .whatsapp-fab-wrap {
   height: 32px;
 }
 
-/* Accueil cinéma mobile : remonter le FAB au-dessus du switcher fixé en bas */
 @media (max-width: 767.98px) {
-  body.page-home:has(#landing-cinematic-root.landing-cinematic-shell) .whatsapp-fab-wrap {
-    /* Au-dessus du switcher bas agrandi + marge */
-    bottom: max(6.15rem, calc(env(safe-area-inset-bottom, 0px) + 5.05rem));
-  }
-
-  /* Pastille « 1 conseiller disponible » : trop chargée sur petit écran — garder uniquement le bouton WhatsApp */
-  .whatsapp-fab-hint {
+  body.page-home .whatsapp-fab-wrap {
     display: none !important;
   }
 }

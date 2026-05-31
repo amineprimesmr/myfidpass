@@ -1,17 +1,15 @@
 /**
- * Bloc « Lancez-vous rapidement » — référence visuelle Shopify FR (landing).
+ * Bloc « Lancez-vous rapidement » — FAQ + CTA télécharger l’app.
  */
 
 .landing-launch-sf {
   --ls-bg: #030808;
-  --ls-num: #00ff92;
-  --ls-accent-b: #008060;
   --ls-text: #ffffff;
-  --ls-muted: rgba(255, 255, 255, 0.68);
-  --ls-rule: rgba(255, 255, 255, 0.2);
+  --ls-muted: rgba(255, 255, 255, 0.72);
+  --ls-rule: rgba(255, 255, 255, 0.14);
 
   margin: 0 calc(-50vw + 50%) 0;
-  padding: clamp(3.65rem, 8.5vw, 6rem) max(1.25rem, calc(50vw - 672px)) clamp(2.5rem, 5vw, 4rem);
+  padding: clamp(3.65rem, 8.5vw, 6rem) max(1.25rem, calc(50vw - 672px)) clamp(2rem, 4.5vw, 3rem);
   width: 100vw;
   max-width: 100vw;
   box-sizing: border-box;
@@ -20,7 +18,7 @@
   background:
     radial-gradient(120% 95% at 18% 10%, rgba(33, 34, 42, 0.55) 0%, rgba(33, 34, 42, 0) 56%),
     radial-gradient(95% 80% at 86% 68%, rgba(33, 34, 42, 0.42) 0%, rgba(33, 34, 42, 0) 62%),
-    linear-gradient(128deg, #030808 0%, #0b1014 38%, #171d24 64%, #21222a 100%);
+    linear-gradient(128deg, #030808 0%, #0b1014 38%, #171d24 64%, #0a0a0a 88%, #000 100%);
 
   font-family:
     "Inter",
@@ -33,11 +31,7 @@
     Arial,
     sans-serif;
 
-  font-feature-settings:
-    "cv02",
-    "cv03",
-    "cv04",
-    "salt" 1;
+  font-feature-settings: "cv02", "cv03", "cv04", "salt" 1;
   -webkit-font-smoothing: antialiased;
   position: relative;
   overflow: clip;
@@ -49,27 +43,38 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: clamp(96px, 16vw, 170px);
+  height: clamp(64px, 10vw, 100px);
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(3, 8, 8, 0) 0%, #000 100%);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #000 100%);
+}
+
+.landing-launch-sf-demo-root {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1344px;
+  margin: 0 auto;
+  padding: 0 max(1.25rem, calc(50vw - 672px)) clamp(2.5rem, 5.5vw, 4rem);
+  box-sizing: border-box;
 }
 
 .landing-launch-sf-inner {
-  max-width: 1344px;
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
   margin: 0 auto;
   padding-top: clamp(0.4rem, 1.5vw, 1.1rem);
 }
 
-/* Titre : même échelle / UX que `.fintap-steps-scroll__h2` (gradient sur texte, Inter 560) ; dégradé clair pour le fond sombre. */
 .landing-launch-sf-heading {
-  margin: 0 auto clamp(2.5rem, 5vw, 3.75rem);
-  padding: 0 clamp(1.25rem, 4vw, 2.5rem);
+  margin: 0 auto clamp(2rem, 4.5vw, 3rem);
+  padding: 0 clamp(0.5rem, 2vw, 1rem);
   width: 100%;
   max-width: min(100%, 38rem);
   box-sizing: border-box;
   text-align: center;
   text-wrap: balance;
-  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: clamp(2.35rem, 7.8vw, 3.55rem);
   font-weight: 560;
   letter-spacing: -0.03em;
@@ -83,292 +88,186 @@
 
 @media (min-width: 1024px) {
   .landing-launch-sf-heading {
-    max-width: min(100%, 42rem);
     font-size: clamp(2.55rem, 4.5vw, 3.75rem);
   }
 }
 
-.landing-launch-sf-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.06fr) minmax(0, 1fr);
-  gap: clamp(2rem, 5vw, 4.5rem);
-  align-items: start;
+.landing-launch-sf-body {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.25rem, 3vw, 1.75rem);
 }
 
-/* PC : pas d’image iPhone — une seule colonne (étapes). */
-@media (min-width: 901px) {
-  .landing-launch-sf-visual {
-    display: none;
-  }
-
-  .landing-launch-sf-grid {
-    grid-template-columns: 1fr;
-    gap: clamp(1.5rem, 3vw, 2.5rem);
-  }
-}
-
-/* Colonne visuelle : deux vignettes chevauchées */
-.landing-launch-sf-visual {
-  position: relative;
-  margin: 0 calc(50% - 50vw) 0 0;
-  width: min(88vw, 1040px);
-  min-height: clamp(620px, 72vw, 980px);
-}
-
-.landing-launch-sf-fig {
-  position: absolute;
-  margin: 0;
-  overflow: hidden;
-  border-radius: clamp(14px, 2vw, 20px);
-  box-shadow:
-    0 24px 48px rgba(0, 0, 0, 0.45),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
-}
-
-.landing-launch-sf-img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.landing-launch-sf-fig--primary {
-  top: 0;
-  right: 0;
-  left: auto;
-  width: clamp(500px, 88%, 980px);
-  aspect-ratio: 3 / 4.05;
-  z-index: 1;
-  overflow: visible;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-.landing-launch-sf-fig--overlap {
-  right: min(12%, 0);
-  bottom: 0;
-  width: clamp(196px, 52%, 270px);
-  aspect-ratio: 3 / 3.92;
-  z-index: 2;
-}
-
-.landing-launch-sf-fig--overlap .landing-launch-sf-img {
-  object-position: 50% 36%;
-}
-
-.landing-launch-sf-fig--primary .landing-launch-sf-img {
-  object-fit: contain;
-  object-position: 100% 50%;
-}
-
-/* Étapes — numéros vert néon (#00FF80) lisibles comme la capture */
-.landing-launch-sf-steps-wrap {
-  min-width: 0;
-}
-
-.landing-launch-sf-list {
+.landing-launch-sf-faq {
+  list-style: none;
   margin: 0;
   padding: 0;
-  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
-.landing-launch-sf-row {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: clamp(0.95rem, 2.2vw, 1.4rem);
-  align-items: baseline;
-  padding: clamp(1.15rem, 2.2vw, 1.55rem) 0 clamp(1.05rem, 2vw, 1.35rem);
-  border-bottom: 1px solid var(--ls-rule);
-}
-
-.landing-launch-sf-row:first-child {
-  padding-top: 0;
-}
-
-.landing-launch-sf-num {
-  font-variant-numeric: tabular-nums;
-  font-size: clamp(0.95rem, 1.85vw, 1.0625rem);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--ls-num);
-  text-shadow:
-    0 0 20px rgba(0, 255, 146, 0.25),
-    0 1px 0 rgba(0, 0, 0, 0.45);
-}
-
-.landing-launch-sf-num--soft {
-  color: var(--ls-accent-b);
-  text-shadow: none;
-}
-
-.landing-launch-sf-step-title {
+#landing #lancez-vous-rapidement .landing-launch-sf-faq-item {
   margin: 0;
-  font-size: clamp(1.68rem, 3.6vw, 2.85rem);
-  font-weight: 500;
-  letter-spacing: -0.036em;
-  line-height: 1.04;
-  color: var(--ls-text);
-  transition:
-    color 0.24s ease,
-    text-shadow 0.24s ease,
-    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.24s ease;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  overflow: hidden;
+  transition: border-color 0.22s ease, background 0.22s ease;
 }
 
-.landing-launch-sf-row--dim .landing-launch-sf-step-title {
-  opacity: 0.78;
+#landing #lancez-vous-rapidement .landing-launch-sf-faq-item:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.48);
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .landing-launch-sf-row:hover .landing-launch-sf-step-title {
-    opacity: 1;
-    color: #f6fbff;
-    text-shadow:
-      0 0 24px rgba(79, 143, 255, 0.2),
-      0 0 14px rgba(0, 255, 146, 0.14);
-    transform: translateX(3px);
-  }
-
-  .landing-launch-sf-row:hover .landing-launch-sf-num {
-    color: #23ffd0;
-    text-shadow:
-      0 0 22px rgba(0, 255, 146, 0.34),
-      0 1px 0 rgba(0, 0, 0, 0.45);
-  }
+#landing #lancez-vous-rapidement .landing-launch-sf-faq-item.is-open {
+  border-color: rgba(134, 239, 172, 0.28);
+  background: rgba(0, 0, 0, 0.52);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 4px 18px rgba(0, 0, 0, 0.28);
 }
 
-/* CTA pill */
-.landing-launch-sf-cta {
+#landing #lancez-vous-rapidement .landing-launch-sf-faq-item .landing-faq-question {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.62rem 0.75rem;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.94);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#landing #lancez-vous-rapidement .landing-launch-sf-faq-item .landing-faq-question:focus-visible {
+  outline: 2px solid rgba(134, 239, 172, 0.45);
+  outline-offset: 1px;
+}
+
+#landing #lancez-vous-rapidement .landing-launch-sf-faq-item .landing-faq-icon {
+  flex-shrink: 0;
+  width: 1.35rem;
+  height: 1.35rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-top: clamp(1.85rem, 4vw, 2.85rem);
-
-  padding: 0.75rem clamp(2.2rem, 4vw, 2.95rem);
-  min-height: 48px;
-
   border-radius: 999px;
-  border: none;
-  background: #ffffff;
-  color: #0a0d0f;
-  font: inherit;
-  font-size: 0.9625rem;
+  font-size: 0.95rem;
+  font-weight: 400;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.08);
+  transition:
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.22s ease,
+    color 0.22s ease;
+}
+
+#landing #lancez-vous-rapidement .landing-launch-sf-faq-item.is-open .landing-faq-icon {
+  transform: rotate(45deg);
+  background: rgba(134, 239, 172, 0.16);
+  color: #bbf7d0;
+}
+
+#landing #lancez-vous-rapidement .landing-launch-sf-faq-item .landing-faq-answer {
+  display: grid;
+  grid-template-rows: 0fr;
+  padding: 0 0.75rem;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.26s ease,
+    padding 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#landing #lancez-vous-rapidement .landing-launch-sf-faq-item.is-open .landing-faq-answer {
+  grid-template-rows: 1fr;
+  padding: 0 0.75rem 0.62rem;
+  opacity: 1;
+}
+
+#landing #lancez-vous-rapidement .landing-launch-sf-faq-item .landing-faq-answer p {
+  margin: 0;
+  overflow: hidden;
+  min-height: 0;
+  font-size: 0.8125rem;
+  line-height: 1.48;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+/* CTA blanc — inverse du fond sombre FAQ */
+.landing-launch-sf-download-app {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  align-self: center;
+  width: auto;
+  max-width: 100%;
+  min-height: 2.65rem;
+  padding: 0.22rem 0.22rem 0.22rem 0.95rem;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.875rem;
   font-weight: 600;
   letter-spacing: -0.02em;
-
-  cursor: pointer;
+  line-height: 1.1;
   text-decoration: none;
-  white-space: nowrap;
-
-  transition:
-    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.2s ease;
+  color: #0a0d0f;
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    0 8px 22px rgba(0, 0, 0, 0.22);
+  transition: transform 0.16s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
-.landing-launch-sf-cta:hover {
+.landing-launch-sf-download-app:hover {
+  transform: translateY(-1px);
   filter: brightness(1.02);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    0 12px 26px rgba(0, 0, 0, 0.26);
 }
 
-.landing-launch-sf-cta:active {
+.landing-launch-sf-download-app:active {
   transform: scale(0.985);
 }
 
-/* Mini vignette vidéo (ref. Shopify) — position relative au bloc */
-.landing-launch-sf-video-tease {
-  position: absolute;
-  right: max(0.85rem, calc(50vw - 672px - 1rem));
-  bottom: max(1.25rem, 3vw);
-
-  width: clamp(232px, 28vw, 302px);
-
-  padding: 0;
-  margin: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
+.landing-launch-sf-download-app__label {
+  flex: 0 1 auto;
   text-align: left;
-  color: inherit;
-  text-decoration: none;
+  white-space: nowrap;
 }
 
-.landing-launch-sf-video-inner {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-
-  padding: 0.5rem;
-  padding-right: 0.72rem;
-
-  border-radius: 12px;
-
-  background: rgba(10, 12, 16, 0.62);
-  backdrop-filter: blur(10px);
-
-  box-shadow:
-    0 8px 26px rgba(0, 0, 0, 0.4),
-    0 1px 0 rgba(255, 255, 255, 0.08);
-
-  outline: none;
-}
-
-.landing-launch-sf-video-inner:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 3px;
-}
-
-.landing-launch-sf-video-thumb-wrap {
-  position: relative;
+.landing-launch-sf-download-app__arrow {
   flex-shrink: 0;
-}
-
-.landing-launch-sf-video-thumb {
-  display: block;
-  width: 72px;
-  height: 48px;
-
-  border-radius: 8px;
-  overflow: hidden;
-  object-fit: cover;
-}
-
-.landing-launch-sf-video-play {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 32px;
-  height: 32px;
-
-  margin: -16px 0 0 -16px;
-
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.95rem;
+  height: 1.95rem;
   border-radius: 50%;
-
-  border: none;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 #fff;
-
-  pointer-events: none;
+  background: #0a0d0f;
+  color: #fff;
 }
 
-.landing-launch-sf-video-play::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-40%, -50%);
-
-  border-style: solid;
-  border-width: 6px 0 6px 9px;
-  border-color: transparent transparent transparent #000;
-}
-
-.landing-launch-sf-video-cap {
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1.32;
-  letter-spacing: -0.01em;
-  color: rgba(255, 255, 255, 0.96);
+.landing-launch-sf-download-app__arrow svg {
+  width: 0.88rem;
+  height: 0.88rem;
+  display: block;
 }
 
 @media (max-width: 900px) {
@@ -380,62 +279,22 @@
   .landing-launch-sf-heading {
     margin-bottom: clamp(1.25rem, 3.5vw, 2rem);
   }
-
-  .landing-launch-sf-grid {
-    grid-template-columns: 1fr;
-    gap: clamp(0.3rem, 1.4vw, 0.6rem);
-  }
-
-  /* Image alignée à droite, bord droit du viewport (annule le padding horizontal de `.landing-launch-sf`). */
-  .landing-launch-sf-visual {
-    width: min(268px, 78vw);
-    max-width: 78vw;
-    min-height: clamp(220px, 56vw, 340px);
-    margin-left: auto;
-    margin-right: calc(-1 * max(1.25rem, calc(50vw - 672px)));
-  }
-
-  .landing-launch-sf-fig--primary {
-    width: 100%;
-    max-width: none;
-    left: auto;
-    right: 0;
-    transform: none;
-  }
-
-  .landing-launch-sf-fig--overlap {
-    display: none;
-  }
-
-  .landing-launch-sf-video-tease {
-    position: static;
-    width: 100%;
-    margin-top: 0.2rem;
-  }
-
-  .landing-launch-sf-cta {
-    display: flex;
-    width: min(100%, 440px);
-    margin-inline: auto;
-    padding: 0.95rem 1.35rem;
-    min-height: 56px;
-    font-size: 1.08rem;
-    font-weight: 620;
-  }
-}
-
-@media (max-width: 640px) {
-  .landing-launch-sf-cta {
-    width: 100%;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing-launch-sf-cta {
+  .landing-launch-sf-download-app,
+  #landing #lancez-vous-rapidement .landing-launch-sf-faq-item,
+  #landing #lancez-vous-rapidement .landing-launch-sf-faq-item .landing-faq-icon,
+  #landing #lancez-vous-rapidement .landing-launch-sf-faq-item .landing-faq-answer {
     transition: none;
   }
 
-  .landing-launch-sf-cta:active {
+  .landing-launch-sf-download-app:hover,
+  .landing-launch-sf-download-app:active {
     transform: none;
+  }
+
+  #landing #lancez-vous-rapidement .landing-launch-sf-faq-item.is-open .landing-faq-answer {
+    opacity: 1;
   }
 }

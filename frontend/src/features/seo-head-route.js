@@ -410,6 +410,17 @@ export function getSeoByRoute(route) {
     };
   }
 
+  if (route?.type === "get-app") {
+    return {
+      title: "Télécharger l'app MyFidPass | App Store & Google Play",
+      description:
+        "Téléchargez l'application MyFidPass pour commerçants : carte fidélité digitale, Apple Wallet, Google Wallet et gestion clients.",
+      robots: "index,follow",
+      canonical,
+      jsonLd: null,
+    };
+  }
+
   if (route?.type === "contact") {
     const description =
       "Contacter MyFidPass : support commercants et clients pour carte fidelite digitale, Apple Wallet, Google Wallet et espace marchand.";

@@ -15,13 +15,13 @@
   inset: 0;
   border-radius: clamp(1.2rem, 3vw, 2.25rem);
   background:
-    radial-gradient(ellipse 100% 85% at 50% -30%, rgba(255, 255, 255, 0.5) 0%, transparent 55%),
-    radial-gradient(ellipse 72% 58% at 0% 5%, rgba(120, 210, 255, 0.55) 0%, transparent 58%),
-    radial-gradient(ellipse 72% 58% at 100% 5%, rgba(95, 190, 255, 0.48) 0%, transparent 56%),
-    linear-gradient(180deg, #84d0ff 0%, #73c8ff 24%, #67c0ff 48%, #5dbbff 74%, #58b8ff 100%);
+    radial-gradient(ellipse 100% 85% at 50% -30%, rgba(255, 255, 255, 0.42) 0%, transparent 55%),
+    radial-gradient(ellipse 72% 58% at 0% 5%, rgba(100, 195, 245, 0.5) 0%, transparent 58%),
+    radial-gradient(ellipse 72% 58% at 100% 5%, rgba(78, 175, 238, 0.44) 0%, transparent 56%),
+    linear-gradient(180deg, #7cc6f5 0%, #6cbef5 24%, #60b6f5 48%, #56b1f5 74%, #51adf5 100%);
   box-shadow:
-    0 10px 40px rgba(12, 80, 140, 0.12),
-    0 1px 0 rgba(255, 255, 255, 0.4) inset;
+    0 10px 40px rgba(12, 80, 140, 0.16),
+    0 1px 0 rgba(255, 255, 255, 0.32) inset;
   pointer-events: none;
 }
 
@@ -56,4 +56,32 @@
 .fintap-hero-iphone.fintap-hero-iphone--scroll .fintap-hero-iphone__search-conflict {
   color: #fecaca;
   text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
+}
+
+.fintap-hero-iphone__brand {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  .fintap-hero-iphone.fintap-hero-iphone--scroll {
+    padding-top: max(0.85rem, calc(env(safe-area-inset-top, 0px) + 0.55rem));
+  }
+
+  .fintap-hero-iphone.fintap-hero-iphone--scroll .fintap-hero-iphone__brand {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin: 0 auto 0.9rem;
+    padding: 0 clamp(1rem, 5vw, 2rem);
+    box-sizing: border-box;
+    text-decoration: none;
+  }
+
+  .fintap-hero-iphone__brand-icon {
+    width: 2.35rem;
+    height: 2.35rem;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
 }

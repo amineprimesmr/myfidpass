@@ -1,0 +1,183 @@
+/* Page /get — téléchargement app (clone get.tuyo.com, fond sombre plein écran) */
+
+html.page-get-app,
+body.page-get-app {
+  margin: 0;
+  min-height: 100%;
+  min-height: 100dvh;
+  background: #0a1015;
+  background-image: none;
+  font-family: Helvetica, sans-serif;
+}
+
+body.page-get-app #landing {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  background: #0a1015;
+}
+
+body.page-get-app #landing-liquid-nav-host,
+body.page-get-app .landing-liquid-nav-host,
+body.page-get-app #site-footer-myfidpass,
+body.page-get-app #lancez-vous-rapidement,
+body.page-get-app .landing-legal-inner > .landing-btn {
+  display: none !important;
+}
+
+body.page-get-app #landing-legal.landing-legal {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  padding: max(1.25rem, env(safe-area-inset-top, 0px)) max(1.25rem, env(safe-area-inset-right, 0px))
+    max(1.25rem, env(safe-area-inset-bottom, 0px)) max(1.25rem, env(safe-area-inset-left, 0px));
+  box-sizing: border-box;
+  background: #0a1015;
+}
+
+body.page-get-app .landing-legal-inner {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body.page-get-app #landing-legal-content {
+  width: 100%;
+  max-width: min(100%, 28rem);
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 0;
+}
+
+body.page-get-app .get-app-container.container {
+  text-align: center;
+  width: 100%;
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+body.page-get-app .get-app-logo {
+  display: block;
+  margin: 0 auto;
+  height: clamp(140px, 28vw, 200px);
+  width: auto;
+  border-radius: 2rem;
+}
+
+body.page-get-app div.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 16px;
+}
+
+body.page-get-app div.content * {
+  margin: 0;
+}
+
+body.page-get-app .title {
+  font-size: clamp(1.65rem, 4.5vw, 2rem);
+  font-weight: bold;
+  line-height: 1.35;
+  margin: 0;
+}
+
+body.page-get-app .subtitle {
+  font-size: clamp(1rem, 2.5vw, 1.125rem);
+  font-weight: normal;
+  line-height: 1.5;
+  margin: 0;
+}
+
+body.page-get-app .referral-code {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: bold;
+  text-transform: uppercase;
+  margin: 8px;
+}
+
+body.page-get-app .color-foreground {
+  color: #ffffff;
+}
+
+body.page-get-app .color-foreground-secondary {
+  color: #949da5;
+}
+
+body.page-get-app .store-logo {
+  height: 50px;
+  width: auto;
+  display: block;
+}
+
+body.page-get-app .get-app-store-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+body.page-get-app .two-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+body.page-get-app .hidden {
+  display: none !important;
+}
+
+body.page-get-app .qr-container {
+  display: flex;
+  justify-content: center;
+  margin: 24px auto;
+  border-radius: 12px;
+  overflow: hidden;
+  height: 250px;
+  width: 250px;
+}
+
+body.page-get-app .qr-code {
+  background-color: #0f1920;
+}
+
+body.page-get-app .qr-code svg {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  body.page-get-app #landing-legal-content {
+    max-width: min(100%, 32rem);
+  }
+
+  body.page-get-app .get-app-container.container {
+    max-width: 32rem;
+    padding: 2rem 1.5rem;
+  }
+}
