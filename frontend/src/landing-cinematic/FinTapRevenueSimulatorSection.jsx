@@ -122,6 +122,14 @@ export function FinTapRevenueSimulatorSection() {
             </div>
 
             <div className="fintap-revenue-simulator__compare" aria-live="polite">
+              <div className="fintap-revenue-simulator__compare-row fintap-revenue-simulator__compare-row--cost">
+                <span className="fintap-revenue-simulator__compare-label">
+                  Investissement Myfidpass
+                </span>
+                <strong className="fintap-revenue-simulator__compare-value">
+                  {formatEuro(MYFIDPASS_MONTHLY_COST, { maximumFractionDigits: 2 })} /mois
+                </strong>
+              </div>
               <div className="fintap-revenue-simulator__compare-net">
                 <div>
                   <span className="fintap-revenue-simulator__compare-label">Gain net estimé</span>
