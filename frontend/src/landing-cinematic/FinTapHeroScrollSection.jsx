@@ -63,6 +63,11 @@ export function FinTapHeroScrollSection() {
   const ctaVisibleRef = useRef(false);
   const ctaHoldUntilRef = useRef(0);
   const [ctaVisible, setCtaVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 767.98px)").matches
+  );
   const pendingShopInit =
     typeof window !== "undefined" ? getPendingEstablishment() : null;
   const [shopQuery, setShopQuery] = useState(
@@ -353,8 +358,22 @@ export function FinTapHeroScrollSection() {
     clearPendingEstablishments();
   }, []);
 
+  /** Mobile : le champ commerce est affiché en haut, toujours actif (sans attendre l'anim scroll). */
   useEffect(() => {
-    if (!ctaVisible) {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 767.98px)");
+    const onChange = () => setIsMobile(mq.matches);
+    onChange();
+    if (mq.addEventListener) mq.addEventListener("change", onChange);
+    else mq.addListener(onChange);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener("change", onChange);
+      else mq.removeListener(onChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!ctaVisible && !isMobile) {
       setPlacesSearching(false);
       return;
     }
@@ -441,7 +460,7 @@ export function FinTapHeroScrollSection() {
         emptyHintTimerRef.current = 0;
       }
     };
-  }, [shopQuery, ctaVisible, shopPlaceId]);
+  }, [shopQuery, ctaVisible, shopPlaceId, isMobile]);
 
   useEffect(() => {
     const onClickOutside = (event) => {
@@ -556,7 +575,7 @@ export function FinTapHeroScrollSection() {
         <div
           id="fintap-commerce-onboarding"
           className={`fintap-hero-iphone__actions${ctaVisible ? " is-visible" : ""}`}
-          aria-hidden={ctaVisible ? "false" : "true"}
+          aria-hidden={ctaVisible || isMobile ? "false" : "true"}
         >
           <p className="fintap-hero-iphone__actions-title">
             Quel est le nom de

@@ -458,34 +458,38 @@
   }
 }
 
-@media (max-width: 720px) {
-  .fintap-hero-iphone__scene {
-    padding-bottom: 10rem;
+/* Conversion mobile : champ commerce sous l'accroche, AVANT l'iPhone, toujours visible */
+@media (max-width: 767.98px) {
+  .fintap-hero-iphone__experience {
+    display: flex;
+    flex-direction: column;
   }
-
-  .fintap-hero-iphone__actions {
+  #fintap-commerce-onboarding.fintap-hero-iphone__actions {
+    order: -1;
+    margin: 0.35rem auto 0.5rem;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 1;
+    transform: none;
+    filter: none;
+    pointer-events: auto;
     flex-wrap: wrap;
     gap: 0.55rem;
-    margin-top: 10rem;
   }
-
-  .fintap-hero-iphone__search {
+  #fintap-commerce-onboarding .fintap-hero-iphone__actions-title {
+    display: none;
+  }
+  #fintap-commerce-onboarding .fintap-hero-iphone__search {
+    opacity: 1;
+    transform: none;
     width: min(100%, 352px);
     max-width: 352px;
     padding-right: 0.36rem;
   }
-
-  .fintap-hero-iphone__btn--primary {
-    display: none;
-    width: 100%;
-    min-height: 2.8rem;
+  .fintap-hero-iphone__scene {
+    padding-bottom: clamp(2.5rem, 7vw, 4rem);
   }
-
-  .fintap-hero-iphone__search-input {
-    padding-right: 0.25rem;
-  }
-
-  .fintap-hero-iphone__search-cta {
-    display: inline-flex;
-  }
+  .fintap-hero-iphone__btn--primary { display: none; }
+  .fintap-hero-iphone__search-input { padding-right: 0.25rem; }
+  .fintap-hero-iphone__search-cta { display: inline-flex; }
 }

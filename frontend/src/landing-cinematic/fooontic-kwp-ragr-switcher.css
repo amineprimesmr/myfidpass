@@ -295,11 +295,11 @@
  100% { scale: 1 1; }
 }
 
-/* Mobile : barre de navigation en bas (safe area) — plus grande et plus décollée du bord */
+/* Mobile : barre de navigation en haut (safe area) — plus grande et plus décollée du bord */
 @media (max-width: 767.98px) {
   #landing-liquid-glass .switcher {
-    top: auto;
-    bottom: max(1.15rem, calc(env(safe-area-inset-bottom, 0px) + 0.62rem));
+    top: max(0.85rem, calc(env(safe-area-inset-top, 0px) + 0.5rem));
+    bottom: auto;
     translate: -50% 0;
     --sw-pad-x: 11px;
     --sw-pad-y: 7px;
