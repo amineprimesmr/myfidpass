@@ -79,7 +79,7 @@ export function computeRevenueSimulation(input) {
 export function buildRevenueSimulatorDisclaimer(results) {
   return (
     `* D'après nos clients en « ${results.sectorLabel} » : ` +
-    `+${results.visitUpliftPercent} % de visites et +${results.basketUpliftPercent} % de panier en moyenne.`
+    `+${results.visitUpliftPercent}% de visites et +${results.basketUpliftPercent}% de panier en moyenne.`
   );
 }
 

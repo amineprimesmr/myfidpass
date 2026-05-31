@@ -58,8 +58,8 @@ describe("buildRevenueSimulatorDisclaimer", () => {
     });
     const text = buildRevenueSimulatorDisclaimer(results);
     expect(text).toContain("Restauration / Fast-food");
-    expect(text).toContain("+22 % de visites");
-    expect(text).toContain("+8 % de panier");
+    expect(text).toContain("+22% de visites");
+    expect(text).toContain("+8% de panier");
     expect(text).not.toContain("Abonnement");
   });
 });
