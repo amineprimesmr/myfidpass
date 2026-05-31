@@ -2,7 +2,6 @@ import {
   DEFAULT_REVENUE_SECTOR_ID,
   getRevenueSectorConfig,
   MYFIDPASS_MONTHLY_COST,
-  REVENUE_GOOGLE_REVIEW_FROM_LOYAL_RATE,
 } from "./fintap-revenue-simulator-data.js";
 
 /** Jours ouvrés moyens par mois pour l'estimation. */
@@ -16,6 +15,16 @@ export const REVENUE_WORKING_DAYS_PER_MONTH = 26;
 export function estimateLoyalClientsPerMonth(clientsPerDay, visitUplift) {
   const ratio = 0.55 + visitUplift * 0.4;
   return Math.max(1, Math.round(clientsPerDay * ratio));
+}
+
+/**
+ * Avis Google en plus / mois — calibré sur clients/jour (≈36 pour 60/j).
+ * @param {number} clientsPerDay
+ * @param {number} visitUplift
+ */
+export function estimateExtraGoogleReviewsPerMonth(clientsPerDay, visitUplift) {
+  const loyal = estimateLoyalClientsPerMonth(clientsPerDay, visitUplift);
+  return Math.max(1, Math.round(clientsPerDay * 0.42 + loyal * 0.28));
 }
 
 /**
@@ -63,9 +72,9 @@ export function computeRevenueSimulation(input) {
   const visitUpliftPercent = Math.round(sector.visitUplift * 100);
   const basketUpliftPercent = Math.round(sector.basketUplift * 100);
   const loyalClientsPerMonth = estimateLoyalClientsPerMonth(clientsPerDay, sector.visitUplift);
-  const extraGoogleReviewsPerMonth = Math.max(
-    1,
-    Math.round(loyalClientsPerMonth * REVENUE_GOOGLE_REVIEW_FROM_LOYAL_RATE)
+  const extraGoogleReviewsPerMonth = estimateExtraGoogleReviewsPerMonth(
+    clientsPerDay,
+    sector.visitUplift
   );
 
   return {

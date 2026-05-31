@@ -30,7 +30,7 @@ describe("computeRevenueSimulation", () => {
       sectorId: "fastfood",
     });
     expect(result.loyalClientsPerMonth).toBe(38);
-    expect(result.extraGoogleReviewsPerMonth).toBe(5);
+    expect(result.extraGoogleReviewsPerMonth).toBe(36);
   });
 
   it("utilise le panier par défaut du secteur si absent", () => {

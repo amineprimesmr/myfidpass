@@ -60,10 +60,6 @@ export const REVENUE_SIMULATOR_DEFAULTS = {
   clientsPerDay: 60,
   avgBasket: 22,
 };
-
-/** Part des clients fidélisés laissant un avis Google en plus / mois. */
-export const REVENUE_GOOGLE_REVIEW_FROM_LOYAL_RATE = 0.12;
-
 /**
  * @param {string | null | undefined} categoryId
  * @returns {typeof REVENUE_SECTOR_OPTIONS[number] | undefined}
