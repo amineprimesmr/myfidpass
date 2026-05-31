@@ -57,8 +57,8 @@ export const DEFAULT_REVENUE_SECTOR_ID = "fastfood";
 export const MYFIDPASS_MONTHLY_COST = 49.99;
 
 export const REVENUE_SIMULATOR_DEFAULTS = {
-  clientsPerDay: 45,
-  avgBasket: null,
+  clientsPerDay: 60,
+  avgBasket: 22,
 };
 
 /**

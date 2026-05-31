@@ -79,13 +79,6 @@
     0 0 0 1px rgba(39, 243, 169, 0.22);
 }
 
-.fintap-revenue-simulator__sim-head {
-  margin: 0 0 1.25rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #334155;
-}
-
 .fintap-revenue-simulator__form {
   display: flex;
   flex-direction: column;
@@ -108,19 +101,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-}
-
-.fintap-revenue-simulator__badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.12rem 0.45rem;
-  border-radius: 999px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: #065f46;
-  background: rgba(39, 243, 169, 0.45);
 }
 
 .fintap-revenue-simulator__select,
