@@ -65,13 +65,28 @@ export function getPostPaymentThanksHtml() {
       </form>
 
       <div class="post-pay-thanks__email-sent hidden" id="post-pay-thanks-email-sent">
-        <div class="post-pay-thanks__mail-icon" aria-hidden="true">✉</div>
         <h2 class="post-pay-thanks__sent-title">Consultez votre boîte mail</h2>
         <p class="post-pay-thanks__sent-text">
           Un lien d’activation a été envoyé à <strong id="post-pay-email-sent-to"></strong>.
         </p>
-        <p class="post-pay-thanks__sent-hint">Cliquez sur le lien dans l’e-mail pour télécharger l’app Myfidpass.</p>
-        <button type="button" class="post-pay-thanks__cta post-pay-thanks__cta--secondary" id="post-pay-thanks-resend">
+        <p class="post-pay-thanks__sent-hint">Vous pouvez aussi scanner le QR code ou télécharger l’app directement.</p>
+
+        <div class="post-pay-thanks__download">
+          <p class="post-pay-thanks__download-label">Télécharger l’app</p>
+          <div id="post-pay-qr-container" class="post-pay-thanks__qr-container hidden">
+            <div id="post-pay-qr" class="post-pay-thanks__qr"></div>
+          </div>
+          <div class="post-pay-thanks__store-buttons">
+            <button type="button" id="post-pay-store-ios" class="post-pay-thanks__store-btn" aria-label="Télécharger sur l’App Store">
+              <img src="/assets/get/app_store_white.svg" alt="App Store" width="120" height="40" decoding="async" />
+            </button>
+            <button type="button" id="post-pay-store-android" class="post-pay-thanks__store-btn" aria-label="Disponible sur Google Play">
+              <img src="/assets/get/google_play.png" alt="Google Play" width="135" height="40" decoding="async" />
+            </button>
+          </div>
+        </div>
+
+        <button type="button" class="post-pay-thanks__ghost" id="post-pay-thanks-resend">
           Renvoyer l’e-mail
         </button>
         <button type="button" class="post-pay-thanks__ghost" id="post-pay-thanks-back-setup">

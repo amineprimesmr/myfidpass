@@ -1,6 +1,7 @@
 import { API_BASE, getAuthToken, setAuthToken, setRefreshToken } from "../config.js";
 import { parseCheckoutSessionId } from "./post-purchase-app-modal.js";
 import { initPostPaymentPlacesSearch } from "./post-payment-places-search.js";
+import { renderAppDownloadQr, wireAppStoreButtons, isMobileDevice } from "./app-download-qr.js";
 
 const SUBSCRIPTION_ID_RE = /^sub_[a-zA-Z0-9_]+$/;
 
@@ -159,11 +160,29 @@ export async function mountPostPaymentThanksPage(refs) {
     return email;
   }
 
+  wireAppStoreButtons({ iosBtnId: "post-pay-store-ios", androidBtnId: "post-pay-store-android" });
+
+  async function mountDownloadWidget() {
+    if (!isMobileDevice()) {
+      try {
+        await renderAppDownloadQr({
+          targetId: "post-pay-qr",
+          containerId: "post-pay-qr-container",
+        });
+      } catch (err) {
+        console.warn("[merci] QR indisponible :", err?.message || err);
+      }
+    } else {
+      document.getElementById("post-pay-qr-container")?.classList.add("hidden");
+    }
+  }
+
   function showEmailSent(email) {
     const toEl = document.getElementById("post-pay-email-sent-to");
     if (toEl) toEl.textContent = email;
     hide(setupForm);
     show(emailSent);
+    void mountDownloadWidget();
   }
 
   document.getElementById("post-pay-thanks-back-setup")?.addEventListener("click", () => {
