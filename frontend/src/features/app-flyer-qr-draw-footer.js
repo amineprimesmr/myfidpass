@@ -1,7 +1,7 @@
 /**
  * Pied de flyer (bandeau + étapes + fallback).
  */
-import { FLYER_LAYOUT, FLYER_EXPORT, footerStepsForegroundResolved } from "./app-flyer-qr-presets.js";
+import { FLYER_LAYOUT, FLYER_EXPORT, footerStepsForegroundResolved, flyerPrintSafeBottomY } from "./app-flyer-qr-presets.js";
 import { wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
 import { drawImageContain, drawImageCover, loadImage } from "./app-flyer-qr-draw-utils.js";
 
@@ -175,15 +175,16 @@ function drawFooterBar(ctx, w, h, s, bottomReserve = 0) {
  * @param {import("./app-flyer-qr-presets.js").FlyerState} s
  */
 export async function drawFlyerFooter(ctx, w, h, s) {
+  const bottomY = flyerPrintSafeBottomY(h);
   const [stepIcons, footerBannerImg] = await Promise.all([loadFooterStepIcons(), getFlyerFooterBanner()]);
   if (footerBannerImg) {
-    drawFooterBanner(ctx, w, h, h, footerBannerImg);
+    drawFooterBanner(ctx, w, h, bottomY, footerBannerImg);
   } else if (stepIcons && stepIcons.length >= 2) {
-    drawFooterStepsWithIcons(ctx, w, h, h, s, stepIcons);
+    drawFooterStepsWithIcons(ctx, w, h, bottomY, s, stepIcons);
   } else {
-    drawFooterBar(ctx, w, h, s, 0);
+    drawFooterBar(ctx, w, h, s, h - bottomY);
   }
-  await drawFlyerPoweredByBadge(ctx, w, h);
+  await drawFlyerPoweredByBadge(ctx, w, h, bottomY);
 }
 
 /**
@@ -192,11 +193,11 @@ export async function drawFlyerFooter(ctx, w, h, s) {
  * @param {number} w
  * @param {number} h
  */
-export async function drawFlyerPoweredByBadge(ctx, w, h) {
+export async function drawFlyerPoweredByBadge(ctx, w, h, bottomY = h) {
   const img = await getMyfidpassFlyerLogo();
   const scale = w / FLYER_EXPORT.w;
   const bottomPad = Math.max(10 * scale, h * 0.004);
-  const yBase = h - bottomPad;
+  const yBase = bottomY - bottomPad;
   const fontPx = Math.max(10, Math.round(20 * scale));
   const gap = Math.max(6 * scale, w * 0.008);
   const iconH = Math.max(14, Math.round(26 * scale));

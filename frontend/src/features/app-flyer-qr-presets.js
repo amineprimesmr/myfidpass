@@ -22,8 +22,8 @@ export const FLYER_WHEEL_SEGMENT_COUNT = 6;
 
 /** Zone logo (drawFlyerCommerceLogo) : bas du bloc = centerYFrac + maxHFrac/2. */
 export const FLYER_LOGO_LAYOUT = Object.freeze({
-  /** Marge sous le bord haut : le centre du logo ne doit pas gratter le haut du flyer. */
-  centerYFrac: 0.092,
+  /** Centre vertical du logo — un peu sous le bord haut (marge coupe imprimante). */
+  centerYFrac: 0.108,
   maxHFrac: 0.15,
   maxWFrac: 0.62,
 });
@@ -84,6 +84,8 @@ export const FLYER_LAYOUT = Object.freeze({
   footerStepsHeightFrac: 0.108,
   /** Hauteur max du PNG bandeau pied (fraction canvas). */
   footerBannerMaxHeightFrac: 0.132,
+  /** Bandeau pied remonté depuis le bord bas (marge coupe imprimante). */
+  printSafeBottomInsetFrac: 0.034,
 });
 
 /**
@@ -258,9 +260,17 @@ function clampFlyerTextScalePct(v) {
 }
 
 function clampFlyerLogoCenterYFrac(v) {
-  const n = typeof v === "number" ? v : Number(v);
+  let n = typeof v === "number" ? v : Number(v);
   if (!Number.isFinite(n)) return FLYER_LOGO_LAYOUT.centerYFrac;
+  /** Migration marge impression : ancienne valeur trop proche du bord haut. */
+  if (Math.abs(n - 0.092) < 0.003) n = FLYER_LOGO_LAYOUT.centerYFrac;
   return Math.min(0.22, Math.max(0.06, Math.round(n * 1000) / 1000));
+}
+
+/** Y du bord bas « safe » pour le bandeau pied (fraction h → px). */
+export function flyerPrintSafeBottomY(canvasH) {
+  const inset = FLYER_LAYOUT.printSafeBottomInsetFrac;
+  return canvasH * (1 - inset);
 }
 
 function clampFlyerLogoMaxWFrac(v) {

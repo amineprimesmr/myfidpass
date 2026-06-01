@@ -4,6 +4,9 @@ import {
   defaultFlyerState,
   FLYER_TEMPLATE_ID,
   FLYER_EXPORT,
+  FLYER_LOGO_LAYOUT,
+  FLYER_LAYOUT,
+  flyerPrintSafeBottomY,
   wheelSegmentColorsResolved,
   FLYER_WHEEL_SEGMENT_COUNT,
 } from "./app-flyer-qr-presets.js";
@@ -12,6 +15,17 @@ describe("mergeFlyerState", () => {
   it("export ultra 4096×6144", () => {
     expect(FLYER_EXPORT.w).toBe(4096);
     expect(FLYER_EXPORT.h).toBe(6144);
+  });
+
+  it("marge impression logo et bandeau pied", () => {
+    expect(FLYER_LOGO_LAYOUT.centerYFrac).toBeGreaterThan(0.1);
+    expect(FLYER_LAYOUT.printSafeBottomInsetFrac).toBeGreaterThan(0.02);
+    expect(flyerPrintSafeBottomY(6144)).toBeLessThan(6144);
+  });
+
+  it("migre l’ancienne position logo trop haute", () => {
+    const s = mergeFlyerState({ flyerLogoCenterYFrac: 0.092 });
+    expect(s.flyerLogoCenterYFrac).toBeGreaterThan(0.1);
   });
 
   it("force le gabarit unique", () => {
