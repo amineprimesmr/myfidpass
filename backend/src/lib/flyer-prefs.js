@@ -2,7 +2,9 @@
  * Validation des préférences flyer QR (sync SaaS ↔ API ↔ app).
  */
 /** Marge pour logo + fond (data URLs) + state dans un seul JSON SQLite. */
-const MAX_JSON_CHARS = 10 * 1024 * 1024;
+const MAX_JSON_CHARS = 22 * 1024 * 1024;
+const MAX_LOGO_DATA_URL_CHARS = 10 * 1024 * 1024;
+const MAX_BG_DATA_URL_CHARS = 18 * 1024 * 1024;
 
 /**
  * @param {string} hex
@@ -97,7 +99,9 @@ export function normalizeFlyerPrefsPut(body, existingFlyerPrefsJson) {
   let custom_logo_data_url = prevLogo;
   if (hasLogoKey) {
     custom_logo_data_url =
-      typeof logoRaw === "string" && logoRaw.startsWith("data:image/") && logoRaw.length < 5 * 1024 * 1024 ? logoRaw : null;
+      typeof logoRaw === "string" && logoRaw.startsWith("data:image/") && logoRaw.length < MAX_LOGO_DATA_URL_CHARS
+        ? logoRaw
+        : null;
   }
 
   let custom_bg_data_url = prevBg;
@@ -107,14 +111,14 @@ export function normalizeFlyerPrefsPut(body, existingFlyerPrefsJson) {
     } else if (
       typeof bgRaw === "string" &&
       bgRaw.startsWith("data:image/") &&
-      bgRaw.length < 6 * 1024 * 1024
+      bgRaw.length < MAX_BG_DATA_URL_CHARS
     ) {
       custom_bg_data_url = bgRaw;
     } else {
       return {
         ok: false,
         error:
-          "Image de fond invalide ou trop volumineuse (data URL image, max. 6 Mo). Le fond précédent est conservé si vous réessayez.",
+          "Image de fond invalide ou trop volumineuse (data URL image, max. 18 Mo). Le fond précédent est conservé si vous réessayez.",
       };
     }
   }

@@ -9,6 +9,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import sharp from "sharp";
+import { FLYER_EXPORT_WIDTH } from "../lib/flyer-export-dimensions.js";
 
 /** `backend/` (ne pas dépendre de `process.cwd()` — Railway / scripts peuvent varier). */
 const BACKEND_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -28,7 +29,7 @@ export async function removeLogoBackgroundWithRemoveBg(input) {
   try {
     pngBuf = await sharp(input)
       .rotate()
-      .resize({ width: 2000, height: 2000, fit: "inside", withoutEnlargement: true })
+      .resize({ width: FLYER_EXPORT_WIDTH, height: FLYER_EXPORT_WIDTH, fit: "inside", withoutEnlargement: true })
       .png({ compressionLevel: 6 })
       .toBuffer();
   } catch (e) {

@@ -182,8 +182,8 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const qrCornerR = 50 * scale;
   const qrPad = 15 * scale;
   const qrInner = Math.max(1, qSize - 2 * qrPad);
-  /** api.qrserver.com : au-delà de ~2400 px le fetch échoue souvent ; 2,75× suffit pour un QR net à l’export. */
-  const qrFetchPx = Math.min(2400, Math.max(768, Math.round(qrInner * 2.75)));
+  /** QR local haute résolution — taille exacte pour un rendu net à l’export. */
+  const qrFetchPx = Math.max(256, Math.round(qrInner));
 
   const [qrImg, flyergameImg, giftflyerImg] = await Promise.all([
     loadQrAsImage(qrTargetUrl, qrFetchPx),

@@ -2,7 +2,7 @@
  * Génération d’image flyer via OpenAI Image API.
  *
  * Modèle **gpt-image-1.5** : dernier modèle « GPT Image » (qualité max côté OpenAI, au-delà de DALL·E 3).
- * Réglages : portrait 1024×1536, quality high, PNG opaque = le plus coûteux / le plus net pour une affiche.
+ * Réglages : portrait 1024×1536 OpenAI → upscale serveur 4096×6144, quality high, PNG opaque.
  *
  * Avec **logo** et/ou **images de référence DA** : `POST /v1/images/edits` (JSON) avec `images[].image_url` (data URL).
  * Sans image : `POST /v1/images/generations` comme avant.

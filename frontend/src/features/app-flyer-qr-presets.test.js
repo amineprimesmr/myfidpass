@@ -3,11 +3,17 @@ import {
   mergeFlyerState,
   defaultFlyerState,
   FLYER_TEMPLATE_ID,
+  FLYER_EXPORT,
   wheelSegmentColorsResolved,
   FLYER_WHEEL_SEGMENT_COUNT,
 } from "./app-flyer-qr-presets.js";
 
 describe("mergeFlyerState", () => {
+  it("export ultra 4096×6144", () => {
+    expect(FLYER_EXPORT.w).toBe(4096);
+    expect(FLYER_EXPORT.h).toBe(6144);
+  });
+
   it("force le gabarit unique", () => {
     const s = mergeFlyerState({ templateId: "studio-clean" });
     expect(s.templateId).toBe(FLYER_TEMPLATE_ID);

@@ -14,8 +14,8 @@ export function scopedFlyerStorageKey(scope) {
   return id ? `${FLYER_STORAGE_KEY}:${id}` : FLYER_STORAGE_KEY;
 }
 
-/** Dimensions export PNG (haute définition impression / zoom). */
-export const FLYER_EXPORT = { w: 2400, h: 3600 };
+/** Dimensions export PNG ultra (2:3, ~300 DPI A2 / affiche pro). Aligné backend `flyer-export-dimensions.js`. */
+export const FLYER_EXPORT = { w: 4096, h: 6144 };
 
 /** Nombre de parts : 6 secteurs égaux (60°) — flyer + libellés canvas alignés sur la même géométrie. */
 export const FLYER_WHEEL_SEGMENT_COUNT = 6;
@@ -27,6 +27,17 @@ export const FLYER_LOGO_LAYOUT = Object.freeze({
   maxHFrac: 0.15,
   maxWFrac: 0.62,
 });
+
+/** Recadrage import logo — dimensions alignées sur la zone canvas. */
+export function flyerLogoCropExportSize() {
+  const exportWidth = Math.round(FLYER_EXPORT.w * FLYER_LOGO_LAYOUT.maxWFrac);
+  const exportHeight = Math.round(FLYER_EXPORT.h * FLYER_LOGO_LAYOUT.maxHFrac);
+  return {
+    aspectRatio: exportWidth / exportHeight,
+    exportWidth,
+    exportHeight,
+  };
+}
 
 /** Rayon affiché de la roue / demi-largeur canvas (aperçu + export). */
 export const FLYER_WHEEL_RADIUS_FRAC = 0.435;

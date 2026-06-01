@@ -1,6 +1,3 @@
-/**
- * Centre de roue flyer (asset flyergame + rendu).
- */
 import flyergameDataUrl from "../assets/flyer-wheels/flyergame.png?inline";
 import { drawImageWithFlyergameFit, loadImage } from "./app-flyer-qr-draw-utils.js";
 

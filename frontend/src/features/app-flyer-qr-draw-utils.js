@@ -1,6 +1,7 @@
 /**
  * Utilitaires de rendu Flyer QR (images, QR, primitives canvas).
  */
+import QRCode from "qrcode";
 
 /** @type {HTMLImageElement | null} */
 let qrImageCache = null;
@@ -37,22 +38,30 @@ export function loadImage(url, cors = true) {
   });
 }
 
-export function flyerQrImageUrl(targetUrl, sizePx) {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=${sizePx}x${sizePx}&margin=10&data=${encodeURIComponent(targetUrl)}`;
-}
-
-/** QR en blob pour éviter canvas « tainted » à l’export PNG. */
+/**
+ * QR haute résolution généré localement (plus de dépendance api.qrserver.com).
+ * @param {string} targetUrl
+ * @param {number} sizePx
+ */
 export async function loadQrAsImage(targetUrl, sizePx) {
   const cacheKey = `${targetUrl}::${sizePx}`;
   const now = Date.now();
   if (qrImageCache && qrImageCacheKey === cacheKey && now - qrImageCacheTs < 60_000) {
     return qrImageCache;
   }
-  const u = flyerQrImageUrl(targetUrl, sizePx);
+  const size = Math.max(64, Math.round(sizePx));
   try {
-    const res = await fetch(u, { mode: "cors", credentials: "omit" });
-    if (!res.ok) return null;
-    const blob = await res.blob();
+    const canvas = document.createElement("canvas");
+    await QRCode.toCanvas(canvas, targetUrl, {
+      width: size,
+      margin: 2,
+      errorCorrectionLevel: "M",
+      color: { dark: "#000000", light: "#ffffff" },
+    });
+    const blob = await new Promise((resolve) => {
+      canvas.toBlob((b) => resolve(b), "image/png");
+    });
+    if (!blob) return null;
     const objUrl = URL.createObjectURL(blob);
     try {
       const loaded = await loadImage(objUrl, false);
@@ -66,15 +75,7 @@ export async function loadQrAsImage(targetUrl, sizePx) {
       } catch (_) {}
     }
   } catch (_) {
-    try {
-      const loaded = await loadImage(u, true);
-      qrImageCache = loaded;
-      qrImageCacheKey = cacheKey;
-      qrImageCacheTs = now;
-      return loaded;
-    } catch (_) {
-      return null;
-    }
+    return null;
   }
 }
 

@@ -2,6 +2,7 @@
  * Logo du flyer uniquement (localStorage) — ne modifie pas le logo commerce / autres pages.
  */
 import { openImageCropModalFromFile } from "./image-crop-modal.js";
+import { FLYER_EXPORT, flyerLogoCropExportSize } from "./app-flyer-qr-presets.js";
 
 export const FLYER_CUSTOM_LOGO_STORAGE_KEY = "fidpass_flyer_custom_logo_v1";
 
@@ -13,8 +14,9 @@ export function scopedFlyerCustomLogoStorageKey(scope) {
   return id ? `${FLYER_CUSTOM_LOGO_STORAGE_KEY}:${id}` : FLYER_CUSTOM_LOGO_STORAGE_KEY;
 }
 
-const MAX_FILE_BYTES = 3 * 1024 * 1024;
-const MAX_EXPORT_EDGE = 900;
+const MAX_FILE_BYTES = 8 * 1024 * 1024;
+/** Zone logo canvas ≈ 62 % × 15 % du flyer — conserver assez de pixels pour l’export ultra. */
+const MAX_EXPORT_EDGE = Math.round(FLYER_EXPORT.w * 0.62);
 
 /** @returns {string} data URL ou "" */
 export function getStoredFlyerCustomLogoDataUrl(storageKey = FLYER_CUSTOM_LOGO_STORAGE_KEY) {
@@ -45,14 +47,14 @@ export function clearStoredFlyerCustomLogo(storageKey = FLYER_CUSTOM_LOGO_STORAG
 
 /**
  * @param {File} file
- * @returns {Promise<string>} data URL PNG
+ * @returns {Promise<string>} data URL PNG lossless
  */
 export async function compressFileToFlyerLogoDataUrl(file) {
   if (!file.type.startsWith("image/")) {
     throw new Error("Format non pris en charge (PNG, JPG, WebP).");
   }
   if (file.size > MAX_FILE_BYTES) {
-    throw new Error("Image trop lourde (max 3 Mo).");
+    throw new Error("Image trop lourde (max 8 Mo).");
   }
   const bitmap = await createImageBitmap(file);
   try {
@@ -68,8 +70,10 @@ export async function compressFileToFlyerLogoDataUrl(file) {
     c.height = Math.max(1, height);
     const x = c.getContext("2d");
     if (!x) throw new Error("Canvas indisponible.");
+    x.imageSmoothingEnabled = true;
+    if ("imageSmoothingQuality" in x) x.imageSmoothingQuality = "high";
     x.drawImage(bitmap, 0, 0, c.width, c.height);
-    return c.toDataURL("image/png", 0.92);
+    return c.toDataURL("image/png");
   } finally {
     try {
       bitmap.close();
@@ -78,23 +82,20 @@ export async function compressFileToFlyerLogoDataUrl(file) {
 }
 
 /**
- * @param {{
- *   onCustomLogoChange: () => void;
- *   storageKey?: string;
- *   removeBgApi?: (dataUrl: string) => Promise<string | null>;
- * }} opts
+ * @param {{ onCustomLogoChange: () => void; removeBgApi?: (dataUrl: string) => Promise<string | null>; storageKey?: string }} opts
  */
 export function initFlyerLogoControl(opts) {
-  const root = document.getElementById("app-flyer-logo-panel");
   const fileInput = document.getElementById("app-flyer-logo-file");
   const chooseBtn = document.getElementById("app-flyer-logo-choose");
+  const clearBtn = document.getElementById("app-flyer-logo-clear");
   const preview = document.getElementById("app-flyer-logo-preview");
   const previewWrap = document.getElementById("app-flyer-logo-preview-wrap");
   const placeholder = document.getElementById("app-flyer-logo-placeholder");
-  const clearBtn = document.getElementById("app-flyer-logo-clear");
   const statusEl = document.getElementById("app-flyer-logo-status");
 
-  if (!root || !fileInput) return undefined;
+  if (!fileInput) return undefined;
+
+  const logoCrop = flyerLogoCropExportSize();
 
   function setStatus(msg) {
     if (statusEl) {
@@ -105,7 +106,7 @@ export function initFlyerLogoControl(opts) {
 
   function syncPreview() {
     const data = getStoredFlyerCustomLogoDataUrl(opts.storageKey);
-    if (preview) {
+    if (preview && previewWrap) {
       if (data) {
         preview.src = data;
         preview.classList.remove("hidden");
@@ -131,14 +132,13 @@ export function initFlyerLogoControl(opts) {
       try {
         const cropped = await openImageCropModalFromFile(f, {
           title: "Recadrer le logo du flyer",
-          aspectRatio: (2400 * 0.56) / (3600 * 0.18),
-          exportWidth: 2000,
-          exportHeight: Math.round(2000 / ((2400 * 0.56) / (3600 * 0.18))),
+          aspectRatio: logoCrop.aspectRatio,
+          exportWidth: logoCrop.exportWidth,
+          exportHeight: logoCrop.exportHeight,
           outputType: "image/png",
         });
         if (!cropped) return;
         const dataUrl = cropped;
-        // Affichage immédiat du logo brut pendant le détourage
         setStoredFlyerCustomLogoDataUrl(dataUrl, opts.storageKey);
         syncPreview();
         opts.onCustomLogoChange();

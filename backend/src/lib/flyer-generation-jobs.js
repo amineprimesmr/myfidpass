@@ -18,6 +18,7 @@ import {
   openaiGenerateFlyerImage,
 } from "../services/flyer-ai-image.js";
 import logger from "../lib/logger.js";
+import { upscaleFlyerAiBackgroundBase64 } from "../lib/flyer-image-upscale.js";
 
 const db = getDb();
 const MAX_ATTEMPTS = 3;
@@ -220,6 +221,14 @@ export async function processFlyerGenerationJob(jobId) {
     const elapsedMs = Date.now() - t0;
     logger.info({ jobId, elapsedMs }, "[flyer-gen-job] openai finished");
 
+    let imageB64 = b64;
+    try {
+      imageB64 = await upscaleFlyerAiBackgroundBase64(b64);
+      logger.info({ jobId }, "[flyer-gen-job] upscale export dimensions OK");
+    } catch (upErr) {
+      logger.warn({ err: upErr, jobId }, "[flyer-gen-job] upscale failed — OpenAI native size kept");
+    }
+
     // Ne pas écrire `flyer_prefs_json` / `flyer_prefs_updated_at` ici : l’image PNG n’est pas encore dans les
     // prefs (elle arrive via polling puis PUT app). Une mise à jour serveur des seules couleurs de roue
     // faisait passer le commerce en « flyer enregistré » côté app (state ≠ défaut) alors que le fond IA
@@ -228,7 +237,7 @@ export async function processFlyerGenerationJob(jobId) {
 
     if (unlimited || devBypass) {
       markJobDone(jobId, {
-        image_base64: b64,
+        image_base64: imageB64,
         revised_prompt: revised ?? null,
         flyer_ai_unlimited: true,
         flyer_ai_generations_used: used,
@@ -240,7 +249,7 @@ export async function processFlyerGenerationJob(jobId) {
     const nextUsed = used + 1;
     updateBusiness(business.id, { flyer_ai_generations_used: nextUsed });
     markJobDone(jobId, {
-      image_base64: b64,
+      image_base64: imageB64,
       revised_prompt: revised ?? null,
       flyer_ai_unlimited: false,
       flyer_ai_generations_used: nextUsed,

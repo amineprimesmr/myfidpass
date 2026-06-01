@@ -2,6 +2,7 @@
  * Image de fond du flyer uniquement (localStorage) — indépendante du logo et de la fiche.
  */
 import { openImageCropModalFromFile } from "./image-crop-modal.js";
+import { FLYER_EXPORT } from "./app-flyer-qr-presets.js";
 
 export const FLYER_CUSTOM_BG_STORAGE_KEY = "fidpass_flyer_custom_bg_v1";
 
@@ -13,9 +14,10 @@ export function scopedFlyerCustomBgStorageKey(scope) {
   return id ? `${FLYER_CUSTOM_BG_STORAGE_KEY}:${id}` : FLYER_CUSTOM_BG_STORAGE_KEY;
 }
 
-const MAX_FILE_BYTES = 5 * 1024 * 1024;
-/** Réduit le poids pour tenir dans localStorage tout en restant net en 2400×3600 export. */
-const MAX_LONG_EDGE = 2000;
+const MAX_FILE_BYTES = 15 * 1024 * 1024;
+/** Aligné sur l’export ultra — pas de downscale avant composition. */
+const MAX_LONG_EDGE = FLYER_EXPORT.w;
+const MAX_DATA_URL_CHARS = 18 * 1024 * 1024;
 
 /** @returns {string} data URL ou "" */
 export function getStoredFlyerCustomBgDataUrl(storageKey = FLYER_CUSTOM_BG_STORAGE_KEY) {
@@ -45,8 +47,18 @@ export function clearStoredFlyerCustomBg(storageKey = FLYER_CUSTOM_BG_STORAGE_KE
 }
 
 /**
+ * @param {HTMLCanvasElement} c
+ * @param {string} mime
+ * @param {number} [quality]
+ */
+function canvasToDataUrl(c, mime, quality) {
+  if (mime === "image/jpeg" && quality != null) return c.toDataURL(mime, quality);
+  return c.toDataURL(mime);
+}
+
+/**
  * @param {ImageBitmap} bitmap
- * @returns {string} data URL JPEG (léger) ou PNG si besoin
+ * @returns {string} data URL PNG ou JPEG haute qualité
  */
 export function compressImageBitmapToFlyerBgDataUrl(bitmap) {
   let { width, height } = bitmap;
@@ -61,24 +73,35 @@ export function compressImageBitmapToFlyerBgDataUrl(bitmap) {
   c.height = Math.max(1, height);
   const x = c.getContext("2d");
   if (!x) throw new Error("Canvas indisponible.");
+  x.imageSmoothingEnabled = true;
+  if ("imageSmoothingQuality" in x) x.imageSmoothingQuality = "high";
   x.drawImage(bitmap, 0, 0, c.width, c.height);
-  try {
-    return c.toDataURL("image/jpeg", 0.88);
-  } catch (_) {
-    return c.toDataURL("image/png", 0.92);
+
+  const png = canvasToDataUrl(c, "image/png");
+  if (png.length <= MAX_DATA_URL_CHARS) return png;
+
+  for (const q of [0.97, 0.94, 0.9]) {
+    const jpeg = canvasToDataUrl(c, "image/jpeg", q);
+    if (jpeg.length <= MAX_DATA_URL_CHARS) return jpeg;
   }
+
+  const sc2 = 0.85;
+  c.width = Math.max(1, Math.round(c.width * sc2));
+  c.height = Math.max(1, Math.round(c.height * sc2));
+  x.drawImage(bitmap, 0, 0, c.width, c.height);
+  return canvasToDataUrl(c, "image/jpeg", 0.92);
 }
 
 /**
  * @param {File} file
- * @returns {Promise<string>} data URL JPEG (léger) ou PNG si besoin
+ * @returns {Promise<string>} data URL PNG ou JPEG haute qualité
  */
 export async function compressFileToFlyerBgDataUrl(file) {
   if (!file.type.startsWith("image/")) {
     throw new Error("Format non pris en charge (PNG, JPG, WebP).");
   }
   if (file.size > MAX_FILE_BYTES) {
-    throw new Error("Image trop lourde (max 5 Mo).");
+    throw new Error("Image trop lourde (max 15 Mo).");
   }
   const bitmap = await createImageBitmap(file);
   try {
@@ -91,7 +114,7 @@ export async function compressFileToFlyerBgDataUrl(file) {
 }
 
 /**
- * @param {string} url URL absolue ou même origine (ex. /assets/flyers/photo.jpg)
+ * @param {string} url
  * @returns {Promise<string>} data URL (même compression que l’import fichier)
  */
 export async function compressFetchedImageToFlyerBgDataUrl(url) {
@@ -102,7 +125,7 @@ export async function compressFetchedImageToFlyerBgDataUrl(url) {
     throw new Error("Format non pris en charge (PNG, JPG, WebP).");
   }
   if (blob.size > MAX_FILE_BYTES) {
-    throw new Error("Image trop lourde (max 5 Mo).");
+    throw new Error("Image trop lourde (max 15 Mo).");
   }
   const bitmap = await createImageBitmap(blob);
   try {
@@ -165,11 +188,11 @@ export function initFlyerBgControl(opts) {
       try {
         const cropped = await openImageCropModalFromFile(f, {
           title: "Recadrer l'image de fond flyer",
-          aspectRatio: 2400 / 3600,
-          exportWidth: 2000,
-          exportHeight: 3000,
-          outputType: "image/jpeg",
-          quality: 0.9,
+          aspectRatio: FLYER_EXPORT.w / FLYER_EXPORT.h,
+          exportWidth: FLYER_EXPORT.w,
+          exportHeight: FLYER_EXPORT.h,
+          outputType: "image/png",
+          quality: 1,
         });
         if (!cropped) return;
         const dataUrl = cropped;
