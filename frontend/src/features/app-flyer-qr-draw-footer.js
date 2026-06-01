@@ -195,45 +195,44 @@ export async function drawFlyerFooter(ctx, w, h, s) {
  */
 export async function drawFlyerPoweredByBadge(ctx, w, h, bottomY = h) {
   const img = await getMyfidpassFlyerLogo();
-  const scale = flyerDesignScale(w);
-  const bottomPad = Math.max(10 * scale, h * 0.004);
+  const ds = flyerDesignScale(w);
+  const bottomPad = Math.max(16 * ds, h * 0.006);
   const yBase = bottomY - bottomPad;
-  const fontPx = Math.max(10, Math.round(20 * scale));
-  const gap = Math.max(6 * scale, w * 0.008);
-  const iconH = Math.max(14, Math.round(26 * scale));
+  const fontPx = Math.max(28, Math.round(40 * ds));
+  const gap = Math.max(10 * ds, w * 0.012);
+  const iconH = Math.max(36, Math.round(52 * ds));
 
   ctx.save();
-  ctx.globalAlpha = 0.55;
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
-  ctx.font = `500 ${fontPx}px Inter, system-ui, sans-serif`;
+  ctx.font = `600 ${fontPx}px Inter, system-ui, sans-serif`;
   const label = "Propulsé par ";
   const brand = "Myfidpass";
   const labelW = ctx.measureText(label).width;
-  ctx.font = `700 ${fontPx}px Inter, system-ui, sans-serif`;
+  ctx.font = `800 ${fontPx}px Inter, system-ui, sans-serif`;
   const brandW = ctx.measureText(brand).width;
   const imgW = img ? (iconH * ((img.naturalWidth || img.width) / (img.naturalHeight || img.height || 1))) : 0;
   const totalW = (img ? imgW + gap : 0) + labelW + brandW;
   let x = (w - totalW) / 2;
-  const yMid = yBase - fontPx * 0.45;
+  const yMid = yBase - fontPx * 0.55;
 
   if (img && imgW > 0) {
     try {
-      ctx.globalAlpha = 0.58;
+      ctx.globalAlpha = 0.92;
       ctx.drawImage(img, x, yMid - iconH / 2, imgW, iconH);
     } catch (_) {}
     x += imgW + gap;
   }
 
-  ctx.globalAlpha = 0.52;
-  ctx.font = `500 ${fontPx}px Inter, system-ui, sans-serif`;
-  ctx.fillStyle = "#475569";
+  ctx.globalAlpha = 0.88;
+  ctx.font = `600 ${fontPx}px Inter, system-ui, sans-serif`;
+  ctx.fillStyle = "#1e293b";
   ctx.textAlign = "left";
   ctx.fillText(label, x, yMid);
   x += labelW;
-  ctx.globalAlpha = 0.62;
-  ctx.font = `700 ${fontPx}px Inter, system-ui, sans-serif`;
-  ctx.fillStyle = "#334155";
+  ctx.globalAlpha = 0.95;
+  ctx.font = `800 ${fontPx}px Inter, system-ui, sans-serif`;
+  ctx.fillStyle = "#0f172a";
   ctx.fillText(brand, x, yMid);
   ctx.restore();
 }
