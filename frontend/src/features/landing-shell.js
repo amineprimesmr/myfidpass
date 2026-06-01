@@ -343,7 +343,7 @@ export function initLandingShell() {
       event.preventDefault();
       const ok = focusOnboardingField();
       if (!ok) {
-        window.location.href = "/creer-ma-carte?mode=login&redirect=/app";
+        window.location.href = "/get";
       }
     });
   });
@@ -367,9 +367,7 @@ export function initLandingShell() {
       establishment_name: name,
       google_place_id: pid,
     });
-    const nextUrl = new URL("/app", window.location.origin);
-    nextUrl.searchParams.set("fromLandingOnboarding", "1");
-    window.location.href = `${nextUrl.pathname}${nextUrl.search}`;
+    window.location.href = "/get";
   }
 
   if (landingHeroForm) {

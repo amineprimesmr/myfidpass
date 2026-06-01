@@ -71,6 +71,23 @@ export function warmStripeJs() {
 /** Payment Link Stripe unique pour le SaaS (checkout hébergé, code promo prérempli). */
 export const STRIPE_SAAS_PAYMENT_LINK = "https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01";
 
+/** Payment Link Stripe — abonnement annuel 399 €/an (surcharge possible via `VITE_STRIPE_ANNUAL_PAYMENT_LINK`). */
+const RAW_STRIPE_ANNUAL_PAYMENT_LINK =
+  typeof import.meta.env?.VITE_STRIPE_ANNUAL_PAYMENT_LINK === "string"
+    ? import.meta.env.VITE_STRIPE_ANNUAL_PAYMENT_LINK.trim()
+    : "";
+
+export const STRIPE_ANNUAL_PAYMENT_LINK =
+  RAW_STRIPE_ANNUAL_PAYMENT_LINK || "https://buy.stripe.com/fZufZh7bjbjEeCR4Cr8Zq03";
+
+/** Code promo prérempli sur le Payment Link annuel (optionnel). Ex. coupon 1er mois à 1 €. */
+const RAW_STRIPE_ANNUAL_PAYMENT_PROMO_CODE =
+  typeof import.meta.env?.VITE_STRIPE_ANNUAL_PAYMENT_PROMO_CODE === "string"
+    ? import.meta.env.VITE_STRIPE_ANNUAL_PAYMENT_PROMO_CODE.trim()
+    : "";
+
+export const STRIPE_ANNUAL_PAYMENT_PROMO_CODE = RAW_STRIPE_ANNUAL_PAYMENT_PROMO_CODE;
+
 export const STRIPE_SAAS_PAYMENT_PROMO_CODE = "MYFID1EURO";
 
 /**
@@ -87,6 +104,25 @@ export function buildStripeSaasPaymentUrl(prefilledEmail) {
     return u.toString();
   } catch (_) {
     return `${STRIPE_SAAS_PAYMENT_LINK}?prefilled_promo_code=${encodeURIComponent(STRIPE_SAAS_PAYMENT_PROMO_CODE)}`;
+  }
+}
+
+/**
+ * URL Payment Link abonnement annuel (399 €/an), promo optionnelle.
+ * @param {string} [prefilledEmail]
+ * @returns {string}
+ */
+export function buildStripeAnnualPaymentUrl(prefilledEmail) {
+  try {
+    const u = new URL(STRIPE_ANNUAL_PAYMENT_LINK);
+    if (STRIPE_ANNUAL_PAYMENT_PROMO_CODE) {
+      u.searchParams.set("prefilled_promo_code", STRIPE_ANNUAL_PAYMENT_PROMO_CODE);
+    }
+    const em = (prefilledEmail || "").trim();
+    if (em) u.searchParams.set("prefilled_email", em);
+    return u.toString();
+  } catch (_) {
+    return STRIPE_ANNUAL_PAYMENT_LINK;
   }
 }
 

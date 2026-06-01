@@ -1,8 +1,9 @@
 import { ScrollReveal } from "./ScrollReveal.jsx";
 import { FINTAP_PRICING_FEATURES, FINTAP_PRICING_PLANS } from "./fintap-pricing-data.js";
+import { getLandingPricingCheckoutUrl } from "./fintap-pricing-urls.js";
 import "./fintap-pricing.css";
 
-/** Section tarification — 1er mois à 1 €, puis mensuel ou à vie. */
+/** Section tarification — 1er mois à 1 €, puis mensuel ou annuel. */
 export function FinTapPricingSection() {
   return (
     <section
@@ -22,7 +23,7 @@ export function FinTapPricingSection() {
           <ScrollReveal delay={0.08}>
             <p className="fintap-pricing__intro">
               Lancez votre programme de fidélité dès aujourd&apos;hui. Choisissez l&apos;offre
-              mensuelle flexible ou l&apos;accès à vie en un seul paiement.
+              mensuelle flexible ou l&apos;abonnement annuel à 399&nbsp;€/an.
             </p>
           </ScrollReveal>
         </header>
@@ -54,7 +55,12 @@ export function FinTapPricingSection() {
                   <li key={`${plan.id}-${feature}`}>{feature}</li>
                 ))}
               </ul>
-              <a href={plan.href} className="fintap-pricing__cta">
+              <a
+                href={getLandingPricingCheckoutUrl(plan.id)}
+                className="fintap-pricing__cta"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 {plan.cta}
               </a>
             </ScrollReveal>

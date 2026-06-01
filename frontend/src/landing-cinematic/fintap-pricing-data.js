@@ -1,4 +1,4 @@
-/** Tarifs landing — 1er mois à 1 € puis mensuel ou accès à vie. */
+/** Tarifs landing — 1er mois à 1 € puis mensuel ou annuel. */
 
 export const FINTAP_PRICING_FEATURES = [
   "Carte fidélité Apple Wallet & Google Wallet",
@@ -18,18 +18,16 @@ export const FINTAP_PRICING_PLANS = [
     summary: "Sans engagement — résiliable à tout moment.",
     detail: "1er mois à 1 €, puis 49 €/mois.",
     cta: "Commencer pour 1 €",
-    href: "/app?fromLandingOnboarding=1",
   },
   {
-    id: "lifetime",
-    name: "À vie",
-    price: "399,99 €",
-    period: "paiement unique",
+    id: "annual",
+    name: "Annuel",
+    price: "399 €",
+    period: "/ an",
     badge: null,
     featured: false,
-    summary: "Un seul règlement, accès permanent.",
-    detail: "Toutes les fonctionnalités Pro, sans renouvellement.",
-    cta: "Choisir l’accès à vie",
-    href: "/paiement?plan=lifetime",
+    summary: "Facturation annuelle — sans engagement.",
+    detail: "1er mois à 1 €, puis 399 €/an (soit ~34 €/mois).",
+    cta: "Choisir l’offre annuelle",
   },
 ];

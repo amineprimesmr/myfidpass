@@ -60,6 +60,14 @@ export const REVENUE_SIMULATOR_DEFAULTS = {
   clientsPerDay: 60,
   avgBasket: 22,
 };
+
+/** Exemple client affiché sous le bloc comparatif. */
+export const REVENUE_SIMULATOR_CASE_STUDY = {
+  name: "BallM",
+  sectorLabel: "fast-food",
+  netMonthly: 4211,
+  googleReviewsPerMonth: 342,
+};
 /**
  * @param {string | null | undefined} categoryId
  * @returns {typeof REVENUE_SECTOR_OPTIONS[number] | undefined}

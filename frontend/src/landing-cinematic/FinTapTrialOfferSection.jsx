@@ -35,7 +35,7 @@ export function FinTapTrialOfferSection() {
                 <li key={perk}>{perk}</li>
               ))}
             </ul>
-            <a href="/app?fromLandingOnboarding=1" className="fintap-trial-offer__cta">
+            <a href="/get" className="fintap-trial-offer__cta">
               Commencer pour 1&nbsp;€
               <span aria-hidden>→</span>
             </a>

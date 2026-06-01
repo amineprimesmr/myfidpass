@@ -52,7 +52,7 @@ export function HeroSection() {
             className="mt-6 flex items-center justify-center gap-6"
           >
             <a
-              href="/creer-ma-carte"
+              href="/get"
               className="liquid-glass-strong inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white"
             >
               Start Your Voyage

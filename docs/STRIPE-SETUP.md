@@ -41,6 +41,23 @@ Sur la fiche **prix** Stripe, tu peux laisser **« Jours d’essai » vide** : l
 
 (Option) Code promo `MYFID1EURO` pour **Payment Link** hébergé — le flux principal est le **Payment Element** sur `/paiement` / `/abonnement`.
 
+### Code promo « 1er mois à 0 € » (`FREEDAF352`)
+
+Coupon Stripe : remise fixe **49,99 €**, durée **Une seule fois** → première facture mensuelle à **0 €**.
+
+Création automatisée (clé `sk_live_…` sur Railway ou en local) :
+
+```bash
+cd backend
+STRIPE_SECRET_KEY=sk_live_… node scripts/create-stripe-promo-first-month-free.mjs --code FREEDAF352
+```
+
+Ou via Railway : `railway run --service fidpass-api node backend/scripts/create-stripe-promo-first-month-free.mjs --code FREEDAF352`
+
+Utilisation au checkout Payment Link mensuel :
+
+`https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01?prefilled_promo_code=FREEDAF352`
+
 ---
 
 ## 2. Clé secrète

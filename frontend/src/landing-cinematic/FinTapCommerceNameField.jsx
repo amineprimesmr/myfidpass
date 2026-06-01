@@ -10,6 +10,7 @@ import "./fintap-commerce-name-field.css";
  * @param {string} [props.placeholder]
  * @param {string} [props.className]
  * @param {boolean} [props.syncPending]
+ * @param {boolean} [props.detectCategory]
  * @param {(categoryId: string | null) => void} [props.onCategoryDetected]
  * @param {(validated: boolean) => void} [props.onCommerceValidated]
  * @param {() => void} [props.onBlurDetect]
@@ -20,14 +21,22 @@ export function FinTapCommerceNameField({
   placeholder = "Ex. Boulangerie Martin, Salon Élégance…",
   className = "",
   syncPending = true,
+  detectCategory = true,
   onCategoryDetected,
   onCommerceValidated,
   onBlurDetect,
 }) {
-  const search = useFinTapCommerceSearch({ syncPending, onCategoryDetected, onCommerceValidated });
+  const search = useFinTapCommerceSearch({
+    syncPending,
+    detectCategory,
+    onCategoryDetected,
+    onCommerceValidated,
+  });
 
   const handleBlur = () => {
-    search.detectCategoryFromQuery();
+    if (detectCategory) {
+      search.detectCategoryFromQuery();
+    }
     onBlurDetect?.();
   };
 

@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
+import { FinTapCommerceNameField } from "./FinTapCommerceNameField.jsx";
 import { FinTapLiquidSlider } from "./FinTapLiquidSlider.jsx";
 import { ScrollReveal } from "./ScrollReveal.jsx";
 import {
   DEFAULT_REVENUE_SECTOR_ID,
   MYFIDPASS_MONTHLY_COST,
   REVENUE_SECTOR_OPTIONS,
+  REVENUE_SIMULATOR_CASE_STUDY,
   REVENUE_SIMULATOR_DEFAULTS,
 } from "./fintap-revenue-simulator-data.js";
 import {
@@ -22,7 +24,6 @@ const BASKET_MAX = 200;
 /** Section simulateur — fond site unifié + carte blanche. */
 export function FinTapRevenueSimulatorSection() {
   const [sectorId, setSectorId] = useState(DEFAULT_REVENUE_SECTOR_ID);
-  const [commerceName, setCommerceName] = useState("");
   const [clientsPerDay, setClientsPerDay] = useState(REVENUE_SIMULATOR_DEFAULTS.clientsPerDay);
   const [avgBasket, setAvgBasket] = useState(String(REVENUE_SIMULATOR_DEFAULTS.avgBasket));
 
@@ -59,21 +60,13 @@ export function FinTapRevenueSimulatorSection() {
         <div className="fintap-revenue-simulator__sim-wrap">
           <div className="fintap-revenue-simulator__sim is-active">
             <div className="fintap-revenue-simulator__form">
-              <div className="fintap-revenue-simulator__field">
-                <label className="fintap-revenue-simulator__label" htmlFor="fintap-revenue-commerce-name">
-                  Nom de votre commerce
-                </label>
-                <input
-                  id="fintap-revenue-commerce-name"
-                  type="text"
-                  className="fintap-revenue-simulator__input"
-                  placeholder="Ex. Boulangerie du Centre"
-                  value={commerceName}
-                  onChange={(e) => setCommerceName(e.target.value)}
-                  autoComplete="organization"
-                  spellCheck={false}
-                />
-              </div>
+              <FinTapCommerceNameField
+                id="fintap-revenue-commerce-name"
+                label="Nom de votre commerce"
+                placeholder="Recherchez votre établissement sur Google"
+                detectCategory={false}
+                syncPending
+              />
 
               <div className="fintap-revenue-simulator__field">
                 <label className="fintap-revenue-simulator__label" htmlFor="fintap-revenue-sector">
@@ -144,11 +137,20 @@ export function FinTapRevenueSimulatorSection() {
             </div>
 
             <div className="fintap-revenue-simulator__sim-details">
-              <p className="fintap-revenue-simulator__results-sub">
-                Pour seulement {formatEuro(MYFIDPASS_MONTHLY_COST, { maximumFractionDigits: 2 })}
-                /mois, soit {formatEuro(results.additionalAnnual)} par an de revenus additionnels
-                — {results.roiMultiple}&nbsp;fois votre investissement.
-              </p>
+              <aside
+                className="fintap-revenue-simulator__example"
+                aria-label="Exemple client Myfidpass"
+              >
+                <p className="fintap-revenue-simulator__example-kicker">Exemple concret</p>
+                <p className="fintap-revenue-simulator__example-body">
+                  <strong>{REVENUE_SIMULATOR_CASE_STUDY.name}</strong>,{" "}
+                  {REVENUE_SIMULATOR_CASE_STUDY.sectorLabel}&nbsp;:{" "}
+                  <strong>{formatEuro(REVENUE_SIMULATOR_CASE_STUDY.netMonthly)}</strong> de gain net
+                  / mois et{" "}
+                  <strong>+{REVENUE_SIMULATOR_CASE_STUDY.googleReviewsPerMonth} avis Google</strong>
+                  .
+                </p>
+              </aside>
 
               <ul className="fintap-revenue-simulator__stats">
                 <li>
@@ -165,15 +167,9 @@ export function FinTapRevenueSimulatorSection() {
                     {formatEuro(results.subscriptionMonthly, { maximumFractionDigits: 2 })}
                   </strong>
                 </li>
-                <li className="fintap-revenue-simulator__stat--net">
-                  <div className="fintap-revenue-simulator__stat-net-row">
-                    <span className="fintap-revenue-simulator__stat-label">Gain net mensuel*</span>
-                    <strong>+{formatEuro(results.netMonthly)}</strong>
-                  </div>
-                  <div className="fintap-revenue-simulator__stat-net-row">
-                    <span className="fintap-revenue-simulator__stat-label">Gain net annuel*</span>
-                    <strong>{formatEuro(results.netAnnual)}</strong>
-                  </div>
+                <li>
+                  <span className="fintap-revenue-simulator__stat-label">Gain net mensuel*</span>
+                  <strong>+{formatEuro(results.netMonthly)}</strong>
                 </li>
               </ul>
 

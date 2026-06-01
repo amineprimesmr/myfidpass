@@ -38,6 +38,7 @@ export async function fetchPlaceCategory({ placeId = "", name = "" } = {}) {
  *   syncPending?: boolean,
  *   onCategoryDetected?: (categoryId: string | null) => void,
  *   onCommerceValidated?: (validated: boolean) => void,
+ *   detectCategory?: boolean,
  *   enabled?: boolean,
  * }} [options]
  */
@@ -48,6 +49,7 @@ export function useFinTapCommerceSearch(options = {}) {
     syncPending = true,
     onCategoryDetected,
     onCommerceValidated,
+    detectCategory = true,
     enabled = true,
   } = options;
 
@@ -76,6 +78,8 @@ export function useFinTapCommerceSearch(options = {}) {
   onCategoryDetectedRef.current = onCategoryDetected;
   const onCommerceValidatedRef = useRef(onCommerceValidated);
   onCommerceValidatedRef.current = onCommerceValidated;
+  const detectCategoryRef = useRef(detectCategory);
+  detectCategoryRef.current = detectCategory;
 
   const initialPlaceIdRef = useRef(
     String(initialPlaceId || pendingInit?.google_place_id || "").trim()
@@ -89,12 +93,15 @@ export function useFinTapCommerceSearch(options = {}) {
     const name = initialNameRef.current;
     if (pid && name) {
       onCommerceValidatedRef.current?.(true);
-      void runCategoryDetection({ placeId: pid, name });
+      if (detectCategoryRef.current) {
+        void runCategoryDetection({ placeId: pid, name });
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- restauration pending au montage
   }, []);
 
   const runCategoryDetection = async ({ placeId = "", name = "" } = {}) => {
+    if (!detectCategoryRef.current) return null;
     const category = await fetchPlaceCategory({ placeId, name });
     onCategoryDetectedRef.current?.(category);
     return category;

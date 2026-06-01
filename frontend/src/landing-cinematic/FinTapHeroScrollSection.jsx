@@ -507,7 +507,7 @@ export function FinTapHeroScrollSection() {
     }
   };
 
-  const startHref = "/app?fromLandingOnboarding=1";
+  const startHref = "/get";
 
   const onStartCtaClick = async (event) => {
     const selectedName = shopQuery.trim();

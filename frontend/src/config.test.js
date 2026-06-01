@@ -10,6 +10,7 @@ import {
   clearAuthToken,
   getAuthHeaders,
   buildStripeSaasPaymentUrl,
+  buildStripeAnnualPaymentUrl,
   subscriptionUsesExternalStripePaymentLink,
   isSaasPaymentEmbeddedInNativeApp,
   consumeAuthTransferFromHash,
@@ -76,6 +77,11 @@ describe("config", () => {
   it("buildStripeSaasPaymentUrl adds prefilled_email when provided", () => {
     const u = buildStripeSaasPaymentUrl("  test@example.com  ");
     expect(u).toContain("prefilled_email=test%40example.com");
+  });
+
+  it("buildStripeAnnualPaymentUrl returns the annual Payment Link", () => {
+    const u = buildStripeAnnualPaymentUrl();
+    expect(u.startsWith("https://buy.stripe.com/fZufZh7bjbjEeCR4Cr8Zq03")).toBe(true);
   });
 
   it("subscriptionUsesExternalStripePaymentLink is true on SaaS web (Payment Link)", () => {
