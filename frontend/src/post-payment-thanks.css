@@ -1,19 +1,45 @@
-/* Page /merci — post-paiement (plein écran, aligné /get) */
+/* Page /merci — plein écran, palette neutre (sans vert accent) */
+
+:root {
+  --post-pay-bg: #09090b;
+  --post-pay-surface: rgba(24, 24, 27, 0.92);
+  --post-pay-border: rgba(255, 255, 255, 0.08);
+  --post-pay-text: #fafafa;
+  --post-pay-muted: rgba(250, 250, 250, 0.62);
+  --post-pay-accent: #ffffff;
+  --post-pay-accent-text: #18181b;
+}
 
 html.page-post-payment-thanks,
 body.page-post-payment-thanks {
   margin: 0;
+  width: 100%;
   min-height: 100%;
   min-height: 100dvh;
-  background: #0a1015;
+  background: var(--post-pay-bg) !important;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  overflow-x: hidden;
+}
+
+body.page-post-payment-thanks #landing {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  background: var(--post-pay-bg) !important;
 }
 
 body.page-post-payment-thanks #landing-liquid-nav-host,
 body.page-post-payment-thanks .landing-liquid-nav-host,
 body.page-post-payment-thanks #site-footer-myfidpass,
 body.page-post-payment-thanks #lancez-vous-rapidement,
-body.page-post-payment-thanks .landing-legal-inner > .landing-btn {
+body.page-post-payment-thanks .landing-legal-inner > .landing-btn,
+body.page-post-payment-thanks #landing-main,
+body.page-post-payment-thanks .site-banner-media {
   display: none !important;
 }
 
@@ -23,42 +49,59 @@ body.page-post-payment-thanks #landing-legal.landing-legal {
   align-items: center;
   justify-content: center;
   width: 100%;
+  max-width: none;
+  min-height: 100vh;
   min-height: 100dvh;
   margin: 0;
-  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
-    max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  padding: max(1.25rem, env(safe-area-inset-top, 0px)) max(1.25rem, env(safe-area-inset-right, 0px))
+    max(1.25rem, env(safe-area-inset-bottom, 0px)) max(1.25rem, env(safe-area-inset-left, 0px));
   box-sizing: border-box;
-  background: #0a1015;
+  background: var(--post-pay-bg);
 }
 
-body.page-post-payment-thanks .landing-legal-inner,
-body.page-post-payment-thanks #landing-legal-content {
+body.page-post-payment-thanks .landing-legal-inner {
   width: 100%;
-  max-width: min(100%, 28rem);
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   padding: 0;
   border: none;
+  border-radius: 0;
   background: transparent;
   box-shadow: none;
+}
+
+body.page-post-payment-thanks #landing-legal-content {
+  width: 100%;
+  max-width: min(100%, 26rem);
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 0;
+}
+
+body.page-landing-subpage.page-post-payment-thanks #landing-legal {
+  padding-top: max(1.25rem, env(safe-area-inset-top, 0px));
 }
 
 .post-pay-thanks {
   position: relative;
   width: 100%;
-  min-height: min(100dvh, 800px);
+  min-height: min(100dvh, 900px);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #f6f4ec;
+  color: var(--post-pay-text);
 }
 
 .post-pay-thanks__bg {
-  position: absolute;
+  position: fixed;
   inset: 0;
+  z-index: 0;
   background:
-    radial-gradient(900px 600px at 70% 10%, rgba(39, 243, 169, 0.08), transparent 55%),
-    radial-gradient(700px 500px at 10% 90%, rgba(30, 58, 138, 0.15), transparent 60%),
-    #0a1015;
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255, 255, 255, 0.04), transparent 55%),
+    radial-gradient(ellipse 60% 50% at 80% 100%, rgba(59, 130, 246, 0.06), transparent 50%),
+    var(--post-pay-bg);
   pointer-events: none;
 }
 
@@ -79,18 +122,20 @@ body.page-post-payment-thanks #landing-legal-content {
 
 .post-pay-thanks__card {
   text-align: left;
-  padding: 1.5rem 1.35rem 1.35rem;
-  border-radius: 22px;
-  background: rgba(15, 25, 32, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  padding: 1.65rem 1.45rem 1.4rem;
+  border-radius: 20px;
+  background: var(--post-pay-surface);
+  border: 1px solid var(--post-pay-border);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   animation: postPayIn 380ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes postPayIn {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -105,8 +150,9 @@ body.page-post-payment-thanks #landing-legal-content {
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: rgba(39, 243, 169, 0.15);
-  color: #27f3a9;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--post-pay-text);
 }
 
 .post-pay-thanks__badge--done {
@@ -115,24 +161,24 @@ body.page-post-payment-thanks #landing-legal-content {
 
 .post-pay-thanks__title {
   margin: 0 0 0.5rem;
-  font-size: 1.45rem;
+  font-size: 1.5rem;
   font-weight: 650;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   text-align: center;
-  color: #fff;
+  color: var(--post-pay-text);
 }
 
 .post-pay-thanks__lead {
-  margin: 0 0 1.1rem;
+  margin: 0 0 1.15rem;
   font-size: 0.92rem;
-  line-height: 1.5;
+  line-height: 1.55;
   text-align: center;
-  color: rgba(246, 244, 236, 0.72);
+  color: var(--post-pay-muted);
 }
 
 .post-pay-thanks__steps {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.45rem;
   margin: 0 0 1.25rem;
   padding: 0;
   list-style: none;
@@ -145,13 +191,15 @@ body.page-post-payment-thanks #landing-legal-content {
   font-size: 0.72rem;
   font-weight: 600;
   text-align: center;
-  color: rgba(246, 244, 236, 0.45);
-  background: rgba(255, 255, 255, 0.04);
+  color: var(--post-pay-muted);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid transparent;
 }
 
 .post-pay-thanks__step.is-active {
-  color: #0f1920;
-  background: #27f3a9;
+  color: var(--post-pay-accent-text);
+  background: var(--post-pay-accent);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .post-pay-thanks__field {
@@ -163,7 +211,7 @@ body.page-post-payment-thanks #landing-legal-content {
   margin-bottom: 0.35rem;
   font-size: 0.82rem;
   font-weight: 600;
-  color: rgba(246, 244, 236, 0.88);
+  color: rgba(250, 250, 250, 0.9);
 }
 
 .post-pay-thanks__input-wrap {
@@ -174,17 +222,18 @@ body.page-post-payment-thanks #landing-legal-content {
   width: 100%;
   box-sizing: border-box;
   padding: 0.82rem 0.95rem;
-  border-radius: 14px;
+  border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.28);
-  color: #fff;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--post-pay-text);
   font-size: 1rem;
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .post-pay-thanks__input:focus {
-  border-color: rgba(39, 243, 169, 0.55);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
 }
 
 .post-pay-thanks__input--code {
@@ -197,7 +246,7 @@ body.page-post-payment-thanks #landing-legal-content {
 .post-pay-thanks__hint {
   margin: 0.35rem 0 0;
   font-size: 0.76rem;
-  color: rgba(246, 244, 236, 0.48);
+  color: rgba(250, 250, 250, 0.42);
 }
 
 .post-pay-thanks__conflict {
@@ -210,20 +259,25 @@ body.page-post-payment-thanks #landing-legal-content {
 .post-pay-thanks__cta {
   display: block;
   width: 100%;
-  margin-top: 0.25rem;
+  margin-top: 0.35rem;
   padding: 0.92rem 1rem;
   border: none;
-  border-radius: 999px;
-  background: #27f3a9;
-  color: #0a1015;
+  border-radius: 12px;
+  background: var(--post-pay-accent);
+  color: var(--post-pay-accent-text);
   font-weight: 650;
   font-size: 1rem;
   cursor: pointer;
   text-align: center;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.post-pay-thanks__cta:hover:not(:disabled) {
+  opacity: 0.92;
 }
 
 .post-pay-thanks__cta:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -234,7 +288,7 @@ body.page-post-payment-thanks #landing-legal-content {
   padding: 0.45rem;
   border: none;
   background: none;
-  color: rgba(246, 244, 236, 0.55);
+  color: var(--post-pay-muted);
   font-size: 0.85rem;
   cursor: pointer;
   text-decoration: underline;
@@ -245,14 +299,14 @@ body.page-post-payment-thanks #landing-legal-content {
   margin: 0 0 1rem;
   font-size: 0.9rem;
   line-height: 1.45;
-  color: rgba(246, 244, 236, 0.78);
+  color: rgba(250, 250, 250, 0.78);
   text-align: center;
 }
 
 .post-pay-thanks__state--loading p,
 .post-pay-thanks__success-sub {
   margin: 0.75rem 0 0;
-  color: rgba(246, 244, 236, 0.65);
+  color: var(--post-pay-muted);
   font-size: 0.9rem;
 }
 
@@ -260,8 +314,8 @@ body.page-post-payment-thanks #landing-legal-content {
   width: 2rem;
   height: 2rem;
   margin: 0 auto 0.75rem;
-  border: 2px solid rgba(39, 243, 169, 0.25);
-  border-top-color: #27f3a9;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-top-color: rgba(255, 255, 255, 0.75);
   border-radius: 50%;
   animation: postPaySpin 0.7s linear infinite;
 }
@@ -276,29 +330,30 @@ body.page-post-payment-thanks #landing-legal-content {
   margin: 0 0 0.35rem;
   font-size: 1.1rem;
   font-weight: 650;
-  color: #fff;
+  color: var(--post-pay-text);
 }
 
 .post-pay-thanks__error-text {
   margin: 0 0 1rem;
   font-size: 0.9rem;
   line-height: 1.45;
-  color: rgba(246, 244, 236, 0.7);
+  color: var(--post-pay-muted);
 }
 
 .post-pay-thanks__success {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 650;
-  color: #27f3a9;
+  color: var(--post-pay-text);
 }
 
 .post-pay-thanks__link-btn {
   display: inline-block;
   padding: 0.75rem 1.25rem;
-  border-radius: 999px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.08);
-  color: #27f3a9;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--post-pay-text);
   text-decoration: none;
   font-size: 0.9rem;
 }
@@ -311,10 +366,10 @@ body.page-post-payment-thanks #landing-legal-content {
   width: 100%;
   max-height: 14rem;
   overflow-y: auto;
-  border-radius: 14px;
+  border-radius: 12px;
   background: #fff;
-  border: 1px solid rgba(15, 25, 32, 0.08);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(24, 24, 27, 0.08);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.32);
   display: none;
 }
 
@@ -327,7 +382,7 @@ body.page-post-payment-thanks #landing-legal-content {
   width: 100%;
   padding: 0.7rem 0.85rem;
   border: none;
-  border-bottom: 1px solid rgba(15, 25, 32, 0.06);
+  border-bottom: 1px solid rgba(24, 24, 27, 0.06);
   background: #fff;
   text-align: left;
   cursor: pointer;
@@ -338,21 +393,21 @@ body.page-post-payment-thanks #landing-legal-content {
 }
 
 .post-pay-places-item:hover {
-  background: #f1f5f9;
+  background: #f4f4f5;
 }
 
 .post-pay-places-item__main {
   display: block;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #0f1920;
+  color: #18181b;
 }
 
 .post-pay-places-item__sub {
   display: block;
   margin-top: 0.15rem;
   font-size: 0.78rem;
-  color: #64748b;
+  color: #71717a;
 }
 
 .post-pay-places-spinner {
@@ -362,8 +417,8 @@ body.page-post-payment-thanks #landing-legal-content {
   width: 1rem;
   height: 1rem;
   margin-top: -0.5rem;
-  border: 2px solid rgba(255, 255, 255, 0.15);
-  border-top-color: #27f3a9;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-top-color: rgba(255, 255, 255, 0.7);
   border-radius: 50%;
   display: none;
   pointer-events: none;
@@ -376,4 +431,18 @@ body.page-post-payment-thanks #landing-legal-content {
 
 .post-pay-thanks .hidden {
   display: none !important;
+}
+
+@media (min-width: 768px) {
+  body.page-post-payment-thanks #landing-legal-content {
+    max-width: min(100%, 28rem);
+  }
+
+  .post-pay-thanks__shell {
+    max-width: 28rem;
+  }
+
+  .post-pay-thanks__card {
+    padding: 1.85rem 1.65rem 1.55rem;
+  }
 }

@@ -21,11 +21,6 @@ import {
 } from "../constants/locationRadius.js";
 import { maybeShowPostPurchaseAppModal } from "./post-purchase-app-modal.js";
 import {
-  initNotificationPreviewSystem,
-  refreshAllNotificationPreviewIcons,
-  openNotificationLogoSheet,
-} from "./app-notif-preview-icons.js";
-import {
   syncSaaSWelcomeChrome,
   wireSaaSWelcomeStripeHandlers,
   applySaaSFrcMessaging,
@@ -5791,7 +5786,23 @@ function initAppDashboard(slug) {
 
   /** Icône aperçu campagne / push : média serveur dédié (`notification_icon`), indépendant des logos carte & fiche. */
   async function refreshCampaignNotificationBannerIcon() {
-    await refreshAllNotificationPreviewIcons(api);
+    const bannerIconImg = document.getElementById("app-notification-banner-icon-img");
+    const bannerIconFallback = document.getElementById("app-notification-banner-icon-fallback");
+    if (!bannerIconImg) return;
+    try {
+      const r = await api("/notification-icon?v=" + Date.now());
+      if (!r.ok) throw new Error("No notification icon");
+      const blob = await r.blob();
+      if (!blob || blob.size === 0) throw new Error("Empty");
+      const url = URL.createObjectURL(blob);
+      if (bannerIconImg.src && bannerIconImg.src.startsWith("blob:")) URL.revokeObjectURL(bannerIconImg.src);
+      bannerIconImg.src = url;
+      bannerIconImg.classList.remove("hidden");
+      if (bannerIconFallback) bannerIconFallback.classList.add("hidden");
+    } catch (_) {
+      bannerIconImg.classList.add("hidden");
+      if (bannerIconFallback) bannerIconFallback.classList.remove("hidden");
+    }
   }
 
   /** Bandeau périmètre + avatar header : logo carré commerce puis logo principal (pas l’icône campagne isolée). */
@@ -5845,11 +5856,11 @@ function initAppDashboard(slug) {
 
   const notificationBannerLogoInput = document.getElementById("app-notification-banner-logo-input");
   const notificationBannerLogoDrop = document.getElementById("app-notification-banner-logo-drop");
-  initNotificationPreviewSystem({
-    api,
-    triggerLogoPicker: () => notificationBannerLogoInput?.click(),
-  });
   if (notificationBannerLogoInput && notificationBannerLogoDrop) {
+    notificationBannerLogoDrop.addEventListener("click", (e) => {
+      if (e.target === notificationBannerLogoInput) return;
+      notificationBannerLogoInput.click();
+    });
     notificationBannerLogoInput.addEventListener("change", async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -6274,12 +6285,6 @@ function initAppDashboard(slug) {
           notifFeedbackEl.classList.add("success");
           }
         } else {
-          if (data.code === "notification_icon_required") {
-            openNotificationLogoSheet({
-              commerceName: titleEl?.value?.trim() || undefined,
-              message: messageEl?.value?.trim() || undefined,
-            });
-          }
           notifFeedbackEl.textContent = data.error || "Erreur";
           notifFeedbackEl.classList.add("error");
         }
