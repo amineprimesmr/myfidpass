@@ -54,8 +54,8 @@ export async function loadQrAsImage(targetUrl, sizePx) {
     const canvas = document.createElement("canvas");
     await QRCode.toCanvas(canvas, targetUrl, {
       width: size,
-      margin: 2,
-      errorCorrectionLevel: "M",
+      margin: 1,
+      errorCorrectionLevel: "H",
       color: { dark: "#000000", light: "#ffffff" },
     });
     const blob = await new Promise((resolve) => {

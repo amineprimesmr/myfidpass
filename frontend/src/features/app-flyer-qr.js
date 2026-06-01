@@ -477,10 +477,15 @@ export function initAppFlyerQr(slug, opts) {
       downloadBtn.disabled = true;
       try {
         await paint();
+        const blob = await new Promise((resolve, reject) => {
+          canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("export_blob"))), "image/png");
+        });
+        const objUrl = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.download = `flyer-qr-${slug}.png`;
-        a.href = canvas.toDataURL("image/png");
+        a.href = objUrl;
         a.click();
+        setTimeout(() => URL.revokeObjectURL(objUrl), 5000);
         if (exportNote) {
           exportNote.textContent = `PNG ${FLYER_EXPORT.w}×${FLYER_EXPORT.h} px — prêt pour impression.`;
           exportNote.classList.remove("hidden");

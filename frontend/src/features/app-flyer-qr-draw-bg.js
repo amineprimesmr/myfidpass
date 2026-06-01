@@ -1,6 +1,42 @@
+import { drawImageCover } from "./app-flyer-qr-draw-utils.js";
+
+/** @type {WeakMap<CanvasImageSource, HTMLCanvasElement>} */
+const bgUpscaleCache = new WeakMap();
+
 /**
- * Fond du flyer : dégradé seul ou photo + voile (couleurs fond haut/bas).
+ * Pré-upscale le fond à la résolution export si la source est plus petite (évite double flou).
+ * @param {CanvasImageSource | null} img
+ * @param {number} w
+ * @param {number} h
+ * @returns {CanvasImageSource | null}
  */
+function ensureBgExportResolution(img, w, h) {
+  if (!img) return null;
+  let sw = 0;
+  let sh = 0;
+  if (typeof ImageBitmap !== "undefined" && img instanceof ImageBitmap) {
+    sw = img.width;
+    sh = img.height;
+  } else if (img && typeof img === "object") {
+    const o = /** @type {{ naturalWidth?: number; naturalHeight?: number; width?: number; height?: number }} */ (img);
+    sw = o.naturalWidth || o.width || 0;
+    sh = o.naturalHeight || o.height || 0;
+  }
+  if (!sw || !sh) return img;
+  if (sw >= w * 0.98 && sh >= h * 0.98) return img;
+  const cached = bgUpscaleCache.get(img);
+  if (cached) return cached;
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  const x = c.getContext("2d");
+  if (!x) return img;
+  x.imageSmoothingEnabled = true;
+  if ("imageSmoothingQuality" in x) x.imageSmoothingQuality = "high";
+  drawImageCover(x, img, 0, 0, w, h);
+  bgUpscaleCache.set(img, c);
+  return c;
+}
 
 /**
  * @param {string} hex #rrggbb
@@ -86,57 +122,6 @@ function fillGradientVOpaque(ctx, w, h, top, bot) {
 
 /**
  * @param {CanvasRenderingContext2D} ctx
- * @param {CanvasImageSource} img
- * @param {number} dx
- * @param {number} dy
- * @param {number} dstW
- * @param {number} dstH
- */
-function drawImageCover(ctx, img, dx, dy, dstW, dstH) {
-  const prevSmooth = ctx.imageSmoothingEnabled;
-  const prevQ = "imageSmoothingQuality" in ctx ? ctx.imageSmoothingQuality : "low";
-  ctx.imageSmoothingEnabled = true;
-  if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
-  try {
-    let sw = 0;
-    let sh = 0;
-    if (typeof ImageBitmap !== "undefined" && img instanceof ImageBitmap) {
-      sw = img.width;
-      sh = img.height;
-    } else if (img && typeof img === "object") {
-      const o = /** @type {{ naturalWidth?: number; naturalHeight?: number; width?: number; height?: number }} */ (img);
-      sw = o.naturalWidth || o.width || 0;
-      sh = o.naturalHeight || o.height || 0;
-    }
-    const drawStretch = () => {
-      ctx.drawImage(img, dx, dy, dstW, dstH);
-    };
-    if (!sw || !sh) {
-      try {
-        drawStretch();
-      } catch (_) {}
-      return;
-    }
-    const scale = Math.max(dstW / sw, dstH / sh);
-    const bw = sw * scale;
-    const bh = sh * scale;
-    const ox = dx + (dstW - bw) / 2;
-    const oy = dy + (dstH - bh) / 2;
-    try {
-      ctx.drawImage(img, ox, oy, bw, bh);
-    } catch (_) {
-      try {
-        drawStretch();
-      } catch (_e) {}
-    }
-  } finally {
-    ctx.imageSmoothingEnabled = prevSmooth;
-    if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = prevQ;
-  }
-}
-
-/**
- * @param {CanvasRenderingContext2D} ctx
  * @param {number} w
  * @param {number} h
  * @param {{ colorBgTop: string; colorBgBottom: string; flyerBgOverlayPct?: number }} s
@@ -155,7 +140,7 @@ export function drawFlyerBackgroundLayer(ctx, w, h, s, bgImg) {
     fillGradientVOpaque(ctx, w, h, base, base);
     return;
   }
-  drawImageCover(ctx, bgImg, 0, 0, w, h);
+  drawImageCover(ctx, ensureBgExportResolution(bgImg, w, h) ?? bgImg, 0, 0, w, h);
   const raw = Number(s.flyerBgOverlayPct);
   const pct = Number.isFinite(raw) ? Math.max(0, Math.min(90, Math.round(raw))) : 0;
   if (pct <= 0) return;

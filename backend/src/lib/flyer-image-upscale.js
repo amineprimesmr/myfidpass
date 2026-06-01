@@ -16,7 +16,8 @@ export async function upscaleFlyerAiBackgroundPng(inputPng) {
       position: "centre",
       kernel: sharp.kernel.lanczos3,
     })
-    .png({ compressionLevel: 6, effort: 10 })
+    .sharpen({ sigma: 1.1, m1: 1.15, m2: 0.65 })
+    .png({ compressionLevel: 3, effort: 10 })
     .toBuffer();
 }
 

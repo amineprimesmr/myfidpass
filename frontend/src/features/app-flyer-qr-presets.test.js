@@ -7,6 +7,7 @@ import {
   FLYER_LOGO_LAYOUT,
   FLYER_LAYOUT,
   flyerPrintSafeBottomY,
+  flyerDesignScale,
   wheelSegmentColorsResolved,
   FLYER_WHEEL_SEGMENT_COUNT,
 } from "./app-flyer-qr-presets.js";
@@ -21,6 +22,10 @@ describe("mergeFlyerState", () => {
     expect(FLYER_LOGO_LAYOUT.centerYFrac).toBeGreaterThan(0.1);
     expect(FLYER_LAYOUT.printSafeBottomInsetFrac).toBeGreaterThan(0.02);
     expect(flyerPrintSafeBottomY(6144)).toBeLessThan(6144);
+  });
+
+  it("scale design 4096 px = 1.707× gabarit 2400", () => {
+    expect(flyerDesignScale(4096)).toBeCloseTo(4096 / 2400, 3);
   });
 
   it("migre l’ancienne position logo trop haute", () => {

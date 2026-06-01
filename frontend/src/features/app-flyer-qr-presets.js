@@ -17,6 +17,14 @@ export function scopedFlyerStorageKey(scope) {
 /** Dimensions export PNG ultra (2:3, ~300 DPI A2 / affiche pro). Aligné backend `flyer-export-dimensions.js`. */
 export const FLYER_EXPORT = { w: 4096, h: 6144 };
 
+/** Gabarit visuel d’origine — les constantes px du canvas sont calées dessus (CTA, roue, etc.). */
+export const FLYER_DESIGN_BASE = { w: 2400, h: 3600 };
+
+/** @param {number} canvasW */
+export function flyerDesignScale(canvasW) {
+  return canvasW / FLYER_DESIGN_BASE.w;
+}
+
 /** Nombre de parts : 6 secteurs égaux (60°) — flyer + libellés canvas alignés sur la même géométrie. */
 export const FLYER_WHEEL_SEGMENT_COUNT = 6;
 

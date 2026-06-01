@@ -5,6 +5,7 @@ import {
   FLYER_EXPORT,
   FLYER_LAYOUT,
   FLYER_WHEEL_RADIUS_FRAC,
+  flyerDesignScale,
 } from "./app-flyer-qr-presets.js";
 import { drawFlyerWheel, drawFlyerWheelLabelsOverlay } from "./app-flyer-wheel.js";
 import { drawFlyerHeroHeadline } from "./app-flyer-qr-hero.js";
@@ -27,30 +28,39 @@ let flyerWorkCanvasCache = null;
 /** @type {HTMLImageElement | null} */
 let flyerGiftflyerCache = null;
 
+const GIFTFLYER_HD_SRC = "/assets/flyer-wheels/giftflyer-hd.png";
+const GIFTFLYER_PUBLIC_SRC = "/assets/flyer-wheels/giftflyer.png";
+
 async function getFlyerGiftflyerImage() {
   if (flyerGiftflyerCache) return flyerGiftflyerCache;
-  try {
-    const src = String(giftflyerDataUrl || "").trim();
-    if (!src) return null;
-    flyerGiftflyerCache = await loadImage(src, false);
-    return flyerGiftflyerCache;
-  } catch {
-    return null;
+  const candidates = [
+    String(giftflyerDataUrl || "").trim(),
+    GIFTFLYER_HD_SRC,
+    GIFTFLYER_PUBLIC_SRC,
+  ].filter(Boolean);
+  for (const src of candidates) {
+    try {
+      flyerGiftflyerCache = await loadImage(src, false);
+      if (flyerGiftflyerCache) return flyerGiftflyerCache;
+    } catch (_) {}
   }
+  return null;
 }
 
-function drawFlyerGiftflyerPromo(ctx, w, h, scale, img) {
+function drawFlyerGiftflyerPromo(ctx, w, h, ds, img) {
   if (!img) return;
   const sw = img.naturalWidth || img.width;
   const sh = img.naturalHeight || img.height;
   if (!sw || !sh) return;
   const giftW = w * 0.48;
   const giftH = (giftW * sh) / sw;
-  const lead = Math.max(8 * scale, w * 0.02);
-  const bottomPad = Math.max(4 * scale, h * 0.01);
-  const lift = Math.max(126 * scale, h * 0.19);
+  const lead = Math.max(8 * ds, w * 0.02);
+  const bottomPad = Math.max(4 * ds, h * 0.01);
+  const lift = Math.max(126 * ds, h * 0.19);
   const x = lead;
   const y = h - bottomPad - giftH - lift;
+  ctx.imageSmoothingEnabled = true;
+  if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
   try {
     ctx.drawImage(img, x, y, giftW, giftH);
   } catch (_) {}
@@ -76,18 +86,18 @@ function splitCtaBannerLines(raw) {
  * @param {CanvasRenderingContext2D} ctx
  * @param {import("./app-flyer-qr-presets.js").FlyerState} s
  */
-function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
+function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, ds) {
   const raw = (s.ctaBanner || "").trim();
   if (!raw) return;
 
   const { line1, line2 } = splitCtaBannerLines(raw);
   if (!line1) return;
 
-  const padX = 44 * scale;
-  const padY = 28 * scale;
-  const lineGap = 8 * scale;
+  const padX = 44 * ds;
+  const padY = 28 * ds;
+  const lineGap = 8 * ds;
 
-  const fontBig = Math.round(Math.min(132, Math.max(78, qSize * 0.31)));
+  const fontBig = Math.round(Math.min(132 * ds, Math.max(78 * ds, qSize * 0.31)));
   const fontSmall = line2 ? Math.round(fontBig * 0.58) : fontBig;
 
   ctx.textAlign = "center";
@@ -106,14 +116,14 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   const row2H = line2 ? fontSmall * 1.1 : 0;
   const pillH = padY * 2 + row1H + (line2 ? lineGap + row2H : 0);
 
-  const gap = -18 * scale;
+  const gap = -18 * ds;
   let pillLeft = qx - gap - pillW;
   const pillTop = qy + qSize * 0.7 - pillH / 2;
-  const minX = 10 * scale;
+  const minX = 10 * ds;
   if (pillLeft < minX) {
     pillLeft = minX;
   }
-  const rr = Math.min(32 * scale, pillH / 2);
+  const rr = Math.min(32 * ds, pillH / 2);
   const fill = (s.ctaBannerBgColor && /^#[0-9A-Fa-f]{6}$/.test(String(s.ctaBannerBgColor).trim()))
     ? String(s.ctaBannerBgColor).trim()
     : "#ec4899";
@@ -126,7 +136,7 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   ctx.fill();
 
   ctx.strokeStyle = "#000000";
-  ctx.lineWidth = Math.max(4, 8 * scale);
+  ctx.lineWidth = Math.max(4, 8 * ds);
   roundRect(ctx, pillLeft, pillTop, pillW, pillH, rr);
   ctx.stroke();
 
@@ -135,7 +145,7 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale) {
   ctx.fillStyle = textFill;
   ctx.font = `800 ${fontBig}px Inter, system-ui, sans-serif`;
   ctx.strokeStyle = "#000000";
-  ctx.lineWidth = Math.max(1.5, 2.8 * scale);
+  ctx.lineWidth = Math.max(1.5, 2.8 * ds);
   ctx.lineJoin = "round";
   ctx.strokeText(line1, cx, cy);
   ctx.fillText(line1, cx, cy);
@@ -176,14 +186,15 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   ctx.imageSmoothingEnabled = true;
   if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
 
-  const scale = w / FLYER_EXPORT.w;
-  /** QR un peu plus grand, coins plus ronds, QR serveur haute définition. */
+  const ds = flyerDesignScale(w);
+
+  /** QR un peu plus grand, coins plus ronds. */
   const qSize = w * 0.42;
-  const qrCornerR = 50 * scale;
-  const qrPad = 15 * scale;
-  const qrInner = Math.max(1, qSize - 2 * qrPad);
-  /** QR local haute résolution — taille exacte pour un rendu net à l’export. */
-  const qrFetchPx = Math.max(256, Math.round(qrInner));
+  const qrCornerR = 50 * ds;
+  const qrPad = 15 * ds;
+  const qrInner = Math.max(1, Math.round(qSize - 2 * qrPad));
+  /** QR local — taille pixel-perfect (modules entiers). */
+  const qrFetchPx = qrInner;
 
   const [qrImg, flyergameImg, giftflyerImg] = await Promise.all([
     loadQrAsImage(qrTargetUrl, qrFetchPx),
@@ -204,7 +215,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
    * Roue couleur nettement plus grande (demandé): elle devient l'élément principal,
    * puis l'overlay graphique se pose au centre seulement.
    */
-  const spinnerR = Math.max(340 * scale, Math.min(wheelR * 0.7, w * 0.47));
+  const spinnerR = Math.max(340 * ds, Math.min(wheelR * 0.7, w * 0.47));
 
   drawFlyerBackgroundLayer(ctx, w, h, s, bgCanvasImg);
   const hasCommerceLogo = logoImg != null;
@@ -220,8 +231,8 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   ctx.restore();
   // Rendre les textes de la roue bien visibles (opaques, au-dessus du masque).
   drawFlyerWheelLabelsOverlay(ctx, s, wheelCx, wheelCy, spinnerR);
-  drawFlyerGiftflyerPromo(ctx, w, h, scale, giftflyerImg);
-  drawFlyerHeroHeadline(ctx, s, w, h, scale, hasCommerceLogo);
+  drawFlyerGiftflyerPromo(ctx, w, h, ds, giftflyerImg);
+  drawFlyerHeroHeadline(ctx, s, w, h, ds, hasCommerceLogo);
   const qx = w * 0.472;
   const qy = h * FLYER_LAYOUT.qrTopYFrac;
   const qCx = qx + qSize / 2;
@@ -230,7 +241,7 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const qrTiltRad = (-6 * Math.PI) / 180;
 
   // Pastille **au-dessus** de l’illustration cadeau ; légèrement derrière le QR.
-  drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, scale);
+  drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, ds);
 
   ctx.save();
   ctx.translate(qCx, qCy);
@@ -239,7 +250,12 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   ctx.fillStyle = "#ffffff";
   roundRect(ctx, qx, qy, qSize, qSize, qrCornerR);
   ctx.fill();
-  if (qrImg) ctx.drawImage(qrImg, qx + qrPad, qy + qrPad, qrInner, qrInner);
+  if (qrImg) {
+    const prevSmooth = ctx.imageSmoothingEnabled;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(qrImg, qx + qrPad, qy + qrPad, qrInner, qrInner);
+    ctx.imageSmoothingEnabled = prevSmooth;
+  }
   ctx.restore();
   await drawFlyerFooter(ctx, w, h, s);
 

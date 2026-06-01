@@ -1,7 +1,7 @@
 /**
  * Pied de flyer (bandeau + étapes + fallback).
  */
-import { FLYER_LAYOUT, FLYER_EXPORT, footerStepsForegroundResolved, flyerPrintSafeBottomY } from "./app-flyer-qr-presets.js";
+import { FLYER_LAYOUT, FLYER_EXPORT, footerStepsForegroundResolved, flyerPrintSafeBottomY, flyerDesignScale } from "./app-flyer-qr-presets.js";
 import { wrapCanvasTextLines } from "./app-flyer-qr-hero.js";
 import { drawImageContain, drawImageCover, loadImage } from "./app-flyer-qr-draw-utils.js";
 
@@ -195,7 +195,7 @@ export async function drawFlyerFooter(ctx, w, h, s) {
  */
 export async function drawFlyerPoweredByBadge(ctx, w, h, bottomY = h) {
   const img = await getMyfidpassFlyerLogo();
-  const scale = w / FLYER_EXPORT.w;
+  const scale = flyerDesignScale(w);
   const bottomPad = Math.max(10 * scale, h * 0.004);
   const yBase = bottomY - bottomPad;
   const fontPx = Math.max(10, Math.round(20 * scale));

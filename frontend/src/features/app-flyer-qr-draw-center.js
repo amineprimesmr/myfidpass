@@ -1,6 +1,7 @@
 import flyergameDataUrl from "../assets/flyer-wheels/flyergame.png?inline";
 import { drawImageWithFlyergameFit, loadImage } from "./app-flyer-qr-draw-utils.js";
 
+const FLYERGAME_HD_SRC = "/assets/flyergame-hd.png";
 const FLYERGAME_PUBLIC_SRC = "/assets/flyergame.png";
 
 /** @type {HTMLImageElement | null} */
@@ -17,7 +18,7 @@ export async function getFlyergameCenterImage() {
         return flyergameCenterCache;
       }
     }
-    const candidates = [String(flyergameDataUrl || "").trim(), FLYERGAME_PUBLIC_SRC]
+    const candidates = [String(flyergameDataUrl || "").trim(), FLYERGAME_HD_SRC, FLYERGAME_PUBLIC_SRC]
       .map((v) => String(v || "").trim())
       .filter(Boolean);
     for (const src of candidates) {
