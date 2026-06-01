@@ -123,7 +123,6 @@ export async function getCheckoutSuccessPreview({ sessionId, subscriptionId }) {
   const payerEmail = session ? payerEmailFromCheckoutSession(session) : null;
   const existingRow = getSubscriptionByStripeSubscriptionId(stripeSubId);
   const existingUser = existingRow?.user_id ? getUserById(String(existingRow.user_id)) : null;
-  const payerEmail = session ? payerEmailFromCheckoutSession(session) : null;
   const emailMatchUser = payerEmail ? getUserByEmail(payerEmail) : null;
   const ownerUserId = existingUser?.id ? String(existingUser.id) : null;
   const ownerBusinesses = ownerUserId ? getBusinessesByUserId(ownerUserId) : [];
