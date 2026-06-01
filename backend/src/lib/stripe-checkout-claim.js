@@ -31,6 +31,7 @@ async function loadStripeSyncHelpers() {
     payerEmailFromCheckoutSession: mod.payerEmailFromCheckoutSession,
     extractCheckoutSubscriptionId: mod.extractCheckoutSubscriptionId,
     isStripeSubscriptionStatusPaying: mod.isStripeSubscriptionStatusPaying,
+    subscriptionRowStatusFromStripeObject: mod.subscriptionRowStatusFromStripeObject,
   };
 }
 
@@ -52,9 +53,42 @@ async function retrieveCheckoutSession(sessionId) {
   return stripe.checkout.sessions.retrieve(String(sessionId).trim(), { expand: ["subscription"] });
 }
 
-async function retrieveSubscription(subscriptionId) {
+async function retrieveSubscriptionExpanded(subscriptionId) {
   if (!stripe) throw Object.assign(new Error("stripe_not_configured"), { code: "stripe_not_configured" });
-  return stripe.subscriptions.retrieve(String(subscriptionId).trim());
+  return stripe.subscriptions.retrieve(String(subscriptionId).trim(), {
+    expand: ["pending_setup_intent", "latest_invoice.payment_intent"],
+  });
+}
+
+async function subscriptionIsClaimable(stripeSub, checkoutSession, helpers) {
+  const { extractCheckoutSubscriptionId, isStripeSubscriptionStatusPaying, subscriptionRowStatusFromStripeObject } =
+    helpers;
+
+  if (checkoutSession && sessionIsPaidSubscription(checkoutSession, extractCheckoutSubscriptionId)) {
+    return true;
+  }
+
+  const raw = String(stripeSub?.status || "").toLowerCase();
+  if (isStripeSubscriptionStatusPaying(raw)) return true;
+
+  const normalized = subscriptionRowStatusFromStripeObject(stripeSub);
+  if (isStripeSubscriptionStatusPaying(normalized)) return true;
+
+  // Checkout payé mais propagation Stripe encore « incomplete » (promo 0 €, délai webhook).
+  if (
+    checkoutSession &&
+    sessionIsPaidSubscription(checkoutSession, extractCheckoutSubscriptionId) &&
+    (raw === "incomplete" || raw === "trialing")
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+async function loadClaimSession(sessionId) {
+  if (!sessionId || !isValidCheckoutSessionId(sessionId)) return null;
+  return retrieveCheckoutSession(sessionId);
 }
 
 function sessionIsPaidSubscription(session, extractCheckoutSubscriptionId) {
@@ -72,7 +106,6 @@ export async function getCheckoutSuccessPreview({ sessionId, subscriptionId }) {
   const {
     payerEmailFromCheckoutSession,
     extractCheckoutSubscriptionId,
-    isStripeSubscriptionStatusPaying,
   } = await loadStripeSyncHelpers();
 
   let session = null;
@@ -85,8 +118,9 @@ export async function getCheckoutSuccessPreview({ sessionId, subscriptionId }) {
     }
     stripeSubId = extractCheckoutSubscriptionId(session) || stripeSubId;
   } else if (stripeSubId && isValidStripeSubscriptionId(stripeSubId)) {
-    const sub = await retrieveSubscription(stripeSubId);
-    if (!isStripeSubscriptionStatusPaying(sub.status)) {
+    const sub = await retrieveSubscriptionExpanded(stripeSubId);
+    const helpers = await loadStripeSyncHelpers();
+    if (!(await subscriptionIsClaimable(sub, null, helpers))) {
       return { ok: false, code: "payment_incomplete", message: "Abonnement non actif." };
     }
   } else {
@@ -122,15 +156,17 @@ async function assertSubscriptionClaimable(stripeSubId, userId) {
   }
 }
 
-export async function attachStripeSubscriptionToUser(stripeSubId, userId) {
-  const { syncSubscriptionFromStripeObject, isStripeSubscriptionStatusPaying } =
-    await loadStripeSyncHelpers();
-  const sub = await retrieveSubscription(stripeSubId);
-  if (!isStripeSubscriptionStatusPaying(sub.status)) {
+export async function attachStripeSubscriptionToUser(stripeSubId, userId, checkoutSession = null) {
+  const helpers = await loadStripeSyncHelpers();
+  const { syncSubscriptionFromStripeObject } = helpers;
+  const sub = await retrieveSubscriptionExpanded(stripeSubId);
+
+  if (!(await subscriptionIsClaimable(sub, checkoutSession, helpers))) {
     const err = new Error("Abonnement Stripe inactif.");
     err.code = "payment_incomplete";
     throw err;
   }
+
   await assertSubscriptionClaimable(sub.id, userId);
   await syncSubscriptionFromStripeObject(sub, userId);
   try {
@@ -144,23 +180,27 @@ export async function attachStripeSubscriptionToUser(stripeSubId, userId) {
 }
 
 export async function claimCheckoutForUser({ sessionId, subscriptionId, userId }) {
-  const { extractCheckoutSubscriptionId } = await loadStripeSyncHelpers();
+  const helpers = await loadStripeSyncHelpers();
+  const { extractCheckoutSubscriptionId } = helpers;
+  const checkoutSession = await loadClaimSession(sessionId);
   let stripeSubId = subscriptionId ? String(subscriptionId).trim() : null;
-  if (sessionId && isValidCheckoutSessionId(sessionId)) {
-    const session = await retrieveCheckoutSession(sessionId);
-    if (!sessionIsPaidSubscription(session, extractCheckoutSubscriptionId)) {
+
+  if (checkoutSession) {
+    if (!sessionIsPaidSubscription(checkoutSession, extractCheckoutSubscriptionId)) {
       const err = new Error("Paiement non finalisé.");
       err.code = "payment_incomplete";
       throw err;
     }
-    stripeSubId = extractCheckoutSubscriptionId(session) || stripeSubId;
+    stripeSubId = extractCheckoutSubscriptionId(checkoutSession) || stripeSubId;
   }
+
   if (!stripeSubId || !isValidStripeSubscriptionId(stripeSubId)) {
     const err = new Error("Référence d’abonnement invalide.");
     err.code = "invalid_reference";
     throw err;
   }
-  await attachStripeSubscriptionToUser(stripeSubId, userId);
+
+  await attachStripeSubscriptionToUser(stripeSubId, userId, checkoutSession);
   return { stripe_subscription_id: stripeSubId };
 }
 
@@ -190,6 +230,18 @@ export async function sendClaimLoginCode({ email, sessionId, subscriptionId }) {
   const preview = await getCheckoutSuccessPreview({ sessionId, subscriptionId });
   if (!preview.ok) {
     return { ok: false, code: preview.code, message: preview.message };
+  }
+
+  if (
+    preview.already_claimed &&
+    preview.claimed_user_email &&
+    preview.claimed_user_email.toLowerCase() !== emailNorm
+  ) {
+    return {
+      ok: false,
+      code: "subscription_already_claimed",
+      message: `Cet abonnement est déjà actif sur ${preview.claimed_user_email}. Utilisez cette adresse e-mail.`,
+    };
   }
 
   const introText =
@@ -256,6 +308,44 @@ export async function verifyClaimAndIssueAuth({ email, code, sessionId, subscrip
   const preview = await getCheckoutSuccessPreview({ sessionId, subscriptionId });
   if (!preview.ok) {
     return { ok: false, status: 400, code: preview.code, message: preview.message };
+  }
+
+  // Abo déjà lié au même e-mail → connexion directe après OTP (sans re-vérifier le statut Stripe live).
+  if (
+    preview.already_claimed &&
+    preview.claimed_user_email &&
+    preview.claimed_user_email.toLowerCase() === emailNorm
+  ) {
+    const linkedUser = getUserByEmail(emailNorm);
+    if (linkedUser?.id && hasOperationalMerchantAccess(String(linkedUser.id))) {
+      const tokens = issueAuthTokensForUser(linkedUser.id);
+      try {
+        await sendPostPurchaseWelcomeEmail(emailNorm, preview.plan_label);
+      } catch (_) {}
+      return {
+        ok: true,
+        status: 200,
+        body: {
+          ...getAuthPayloadForUser(linkedUser),
+          token: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          subscription_claimed: true,
+        },
+      };
+    }
+  }
+
+  if (
+    preview.already_claimed &&
+    preview.claimed_user_email &&
+    preview.claimed_user_email.toLowerCase() !== emailNorm
+  ) {
+    return {
+      ok: false,
+      status: 409,
+      code: "subscription_already_claimed",
+      message: `Cet abonnement est déjà actif sur ${preview.claimed_user_email}. Connectez-vous avec ce compte.`,
+    };
   }
 
   let user = getUserByEmail(emailNorm);

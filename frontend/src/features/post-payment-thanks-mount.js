@@ -102,9 +102,12 @@ export async function mountPostPaymentThanksPage(refs) {
   }
   if (preview.already_claimed && preview.claimed_user_email) {
     const lead = document.getElementById("post-pay-thanks-lead");
+    const claimed = preview.claimed_user_email;
     if (lead) {
-      lead.textContent =
-        "Cet abonnement est déjà actif. Connectez-vous avec votre compte ou contactez le support.";
+      lead.textContent = `Cet abonnement est déjà actif sur ${claimed}. Entrez cette adresse e-mail pour vous connecter.`;
+    }
+    if (emailInput) {
+      emailInput.value = claimed;
     }
   }
   show(emailForm);

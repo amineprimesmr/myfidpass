@@ -1277,6 +1277,7 @@ export {
   payerEmailFromCheckoutSession,
   extractCheckoutSubscriptionId,
   isStripeSubscriptionStatusPaying,
+  subscriptionRowStatusFromStripeObject,
 };
 
 export default router;
