@@ -9,6 +9,7 @@ import {
   getUserByEmail,
   getUserById,
   hasOperationalMerchantAccess,
+  getBusinessesByUserId,
 } from "../db.js";
 import {
   deleteEmailOtpChallenge,
@@ -23,6 +24,7 @@ import {
   isValidCheckoutSessionId,
   isValidStripeSubscriptionId,
 } from "./stripe-checkout-ids.js";
+import { bootstrapFirstBusinessForUser, finalizeBusinessForClaimedUser } from "./bootstrap-first-business.js";
 
 async function loadStripeSyncHelpers() {
   const mod = await import("../routes/payment.js");
@@ -73,15 +75,6 @@ async function subscriptionIsClaimable(stripeSub, checkoutSession, helpers) {
 
   const normalized = subscriptionRowStatusFromStripeObject(stripeSub);
   if (isStripeSubscriptionStatusPaying(normalized)) return true;
-
-  // Checkout payé mais propagation Stripe encore « incomplete » (promo 0 €, délai webhook).
-  if (
-    checkoutSession &&
-    sessionIsPaidSubscription(checkoutSession, extractCheckoutSubscriptionId) &&
-    (raw === "incomplete" || raw === "trialing")
-  ) {
-    return true;
-  }
 
   return false;
 }
@@ -135,6 +128,8 @@ export async function getCheckoutSuccessPreview({ sessionId, subscriptionId }) {
   const existingRow = getSubscriptionByStripeSubscriptionId(stripeSubId);
   const existingUser = existingRow?.user_id ? getUserById(String(existingRow.user_id)) : null;
   const emailMatchUser = payerEmail ? getUserByEmail(payerEmail) : null;
+  const claimedBusinesses = existingUser ? getBusinessesByUserId(String(existingUser.id)) : [];
+  const payerBusinesses = emailMatchUser ? getBusinessesByUserId(String(emailMatchUser.id)) : [];
 
   return {
     ok: true,
@@ -144,6 +139,8 @@ export async function getCheckoutSuccessPreview({ sessionId, subscriptionId }) {
     already_claimed: !!(existingRow?.user_id && hasOperationalMerchantAccess(String(existingRow.user_id))),
     claimed_user_email: existingUser?.email || null,
     user_exists_for_payer_email: !!emailMatchUser,
+    has_business: claimedBusinesses.length > 0 || payerBusinesses.length > 0,
+    business_name: claimedBusinesses[0]?.name || payerBusinesses[0]?.name || null,
   };
 }
 
@@ -208,13 +205,13 @@ export async function sendPostPurchaseWelcomeEmail(email, planLabel) {
   const to = String(email || "").trim().toLowerCase();
   if (!to) return { sent: false };
   const plan = planLabel || "Myfidpass Pro";
-  const appUrl = (process.env.FRONTEND_URL || "https://myfidpass.fr").replace(/\/$/, "") + "/app";
-  const getUrl = (process.env.FRONTEND_URL || "https://myfidpass.fr").replace(/\/$/, "") + "/get";
+  const appUrl = (process.env.FRONTEND_URL || "https://myfidpass.fr").replace(/\/$/, "") + "/get?welcome=1&stay=1";
+  const getUrl = appUrl;
   return sendMail({
     to,
     subject: "Merci — votre abonnement Myfidpass est actif",
-    text: `Merci pour votre achat.\n\nVotre abonnement ${plan} est maintenant actif sur Myfidpass.\n\nOuvrez l’application commerçant : ${appUrl}\nTéléchargez l’app mobile : ${getUrl}\n\n— L’équipe Myfidpass`,
-    html: `<p>Merci pour votre achat.</p><p>Votre abonnement <strong>${plan}</strong> est maintenant actif sur Myfidpass.</p><p><a href="${appUrl}">Ouvrir l’espace commerçant</a> · <a href="${getUrl}">Télécharger l’app</a></p><p>— L’équipe Myfidpass</p>`,
+    text: `Merci pour votre achat.\n\nVotre abonnement Myfidpass est actif.\n\nTéléchargez l’app commerçant : ${getUrl}\n\n— L’équipe Myfidpass`,
+    html: `<p>Merci pour votre achat.</p><p>Votre abonnement <strong>Myfidpass</strong> est actif.</p><p><a href="${getUrl}">Télécharger l’app commerçant</a></p><p>— L’équipe Myfidpass</p>`,
   });
 }
 
@@ -298,7 +295,14 @@ function verifyOtpCode(emailNorm, code) {
   return { ok: true };
 }
 
-export async function verifyClaimAndIssueAuth({ email, code, sessionId, subscriptionId }) {
+export async function verifyClaimAndIssueAuth({
+  email,
+  code,
+  sessionId,
+  subscriptionId,
+  establishment_name,
+  google_place_id,
+}) {
   const emailNorm = String(email || "").trim().toLowerCase();
   const otp = verifyOtpCode(emailNorm, code);
   if (!otp.ok) {
@@ -310,7 +314,7 @@ export async function verifyClaimAndIssueAuth({ email, code, sessionId, subscrip
     return { ok: false, status: 400, code: preview.code, message: preview.message };
   }
 
-  // Abo déjà lié au même e-mail → connexion directe après OTP (sans re-vérifier le statut Stripe live).
+  // Abo déjà lié au même e-mail → connexion directe après OTP.
   if (
     preview.already_claimed &&
     preview.claimed_user_email &&
@@ -318,6 +322,18 @@ export async function verifyClaimAndIssueAuth({ email, code, sessionId, subscrip
   ) {
     const linkedUser = getUserByEmail(emailNorm);
     if (linkedUser?.id && hasOperationalMerchantAccess(String(linkedUser.id))) {
+      const bizResult = await finalizeBusinessForClaimedUser(String(linkedUser.id), {
+        establishment_name,
+        google_place_id,
+      });
+      if (!bizResult.ok) {
+        return {
+          ok: false,
+          status: bizResult.code === "business_place_already_linked" ? 409 : 400,
+          code: bizResult.code,
+          message: bizResult.message,
+        };
+      }
       const tokens = issueAuthTokensForUser(linkedUser.id);
       try {
         await sendPostPurchaseWelcomeEmail(emailNorm, preview.plan_label);
@@ -325,12 +341,7 @@ export async function verifyClaimAndIssueAuth({ email, code, sessionId, subscrip
       return {
         ok: true,
         status: 200,
-        body: {
-          ...getAuthPayloadForUser(linkedUser),
-          token: tokens.accessToken,
-          refreshToken: tokens.refreshToken,
-          subscription_claimed: true,
-        },
+        body: buildClaimAuthBody(linkedUser, tokens, bizResult.business),
       };
     }
   }
@@ -380,6 +391,19 @@ export async function verifyClaimAndIssueAuth({ email, code, sessionId, subscrip
     };
   }
 
+  const bizResult = await finalizeBusinessForClaimedUser(String(user.id), {
+    establishment_name,
+    google_place_id,
+  });
+  if (!bizResult.ok) {
+    return {
+      ok: false,
+      status: bizResult.code === "business_place_already_linked" ? 409 : 400,
+      code: bizResult.code,
+      message: bizResult.message,
+    };
+  }
+
   try {
     await sendPostPurchaseWelcomeEmail(emailNorm, preview.plan_label);
   } catch (e) {
@@ -390,11 +414,18 @@ export async function verifyClaimAndIssueAuth({ email, code, sessionId, subscrip
   return {
     ok: true,
     status: created ? 201 : 200,
-    body: {
-      ...getAuthPayloadForUser(user),
-      token: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      subscription_claimed: true,
-    },
+    body: buildClaimAuthBody(user, tokens, bizResult.business),
+  };
+}
+
+function buildClaimAuthBody(user, tokens, business) {
+  return {
+    ...getAuthPayloadForUser(user),
+    token: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+    subscription_claimed: true,
+    business: business
+      ? { id: business.id, name: business.name, slug: business.slug }
+      : undefined,
   };
 }

@@ -65,6 +65,8 @@ router.post("/claim/verify", async (req, res) => {
       code: req.body?.code,
       sessionId,
       subscriptionId,
+      establishment_name: req.body?.establishment_name,
+      google_place_id: req.body?.google_place_id,
     });
     if (!result.ok) {
       return res.status(result.status || 400).json({

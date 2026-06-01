@@ -62,6 +62,20 @@ function shouldStayOnPage() {
   return ["1", "true", "yes"].includes(String(params.get("stay") || "").toLowerCase());
 }
 
+function applyWelcomeCopy() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("welcome") !== "1") return;
+  const commerce = String(params.get("commerce") || "").trim();
+  const title = document.getElementById("get-app-title");
+  const subtitle = document.getElementById("get-app-subtitle");
+  if (title) {
+    title.textContent = commerce ? `${commerce} est prêt.` : "Votre compte est prêt.";
+  }
+  if (subtitle) {
+    subtitle.textContent = "Téléchargez l’app Myfidpass pour gérer votre programme fidélité.";
+  }
+}
+
 async function renderQR() {
   await loadQrScript();
   const QRCodeStyling = window.QRCodeStyling;
@@ -96,6 +110,8 @@ function wireStoreButtons() {
 
 /** Initialise la page /get (clone Tuyo). */
 export async function mountGetAppPage() {
+  applyWelcomeCopy();
+
   if (isMobileDevice() && !shouldStayOnPage()) {
     const platform = detectDevicePlatform();
     if (platform === "ios" || platform === "android") {

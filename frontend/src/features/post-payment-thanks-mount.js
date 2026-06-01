@@ -1,5 +1,6 @@
 import { API_BASE, getAuthToken, setAuthToken, setRefreshToken } from "../config.js";
 import { parseCheckoutSessionId } from "./post-purchase-app-modal.js";
+import { initPostPaymentPlacesSearch } from "./post-payment-places-search.js";
 
 const SUBSCRIPTION_ID_RE = /^sub_[a-zA-Z0-9_]+$/;
 
@@ -24,10 +25,21 @@ function hide(el) {
   el?.classList.add("hidden");
 }
 
+function setStep(active) {
+  document.getElementById("post-pay-step-1")?.classList.toggle("is-active", active === 1);
+  document.getElementById("post-pay-step-2")?.classList.toggle("is-active", active === 2);
+}
+
+function redirectToGetApp(commerceName) {
+  const params = new URLSearchParams({ welcome: "1", stay: "1" });
+  if (commerceName) params.set("commerce", commerceName);
+  window.location.replace(`/get?${params.toString()}`);
+}
+
 function setError(msg) {
   hide(document.getElementById("post-pay-thanks-loading"));
-  hide(document.getElementById("post-pay-thanks-email-form"));
-  hide(document.getElementById("post-pay-thanks-code-form"));
+  hide(document.getElementById("post-pay-thanks-main"));
+  hide(document.getElementById("post-pay-thanks-done"));
   const err = document.getElementById("post-pay-thanks-error");
   const txt = document.getElementById("post-pay-thanks-error-text");
   if (txt) txt.textContent = msg;
@@ -37,13 +49,14 @@ function setError(msg) {
 /** @param {{ sessionId?: string | null, subscriptionId?: string | null }} refs */
 export async function mountPostPaymentThanksPage(refs) {
   const loading = document.getElementById("post-pay-thanks-loading");
-  const emailForm = document.getElementById("post-pay-thanks-email-form");
+  const mainCard = document.getElementById("post-pay-thanks-main");
+  const setupForm = document.getElementById("post-pay-thanks-setup-form");
   const codeForm = document.getElementById("post-pay-thanks-code-form");
   const emailInput = document.getElementById("post-pay-thanks-email");
   const codeInput = document.getElementById("post-pay-thanks-code");
   const emailDisplay = document.getElementById("post-pay-thanks-email-display");
-  const planEl = document.getElementById("post-pay-thanks-plan");
   const doneEl = document.getElementById("post-pay-thanks-done");
+  const commerceField = document.getElementById("post-pay-commerce-field");
 
   const { sessionId, subscriptionId } = refs;
   if (!sessionId && !subscriptionId) {
@@ -52,6 +65,15 @@ export async function mountPostPaymentThanksPage(refs) {
   }
 
   const q = checkoutQuery(sessionId, subscriptionId);
+  let requiresCommerce = true;
+  /** @type {{ establishmentName: string, placeId: string } | null} */
+  let pendingCommerce = null;
+
+  const placesSearch = initPostPaymentPlacesSearch({
+    inputId: "post-pay-commerce",
+    placeIdInputId: "post-pay-place-id",
+    wrapId: "post-pay-commerce-wrap",
+  });
 
   if (getAuthToken()) {
     try {
@@ -69,13 +91,11 @@ export async function mountPostPaymentThanksPage(refs) {
         if (data.refreshToken) setRefreshToken(data.refreshToken);
         hide(loading);
         show(doneEl);
-        window.setTimeout(() => {
-          window.location.replace("/app");
-        }, 1200);
+        window.setTimeout(() => redirectToGetApp(null), 900);
         return;
       }
     } catch {
-      /* continue with email flow */
+      /* continue */
     }
   }
 
@@ -93,35 +113,54 @@ export async function mountPostPaymentThanksPage(refs) {
   }
 
   hide(loading);
-  if (preview.plan_label && planEl) {
-    planEl.textContent = preview.plan_label;
-    show(planEl);
-  }
+  show(mainCard);
+
   if (preview.payer_email && emailInput) {
     emailInput.value = preview.payer_email;
   }
-  if (preview.already_claimed && preview.claimed_user_email) {
+
+  if (preview.has_business) {
+    requiresCommerce = false;
+    hide(commerceField);
     const lead = document.getElementById("post-pay-thanks-lead");
-    const claimed = preview.claimed_user_email;
     if (lead) {
-      lead.textContent = `Cet abonnement est déjà actif sur ${claimed}. Entrez cette adresse e-mail pour vous connecter.`;
-    }
-    if (emailInput) {
-      emailInput.value = claimed;
+      lead.textContent = "Votre commerce est déjà configuré. Confirmez votre e-mail pour accéder à l’app.";
     }
   }
-  show(emailForm);
+
+  if (preview.already_claimed && preview.claimed_user_email) {
+    const claimed = preview.claimed_user_email;
+    const lead = document.getElementById("post-pay-thanks-lead");
+    if (lead) {
+      lead.textContent = preview.has_business
+        ? `Abonnement actif sur ${claimed}. Confirmez votre e-mail pour télécharger l’app.`
+        : `Abonnement actif sur ${claimed}. Indiquez votre commerce puis confirmez votre e-mail.`;
+    }
+    if (emailInput) emailInput.value = claimed;
+  }
 
   document.getElementById("post-pay-thanks-back-email")?.addEventListener("click", () => {
     hide(codeForm);
-    show(emailForm);
+    show(setupForm);
+    setStep(1);
     codeInput.value = "";
   });
 
-  emailForm?.addEventListener("submit", async (e) => {
+  setupForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = emailInput?.value?.trim();
     if (!email) return;
+
+    if (requiresCommerce) {
+      if (!placesSearch?.hasSelection()) {
+        window.alert("Sélectionnez votre commerce dans la liste de suggestions.");
+        return;
+      }
+      pendingCommerce = placesSearch.getSelection();
+    } else {
+      pendingCommerce = null;
+    }
+
     const btn = document.getElementById("post-pay-thanks-send-code");
     if (btn instanceof HTMLButtonElement) btn.disabled = true;
     try {
@@ -140,8 +179,9 @@ export async function mountPostPaymentThanksPage(refs) {
         return;
       }
       if (emailDisplay) emailDisplay.textContent = email;
-      hide(emailForm);
+      hide(setupForm);
       show(codeForm);
+      setStep(2);
       codeInput?.focus();
     } catch {
       window.alert("Erreur réseau.");
@@ -155,18 +195,26 @@ export async function mountPostPaymentThanksPage(refs) {
     const email = emailInput?.value?.trim();
     const code = codeInput?.value?.trim();
     if (!email || !code) return;
+
     const btn = document.getElementById("post-pay-thanks-verify");
     if (btn instanceof HTMLButtonElement) btn.disabled = true;
+
+    const body = {
+      email,
+      code,
+      session_id: sessionId,
+      subscription_id: subscriptionId,
+    };
+    if (pendingCommerce?.placeId) {
+      body.establishment_name = pendingCommerce.establishmentName;
+      body.google_place_id = pendingCommerce.placeId;
+    }
+
     try {
       const res = await fetch(`${API_BASE}/api/payment/claim/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          code,
-          session_id: sessionId,
-          subscription_id: subscriptionId,
-        }),
+        body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -175,11 +223,13 @@ export async function mountPostPaymentThanksPage(refs) {
       }
       if (data.token) setAuthToken(data.token);
       if (data.refreshToken) setRefreshToken(data.refreshToken);
-      hide(codeForm);
+
+      const commerceName =
+        data.business?.name || pendingCommerce?.establishmentName || preview?.business_name || null;
+
+      hide(mainCard);
       show(doneEl);
-      window.setTimeout(() => {
-        window.location.replace("/app");
-      }, 1400);
+      window.setTimeout(() => redirectToGetApp(commerceName), 1100);
     } catch {
       window.alert("Erreur réseau.");
     } finally {
