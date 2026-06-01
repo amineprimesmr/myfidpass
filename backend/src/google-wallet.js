@@ -5,6 +5,7 @@
 
 import jwt from "jsonwebtoken";
 import { GoogleAuth } from "google-auth-library";
+import { getMembersForBusiness } from "./db/members.js";
 import { stampNextRewardFaceLabelAndValue } from "./pass/stamp-next-reward-face.js";
 
 const GOOGLE_SAVE_BASE = "https://pay.google.com/gp/v/save";
@@ -101,7 +102,12 @@ function publicStampHeroUrlForBusiness(apiBase, business, filled = 0) {
   const programType = String(business?.program_type || "").toLowerCase();
   if (programType !== "stamps") return null;
   const f = Math.max(0, Math.min(10, Math.floor(Number(filled) || 0)));
-  return `${base}/api/businesses/${slug}/public/wallet-stamp-hero?filled=${f}${imageVersionParam(business?.logo_updated_at || business?.updated_at)}`;
+  const stampVersion = [business?.updated_at, business?.stamp_emoji]
+    .map((v) => String(v ?? "").trim())
+    .filter(Boolean)
+    .join("_");
+  const vParam = stampVersion ? `&v=${encodeURIComponent(stampVersion).slice(0, 80)}` : "";
+  return `${base}/api/businesses/${slug}/public/wallet-stamp-hero?filled=${f}${vParam}`;
 }
 
 function publicCardBackgroundUrlForBusiness(apiBase, business) {
@@ -159,23 +165,36 @@ function parseRewardTiers(value) {
 }
 
 function rewardSummaryForBusiness(business, programType) {
+  return fullRewardsListForBusiness(business, programType);
+}
+
+function fullRewardsListForBusiness(business, programType) {
   if (programType === "stamps") {
     const required = Math.max(1, Math.floor(Number(business?.required_stamps) || 10));
-    const label = String(business?.stamp_reward_label || "").trim() || "Récompense";
-    return `${label} à ${required} tampons`;
+    const start = String(business?.start_game_reward_label || "").trim();
+    const mid = String(business?.stamp_mid_reward_label || "").trim();
+    const finalLabel = String(business?.stamp_reward_label || "").trim() || "Récompense";
+    const lines = [];
+    if (start) lines.push(`10 tampons : ${start}`);
+    if (required > 5 && mid) lines.push(`5 tampons : ${mid}`);
+    lines.push(`${required} tampons : ${finalLabel}`);
+    return truncateGoogleText(lines.join(" · "), 500);
   }
-  const startLabel = String(business?.start_game_reward_label || "").trim();
-  if (startLabel) return `${startLabel} à 10 points`;
-  const tiers = parseRewardTiers(business?.points_reward_tiers);
-  const firstTier = tiers
+  const start = String(business?.start_game_reward_label || "").trim();
+  const lines = [];
+  if (start) lines.push(`10 pts : ${start}`);
+  const tiers = parseRewardTiers(business?.points_reward_tiers)
     .map((tier) => ({
       points: Math.max(0, Math.floor(Number(tier?.points) || 0)),
       label: String(tier?.label || tier?.reward || tier?.name || "").trim(),
     }))
-    .filter((tier) => tier.points > 0)
-    .sort((a, b) => a.points - b.points)[0];
-  if (!firstTier) return "Récompenses selon le barème du commerce";
-  return `${firstTier.label || "Récompense"} à ${firstTier.points} points`;
+    .filter((tier) => tier.points > 0 && tier.label)
+    .sort((a, b) => a.points - b.points);
+  for (const tier of tiers) {
+    lines.push(`${tier.points} pts : ${tier.label}`);
+  }
+  if (!lines.length) return "Récompenses selon le barème du commerce";
+  return truncateGoogleText(lines.join(" · "), 500);
 }
 
 function nextPointsRewardForBalance(business, balance) {
@@ -273,36 +292,56 @@ function buildLoyaltyClass(classId, business = null, apiBase = null) {
 
 function buildLoyaltyObject(objectId, classId, member, business, apiBase = null) {
   const programType = String(business?.program_type || "").toLowerCase() === "stamps" ? "stamps" : "points";
-  const balances = loyaltyBalancesForMember(member, business, programType, apiBase);
   const accountName = (member.name || member.email || "Client").slice(0, 20);
   const accountId = (member.email || member.id).slice(0, 20);
-  const heroUrl = publicHeroImageUrlForBusiness(apiBase, business, balances.heroFilled);
+  const heroUrl = publicHeroImageUrlForBusiness(apiBase, business, Math.min(Math.max(0, Math.floor(Number(member.points) || 0)), Math.max(1, Math.floor(Number(business?.required_stamps) || 10))));
+  const rewardsBody = fullRewardsListForBusiness(business, programType);
+  const backTerms = String(business?.back_terms || "").trim();
+  const backContact = String(business?.back_contact || "").trim();
+  const textModules = [
+    {
+      header: "Récompenses",
+      body: rewardsBody,
+      id: "rewards_full",
+    },
+    {
+      header: "Commerce",
+      body: displayNameForBusiness(business),
+      id: "merchant",
+    },
+    {
+      header: "Scan",
+      body: "Présentez le QR code en caisse pour créditer votre fidélité.",
+      id: "scan_hint",
+    },
+  ];
+  if (backTerms) {
+    textModules.push({
+      header: "Conditions",
+      body: truncateGoogleText(backTerms, 500),
+      id: "pass_back_terms",
+    });
+  }
+  if (backContact) {
+    textModules.push({
+      header: "Contact",
+      body: truncateGoogleText(backContact, 200),
+      id: "pass_back_contact",
+    });
+  }
   return {
     id: objectId,
     classId,
     state: "ACTIVE",
     accountName,
     accountId,
-    loyaltyPoints: balances.loyaltyPoints,
-    secondaryLoyaltyPoints: balances.secondaryLoyaltyPoints,
     barcode: {
       type: "QR_CODE",
       value: member.id,
       alternateText: member.id,
     },
     ...(heroUrl ? { heroImage: googleImage(heroUrl, `Carte ${displayNameForBusiness(business)}`) } : {}),
-    textModulesData: [
-      {
-        header: "Commerce",
-        body: displayNameForBusiness(business),
-        id: "merchant",
-      },
-      {
-        header: "Scan",
-        body: "Présentez le QR code en caisse pour créditer votre fidélité.",
-        id: "scan_hint",
-      },
-    ],
+    textModulesData: textModules,
   };
 }
 
@@ -429,7 +468,14 @@ export async function ensureGoogleWalletObjectForMember(member, business, apiBas
   const getPath = `/loyaltyObject/${encodeURIComponent(objectId)}`;
   const current = await googleWalletApiRequest(config, "GET", getPath);
   if (current.ok) {
-    const patch = await googleWalletApiRequest(config, "PATCH", getPath, objectDef);
+    const patchBody = {
+      ...objectDef,
+      loyaltyPoints: undefined,
+      secondaryLoyaltyPoints: undefined,
+    };
+    delete patchBody.loyaltyPoints;
+    delete patchBody.secondaryLoyaltyPoints;
+    const patch = await googleWalletApiRequest(config, "PATCH", getPath, patchBody);
     return {
       ok: patch.ok,
       configured: true,
@@ -495,6 +541,31 @@ async function syncLegacyGoogleWalletObjectForMember(config, member, business, a
     googleStatus: patch.status,
     googleError: patch.ok ? undefined : (patch.data?.error || patch.data),
   };
+}
+
+export async function syncGoogleWalletHeroForBusinessMembers(business, apiBase, { limit = 300 } = {}) {
+  const config = getConfig();
+  if (!config || !business?.id) {
+    return { ok: false, configured: Boolean(config), synced: 0, skipped: true };
+  }
+  const programType = String(business?.program_type || "").toLowerCase();
+  if (programType !== "stamps") {
+    return { ok: true, configured: true, synced: 0, skipped: true };
+  }
+  const ensured = await ensureGoogleWalletClassForBusiness(business, apiBase);
+  if (!ensured.ok) {
+    return { ok: false, configured: true, synced: 0, error: ensured.error || "Google Wallet class unavailable" };
+  }
+  const { members } = getMembersForBusiness(business.id, { limit, offset: 0, sort: "created_desc" });
+  let synced = 0;
+  let failed = 0;
+  for (const member of members) {
+    const result = await ensureGoogleWalletObjectForMember(member, business, apiBase, ensured.classId);
+    if (result.ok) synced++;
+    else failed++;
+    await syncLegacyGoogleWalletObjectForMember(config, member, business, apiBase);
+  }
+  return { ok: failed === 0, configured: true, synced, failed, total: members.length };
 }
 
 export async function syncGoogleWalletObjectForMember(member, business, apiBase) {

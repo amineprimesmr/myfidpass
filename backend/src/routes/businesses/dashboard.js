@@ -84,7 +84,12 @@ import dashboardTeamRouter from "./dashboard-team.js";
 import { isDeliveryReceiptDevResetEnabled } from "../../lib/delivery-receipt-dev-reset-flag.js";
 import { refreshGoogleSnapshotForBusiness } from "../../services/social-metrics-service.js";
 import { removeLogoBackgroundWithRemoveBg } from "../../services/flyer-logo-remove-bg.js";
-import { ensureGoogleWalletClassForBusiness } from "../../google-wallet.js";
+import { isCatalogStampSelection } from "../../lib/stamp-catalog.js";
+import {
+  ensureGoogleWalletClassForBusiness,
+  syncGoogleWalletHeroForBusinessMembers,
+} from "../../google-wallet.js";
+import { mergePointsRewardTiersForStorage, SIGNUP_REWARD_POINTS } from "../../lib/points-reward-tiers.js";
 
 const router = Router({ mergeParams: true });
 
@@ -346,6 +351,7 @@ router.patch("/settings", async (req, res) => {
     body.fidelity_page_background_base64 ?? body.fidelityPageBackgroundBase64;
   const fidelity_qr_hero_title = body.fidelity_qr_hero_title ?? body.fidelityQrHeroTitle;
   const stamp_icon_base64 = body.stamp_icon_base64 ?? body.stampIconBase64;
+  const stamp_icon_remove = body.stamp_icon_remove ?? body.stampIconRemove;
   const strip_color = body.strip_color ?? body.stripColor;
   const strip_display_mode = body.strip_display_mode ?? body.stripDisplayMode;
   const strip_text = body.strip_text ?? body.stripText;
@@ -451,6 +457,9 @@ router.patch("/settings", async (req, res) => {
   if (stamp_emoji !== undefined) {
     const v = stamp_emoji == null || stamp_emoji === "" ? null : String(stamp_emoji).trim().slice(0, 32);
     updates.stamp_emoji = v || null;
+    if (v && isCatalogStampSelection(v)) {
+      updates.stamp_icon_base64 = null;
+    }
   }
   if (stamp_reward_label !== undefined) {
     const v = stamp_reward_label == null || stamp_reward_label === "" ? null : String(stamp_reward_label).trim().slice(0, 120);
@@ -559,7 +568,13 @@ router.patch("/settings", async (req, res) => {
     }
   }
   const MAX_STAMP_ICON_BYTES = 512 * 1024;
-  if (stamp_icon_base64 !== undefined) {
+  if (
+    stamp_icon_remove === 1 ||
+    stamp_icon_remove === true ||
+    String(stamp_icon_remove ?? "").trim() === "1"
+  ) {
+    updates.stamp_icon_base64 = null;
+  } else if (stamp_icon_base64 !== undefined) {
     if (stamp_icon_base64 === null || (typeof stamp_icon_base64 === "string" && stamp_icon_base64.trim() === "")) {
       updates.stamp_icon_base64 = null;
     } else if (typeof stamp_icon_base64 === "string") {
@@ -833,6 +848,28 @@ router.patch("/settings", async (req, res) => {
     }
   }
 
+  if (updates.points_reward_tiers !== undefined && updates.points_reward_tiers !== null) {
+    const signupLabel =
+      updates.start_game_reward_label ??
+      body.start_game_reward_label ??
+      body.startGameRewardLabel ??
+      business.start_game_reward_label;
+    let tiersRaw = updates.points_reward_tiers;
+    if (typeof tiersRaw === "string") {
+      try {
+        tiersRaw = JSON.parse(tiersRaw);
+      } catch {
+        tiersRaw = [];
+      }
+    }
+    const merged = mergePointsRewardTiersForStorage(tiersRaw, signupLabel);
+    updates.points_reward_tiers = JSON.stringify(merged);
+    if (updates.start_game_reward_label === undefined) {
+      const signup = merged.find((t) => t.points === SIGNUP_REWARD_POINTS);
+      if (signup?.label) updates.start_game_reward_label = signup.label;
+    }
+  }
+
   const locationKeys = ["location_lat", "location_lng", "location_radius_meters", "location_relevant_text"];
   const locationUpdated = locationKeys.some((k) => updates[k] !== undefined);
   const passWalletGeometryUpdated =
@@ -845,7 +882,8 @@ router.patch("/settings", async (req, res) => {
     updates.logo_icon_base64 !== undefined ||
     updates.logo_base64 !== undefined ||
     updates.card_background_base64 !== undefined ||
-    updates.stamp_icon_base64 !== undefined;
+    updates.stamp_icon_base64 !== undefined ||
+    updates.stamp_emoji !== undefined;
   const googleWalletClassVisualUpdated =
     updates.organization_name !== undefined ||
     updates.background_color !== undefined ||
@@ -861,7 +899,9 @@ router.patch("/settings", async (req, res) => {
     updates.required_stamps !== undefined ||
     updates.label_member !== undefined ||
     updates.strip_display_mode !== undefined ||
-    updates.strip_text !== undefined;
+    updates.strip_text !== undefined ||
+    updates.stamp_emoji !== undefined ||
+    updates.stamp_icon_base64 !== undefined;
   updateBusiness(business.id, updates);
   if (passNotifTextsUpdated || passVisualMediaUpdated) {
     bumpBusinessPassRefreshTimestamp(business.id);
@@ -941,6 +981,18 @@ router.patch("/settings", async (req, res) => {
     if (bFresh) {
       try {
         await ensureGoogleWalletClassForBusiness(bFresh, apiBase);
+        const stampHeroVisualUpdated =
+          updates.stamp_emoji !== undefined ||
+          updates.stamp_icon_base64 !== undefined ||
+          updates.card_background_base64 !== undefined ||
+          updates.required_stamps !== undefined;
+        if (stampHeroVisualUpdated) {
+          process.nextTick(() => {
+            syncGoogleWalletHeroForBusinessMembers(bFresh, apiBase).catch((gwErr) => {
+              logger.warn({ err: gwErr, businessId: business.id }, "[dashboard] Google Wallet hero sync after stamp/settings");
+            });
+          });
+        }
       } catch (gwErr) {
         logger.warn({ err: gwErr, businessId: business.id }, "[dashboard] Google Wallet class sync after PATCH /settings");
       }

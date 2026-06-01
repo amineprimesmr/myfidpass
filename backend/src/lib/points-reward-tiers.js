@@ -77,5 +77,21 @@ export function findNewlyUnlockedPointsTiers(tiers, previousBalance, newBalance)
   return tiers.filter((t) => t.points > prev && t.points <= next);
 }
 
+/**
+ * Fusionne palier inscription (10 pts) + paliers éditables sans doublon 10 pts.
+ * @param {unknown} rawTiers
+ * @param {string} [signupLabel]
+ */
+export function mergePointsRewardTiersForStorage(rawTiers, signupLabel = "") {
+  const parsed = parsePointsRewardTiersRaw(rawTiers);
+  const signupFromTiers = parsed.find((t) => t.points === SIGNUP_REWARD_POINTS);
+  const label =
+    String(signupLabel || "").trim() ||
+    signupFromTiers?.label ||
+    "Boisson offerte";
+  const editable = parsed.filter((t) => t.points !== SIGNUP_REWARD_POINTS);
+  return [{ points: SIGNUP_REWARD_POINTS, label }, ...editable].sort((a, b) => a.points - b.points);
+}
+
 /** Message écran verrouillé Wallet quand un palier points est franchi (%@ = libellé récompense). */
 export const WALLET_TIER_UNLOCK_CHANGE_MESSAGE = "Nouvelle récompense : %@";

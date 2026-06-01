@@ -14,6 +14,10 @@ import {
   STAMP_GAP,
   STAMP_TOP,
 } from "./constants.js";
+import {
+  normalizeStampCatalogKey,
+  resolveStampIconBase64ForStrip,
+} from "../lib/stamp-catalog.js";
 let _sharp = null;
 async function getSharp() {
   if (!_sharp) _sharp = (await import("sharp")).default;
@@ -142,10 +146,11 @@ export async function drawStampsOnStrip(
     if (giftGold) rewardIconByIndex.set(9, giftGold);
   }
 
+  const effectiveCustomB64 = resolveStampIconBase64ForStrip(stampEmoji, customIconBase64);
   let iconBuf = null;
-  if (customIconBase64 && String(customIconBase64).trim()) {
+  if (effectiveCustomB64) {
     try {
-      const base64Data = String(customIconBase64).replace(/^data:image\/\w+;base64,/, "");
+      const base64Data = String(effectiveCustomB64).replace(/^data:image\/\w+;base64,/, "");
       const buf = Buffer.from(base64Data, "base64");
       if (buf.length > 0) {
         iconBuf = await sharp(buf)
@@ -159,7 +164,7 @@ export async function drawStampsOnStrip(
     }
   }
   if (!iconBuf) {
-    const stampIconKey = (stampEmoji && String(stampEmoji).trim()) || "cafe";
+    const stampIconKey = normalizeStampCatalogKey(stampEmoji) || (stampEmoji && String(stampEmoji).trim()) || "cafe";
     iconBuf = await fetchStampIconPng(stampIconKey);
   }
   if (!iconBuf) {
