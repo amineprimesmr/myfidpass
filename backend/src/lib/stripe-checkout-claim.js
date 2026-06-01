@@ -123,9 +123,11 @@ export async function getCheckoutSuccessPreview({ sessionId, subscriptionId }) {
   const payerEmail = session ? payerEmailFromCheckoutSession(session) : null;
   const existingRow = getSubscriptionByStripeSubscriptionId(stripeSubId);
   const existingUser = existingRow?.user_id ? getUserById(String(existingRow.user_id)) : null;
+  const payerEmail = session ? payerEmailFromCheckoutSession(session) : null;
   const emailMatchUser = payerEmail ? getUserByEmail(payerEmail) : null;
-  const claimedBusinesses = existingUser ? getBusinessesByUserId(String(existingUser.id)) : [];
-  const payerBusinesses = emailMatchUser ? getBusinessesByUserId(String(emailMatchUser.id)) : [];
+  const ownerUserId = existingUser?.id ? String(existingUser.id) : null;
+  const ownerBusinesses = ownerUserId ? getBusinessesByUserId(ownerUserId) : [];
+  const hasBusiness = ownerBusinesses.length > 0;
 
   return {
     ok: true,
@@ -135,8 +137,10 @@ export async function getCheckoutSuccessPreview({ sessionId, subscriptionId }) {
     already_claimed: !!(existingRow?.user_id && hasOperationalMerchantAccess(String(existingRow.user_id))),
     claimed_user_email: existingUser?.email || null,
     user_exists_for_payer_email: !!emailMatchUser,
-    has_business: claimedBusinesses.length > 0 || payerBusinesses.length > 0,
-    business_name: claimedBusinesses[0]?.name || payerBusinesses[0]?.name || null,
+    account_exists: !!(existingUser || emailMatchUser),
+    has_business: hasBusiness,
+    needs_commerce: !hasBusiness,
+    business_name: ownerBusinesses[0]?.name || null,
   };
 }
 

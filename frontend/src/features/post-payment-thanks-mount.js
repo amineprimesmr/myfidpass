@@ -104,20 +104,26 @@ export async function mountPostPaymentThanksPage(refs) {
     emailInput.value = preview.payer_email;
   }
 
-  if (preview.has_business) {
+  // Commerce Google : toujours affiché sauf si un commerce est déjà configuré sur ce compte.
+  if (preview.business_name) {
     requiresCommerce = false;
     hide(commerceField);
     const lead = document.getElementById("post-pay-thanks-lead");
-    if (lead) lead.textContent = "Validez votre e-mail pour activer votre compte.";
+    if (lead) {
+      lead.textContent = `Commerce « ${preview.business_name} » déjà configuré. Validez votre e-mail pour accéder à l’app.`;
+    }
+  } else {
+    requiresCommerce = true;
+    show(commerceField);
   }
 
   if (preview.already_claimed && preview.claimed_user_email) {
     const claimed = preview.claimed_user_email;
     const lead = document.getElementById("post-pay-thanks-lead");
-    if (lead) {
-      lead.textContent = preview.has_business
-        ? `Abonnement actif sur ${claimed}. Validez cet e-mail pour continuer.`
-        : `Abonnement actif sur ${claimed}. Indiquez votre commerce puis validez votre e-mail.`;
+    if (lead && !preview.business_name) {
+      lead.textContent = `Abonnement actif sur ${claimed}. Indiquez votre commerce Google puis validez votre e-mail.`;
+    } else if (lead && preview.business_name) {
+      lead.textContent = `Abonnement actif sur ${claimed}. Validez votre e-mail pour accéder à l’app.`;
     }
     if (emailInput) emailInput.value = claimed;
   }
