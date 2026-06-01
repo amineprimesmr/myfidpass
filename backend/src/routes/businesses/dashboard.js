@@ -84,6 +84,7 @@ import dashboardTeamRouter from "./dashboard-team.js";
 import { isDeliveryReceiptDevResetEnabled } from "../../lib/delivery-receipt-dev-reset-flag.js";
 import { refreshGoogleSnapshotForBusiness } from "../../services/social-metrics-service.js";
 import { removeLogoBackgroundWithRemoveBg } from "../../services/flyer-logo-remove-bg.js";
+import { ensureGoogleWalletClassForBusiness } from "../../google-wallet.js";
 
 const router = Router({ mergeParams: true });
 
@@ -225,8 +226,8 @@ router.get("/settings", (req, res) => {
     flyer_prefs_updated_at: business.flyer_prefs_updated_at ?? undefined,
     fidelity_qr_hero_title: business.fidelity_qr_hero_title?.trim() || undefined,
     strip_color: business.strip_color ?? undefined,
-    strip_display_mode: business.strip_display_mode ?? "logo",
-    strip_text: business.strip_text ?? undefined,
+    strip_display_mode: "logo",
+    strip_text: undefined,
     label_restants: business.label_restants ?? undefined,
     label_member: business.label_member ?? undefined,
     header_right_text: business.header_right_text ?? undefined,
@@ -458,9 +459,9 @@ router.patch("/settings", async (req, res) => {
   if (start_game_reward_label !== undefined) {
     const v =
       start_game_reward_label == null || start_game_reward_label === ""
-        ? null
+        ? "Boisson offerte"
         : String(start_game_reward_label).trim().slice(0, 120);
-    updates.start_game_reward_label = v || null;
+    updates.start_game_reward_label = v || "Boisson offerte";
   }
   {
     const stampMidIncoming =
@@ -576,11 +577,11 @@ router.patch("/settings", async (req, res) => {
     updates.strip_color = v || null;
   }
   if (strip_display_mode !== undefined) {
-    const v = strip_display_mode === "text" ? "text" : "logo";
-    updates.strip_display_mode = v;
+    updates.strip_display_mode = "logo";
+    updates.strip_text = null;
   }
-  if (strip_text !== undefined) {
-    updates.strip_text = strip_text == null || String(strip_text).trim() === "" ? null : String(strip_text).trim().slice(0, 120);
+  if (strip_text !== undefined && strip_display_mode === undefined) {
+    updates.strip_text = null;
   }
   const label_restants = body.label_restants ?? body.labelRestants;
   const label_member = body.label_member ?? body.labelMember;
@@ -845,6 +846,22 @@ router.patch("/settings", async (req, res) => {
     updates.logo_base64 !== undefined ||
     updates.card_background_base64 !== undefined ||
     updates.stamp_icon_base64 !== undefined;
+  const googleWalletClassVisualUpdated =
+    updates.organization_name !== undefined ||
+    updates.background_color !== undefined ||
+    updates.foreground_color !== undefined ||
+    updates.label_color !== undefined ||
+    updates.logo_base64 !== undefined ||
+    updates.card_background_base64 !== undefined ||
+    updates.program_type !== undefined ||
+    updates.points_reward_tiers !== undefined ||
+    updates.start_game_reward_label !== undefined ||
+    updates.stamp_reward_label !== undefined ||
+    updates.stamp_mid_reward_label !== undefined ||
+    updates.required_stamps !== undefined ||
+    updates.label_member !== undefined ||
+    updates.strip_display_mode !== undefined ||
+    updates.strip_text !== undefined;
   updateBusiness(business.id, updates);
   if (passNotifTextsUpdated || passVisualMediaUpdated) {
     bumpBusinessPassRefreshTimestamp(business.id);
@@ -915,6 +932,17 @@ router.patch("/settings", async (req, res) => {
           }
         }, 1800);
       }
+      }
+    }
+  }
+  if (googleWalletClassVisualUpdated) {
+    const apiBase = getApiBase(req);
+    const bFresh = getBusinessById(business.id);
+    if (bFresh) {
+      try {
+        await ensureGoogleWalletClassForBusiness(bFresh, apiBase);
+      } catch (gwErr) {
+        logger.warn({ err: gwErr, businessId: business.id }, "[dashboard] Google Wallet class sync after PATCH /settings");
       }
     }
   }

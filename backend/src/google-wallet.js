@@ -164,6 +164,8 @@ function rewardSummaryForBusiness(business, programType) {
     const label = String(business?.stamp_reward_label || "").trim() || "Récompense";
     return `${label} à ${required} tampons`;
   }
+  const startLabel = String(business?.start_game_reward_label || "").trim();
+  if (startLabel) return `${startLabel} à 10 points`;
   const tiers = parseRewardTiers(business?.points_reward_tiers);
   const firstTier = tiers
     .map((tier) => ({
@@ -244,6 +246,7 @@ function buildLoyaltyClass(classId, business = null, apiBase = null) {
   const programType = String(business?.program_type || "").toLowerCase() === "stamps" ? "stamps" : "points";
   const accountNameLabel = String(business?.label_member || "").trim() || "Client";
   const accountIdLabel = "Carte";
+  const rewardsBody = business ? rewardSummaryForBusiness(business, programType) : "Récompenses fidélité";
   return {
     id: classId,
     issuerName: merchantName.slice(0, 20),
@@ -254,6 +257,13 @@ function buildLoyaltyClass(classId, business = null, apiBase = null) {
     accountIdLabel,
     programLogo: googleImage(logoUrl, `Logo ${merchantName}`),
     ...(heroUrl ? { heroImage: googleImage(heroUrl, `Carte ${merchantName}`) } : {}),
+    textModulesData: [
+      {
+        header: "Récompenses",
+        body: truncateGoogleText(rewardsBody, 120),
+        id: "rewards_summary",
+      },
+    ],
     homepageUri: {
       uri: business?.slug ? `https://myfidpass.fr/fidelity/${encodeURIComponent(String(business.slug))}` : "https://myfidpass.fr",
       description: "Carte fidélité",
@@ -340,6 +350,7 @@ async function ensureGoogleWalletClass(classDef, config) {
       changed((x) => x.programLogo) ||
       changed((x) => x.heroImage) ||
       changed((x) => x.accountNameLabel) ||
+      changed((x) => x.textModulesData) ||
       changed((x) => x.homepageUri) ||
       Boolean(current.data?.classTemplateInfo) ||
       Boolean(current.data?.textModulesData?.length) ||

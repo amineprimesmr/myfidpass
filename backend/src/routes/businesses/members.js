@@ -616,9 +616,8 @@ router.get("/:memberId/pass", async (req, res) => {
     if (Number.isInteger(n) && n > 0) opts.required_stamps = n;
   }
   if (biz?.card_background_base64) opts.card_background_base64 = biz.card_background_base64;
-  const stripDisplayMode = (req.query.strip_display_mode ?? biz?.strip_display_mode ?? "logo").toString().toLowerCase();
-  opts.strip_display_mode = stripDisplayMode === "text" ? "text" : "logo";
-  opts.strip_text = req.query.strip_text ?? biz?.strip_text ?? undefined;
+  opts.strip_display_mode = "logo";
+  opts.strip_text = undefined;
   const lc = (req.query.label_color ?? "").toString().trim();
   if (lc) opts.label_color = lc.startsWith("#") ? lc : `#${lc}`;
 
