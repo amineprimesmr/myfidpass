@@ -96,8 +96,27 @@ export async function mountPostPaymentThanksPage(refs) {
     return;
   }
 
+  async function mountDownloadWidget() {
+    if (!isMobileDevice()) {
+      try {
+        await renderAppDownloadQr({
+          targetId: "post-pay-qr",
+          containerId: "post-pay-qr-container",
+          size: 250,
+        });
+      } catch (err) {
+        console.warn("[merci] QR indisponible :", err?.message || err);
+      }
+    } else {
+      document.getElementById("post-pay-qr-container")?.classList.add("hidden");
+    }
+  }
+
   hide(loading);
   show(mainCard);
+
+  wireAppStoreButtons({ iosBtnId: "post-pay-store-ios", androidBtnId: "post-pay-store-android" });
+  void mountDownloadWidget();
 
   if (preview.payer_email && emailInput) {
     emailInput.value = preview.payer_email;
@@ -160,33 +179,19 @@ export async function mountPostPaymentThanksPage(refs) {
     return email;
   }
 
-  wireAppStoreButtons({ iosBtnId: "post-pay-store-ios", androidBtnId: "post-pay-store-android" });
-
-  async function mountDownloadWidget() {
-    if (!isMobileDevice()) {
-      try {
-        await renderAppDownloadQr({
-          targetId: "post-pay-qr",
-          containerId: "post-pay-qr-container",
-        });
-      } catch (err) {
-        console.warn("[merci] QR indisponible :", err?.message || err);
-      }
-    } else {
-      document.getElementById("post-pay-qr-container")?.classList.add("hidden");
-    }
-  }
-
   function showEmailSent(email) {
     const toEl = document.getElementById("post-pay-email-sent-to");
     if (toEl) toEl.textContent = email;
     hide(setupForm);
+    hide(document.getElementById("post-pay-thanks-lead"));
     show(emailSent);
-    void mountDownloadWidget();
+    show(document.getElementById("post-pay-thanks-resend"));
   }
 
   document.getElementById("post-pay-thanks-back-setup")?.addEventListener("click", () => {
     hide(emailSent);
+    hide(document.getElementById("post-pay-thanks-resend"));
+    show(document.getElementById("post-pay-thanks-lead"));
     show(setupForm);
   });
 

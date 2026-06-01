@@ -34,9 +34,10 @@ export async function renderAppDownloadQr(opts) {
   const container = document.getElementById(opts.containerId);
   if (!QRCodeStyling || !target || !container) return;
 
+  const size = opts.size ?? 220;
   const qrCode = new QRCodeStyling({
-    width: 220,
-    height: 220,
+    width: size,
+    height: size,
     type: "svg",
     data: opts.dataUrl || DEFAULT_GET_URL,
     qrOptions: { typeNumber: 0, errorCorrectionLevel: "H" },
