@@ -1,0 +1,148 @@
+/* Feuille iOS — ajout logo notification */
+.app-notif-logo-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+
+.app-notif-logo-sheet.is-open {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.app-notif-logo-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.app-notif-logo-sheet__panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 26rem);
+  margin: 0 0.65rem max(0.65rem, env(safe-area-inset-bottom));
+  padding: 1.1rem 1rem 0.85rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+  transform: translateY(110%);
+  transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-notif-logo-sheet.is-open .app-notif-logo-sheet__panel {
+  transform: translateY(0);
+}
+
+.app-notif-logo-sheet__preview {
+  margin-bottom: 0.85rem;
+  padding: 0.75rem;
+  border-radius: 16px;
+  background: linear-gradient(165deg, #1c1c1e 0%, #0c0c0e 100%);
+}
+
+.app-notif-logo-sheet__bubble {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 0.5px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+}
+
+.app-notif-logo-sheet__icon-slot {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  overflow: hidden;
+  background: #e5e7eb;
+  display: grid;
+  place-items: center;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.app-notif-logo-sheet__icon-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.app-notif-logo-sheet__icon-slot img.hidden {
+  display: none;
+}
+
+.app-notif-logo-sheet__icon-plus {
+  font-size: 1.35rem;
+  font-weight: 300;
+  color: #64748b;
+  line-height: 1;
+}
+
+.app-notif-logo-sheet__text {
+  min-width: 0;
+  flex: 1;
+  text-align: left;
+}
+
+.app-notif-logo-sheet__title {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.app-notif-logo-sheet__body {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: #334155;
+}
+
+.app-notif-logo-sheet__hint {
+  margin: 0 0 0.85rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: #475569;
+  text-align: center;
+}
+
+.app-notif-logo-sheet__cta {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.45rem;
+  padding: 0.85rem 1rem;
+  border: none;
+  border-radius: 14px;
+  background: #007aff;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.app-notif-logo-sheet__cancel {
+  display: block;
+  width: 100%;
+  padding: 0.65rem;
+  border: none;
+  background: none;
+  color: #64748b;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+}
