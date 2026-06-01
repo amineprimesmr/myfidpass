@@ -28,7 +28,8 @@ function hide(el) {
 
 function setError(msg) {
   hide(document.getElementById("post-pay-thanks-loading"));
-  hide(document.getElementById("post-pay-thanks-main"));
+  hide(document.getElementById("post-pay-step-form"));
+  hide(document.getElementById("post-pay-step-download"));
   const err = document.getElementById("post-pay-thanks-error");
   const txt = document.getElementById("post-pay-thanks-error-text");
   if (txt) txt.textContent = msg;
@@ -38,9 +39,9 @@ function setError(msg) {
 /** @param {{ sessionId?: string | null, subscriptionId?: string | null }} refs */
 export async function mountPostPaymentThanksPage(refs) {
   const loading = document.getElementById("post-pay-thanks-loading");
-  const mainCard = document.getElementById("post-pay-thanks-main");
+  const stepForm = document.getElementById("post-pay-step-form");
+  const stepDownload = document.getElementById("post-pay-step-download");
   const setupForm = document.getElementById("post-pay-thanks-setup-form");
-  const emailSent = document.getElementById("post-pay-thanks-email-sent");
   const emailInput = document.getElementById("post-pay-thanks-email");
   const commerceField = document.getElementById("post-pay-commerce-field");
 
@@ -96,6 +97,33 @@ export async function mountPostPaymentThanksPage(refs) {
     return;
   }
 
+  hide(loading);
+  show(stepForm);
+
+  if (preview.payer_email && emailInput) {
+    emailInput.value = preview.payer_email;
+  }
+
+  if (preview.has_business) {
+    requiresCommerce = false;
+    hide(commerceField);
+    const lead = document.getElementById("post-pay-thanks-lead");
+    if (lead) lead.textContent = "Validez votre e-mail pour activer votre compte.";
+  }
+
+  if (preview.already_claimed && preview.claimed_user_email) {
+    const claimed = preview.claimed_user_email;
+    const lead = document.getElementById("post-pay-thanks-lead");
+    if (lead) {
+      lead.textContent = preview.has_business
+        ? `Abonnement actif sur ${claimed}. Validez cet e-mail pour continuer.`
+        : `Abonnement actif sur ${claimed}. Indiquez votre commerce puis validez votre e-mail.`;
+    }
+    if (emailInput) emailInput.value = claimed;
+  }
+
+  wireAppStoreButtons({ iosBtnId: "post-pay-store-ios", androidBtnId: "post-pay-store-android" });
+
   async function mountDownloadWidget() {
     if (!isMobileDevice()) {
       try {
@@ -107,39 +135,7 @@ export async function mountPostPaymentThanksPage(refs) {
       } catch (err) {
         console.warn("[merci] QR indisponible :", err?.message || err);
       }
-    } else {
-      document.getElementById("post-pay-qr-container")?.classList.add("hidden");
     }
-  }
-
-  hide(loading);
-  show(mainCard);
-
-  wireAppStoreButtons({ iosBtnId: "post-pay-store-ios", androidBtnId: "post-pay-store-android" });
-  void mountDownloadWidget();
-
-  if (preview.payer_email && emailInput) {
-    emailInput.value = preview.payer_email;
-  }
-
-  if (preview.has_business) {
-    requiresCommerce = false;
-    hide(commerceField);
-    const lead = document.getElementById("post-pay-thanks-lead");
-    if (lead) {
-      lead.textContent = "Confirmez votre e-mail — nous vous enverrons un lien pour télécharger l’app.";
-    }
-  }
-
-  if (preview.already_claimed && preview.claimed_user_email) {
-    const claimed = preview.claimed_user_email;
-    const lead = document.getElementById("post-pay-thanks-lead");
-    if (lead) {
-      lead.textContent = preview.has_business
-        ? `Abonnement actif sur ${claimed}. Validez cet e-mail pour recevoir le lien de téléchargement.`
-        : `Abonnement actif sur ${claimed}. Indiquez votre commerce puis validez votre e-mail.`;
-    }
-    if (emailInput) emailInput.value = claimed;
   }
 
   async function submitActivationLink() {
@@ -179,20 +175,20 @@ export async function mountPostPaymentThanksPage(refs) {
     return email;
   }
 
-  function showEmailSent(email) {
+  async function showDownloadStep(email) {
     const toEl = document.getElementById("post-pay-email-sent-to");
     if (toEl) toEl.textContent = email;
-    hide(setupForm);
-    hide(document.getElementById("post-pay-thanks-lead"));
-    show(emailSent);
-    show(document.getElementById("post-pay-thanks-resend"));
+    hide(stepForm);
+    show(stepDownload);
+    document.body.classList.add("post-pay-thanks--download-step");
+    await mountDownloadWidget();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   document.getElementById("post-pay-thanks-back-setup")?.addEventListener("click", () => {
-    hide(emailSent);
-    hide(document.getElementById("post-pay-thanks-resend"));
-    show(document.getElementById("post-pay-thanks-lead"));
-    show(setupForm);
+    hide(stepDownload);
+    show(stepForm);
+    document.body.classList.remove("post-pay-thanks--download-step");
   });
 
   setupForm?.addEventListener("submit", async (e) => {
@@ -201,7 +197,7 @@ export async function mountPostPaymentThanksPage(refs) {
     if (btn instanceof HTMLButtonElement) btn.disabled = true;
     try {
       const email = await submitActivationLink();
-      if (email) showEmailSent(email);
+      if (email) await showDownloadStep(email);
     } catch {
       window.alert("Erreur réseau.");
     } finally {
@@ -214,9 +210,7 @@ export async function mountPostPaymentThanksPage(refs) {
     if (btn instanceof HTMLButtonElement) btn.disabled = true;
     try {
       const email = await submitActivationLink();
-      if (email) {
-        window.alert(`Un nouvel e-mail a été envoyé à ${email}.`);
-      }
+      if (email) window.alert(`Un nouvel e-mail a été envoyé à ${email}.`);
     } catch {
       window.alert("Erreur réseau.");
     } finally {

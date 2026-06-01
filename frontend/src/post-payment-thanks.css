@@ -114,21 +114,60 @@ body.page-landing-subpage.page-post-payment-thanks #landing-legal {
   text-align: center;
 }
 
-.post-pay-thanks__layout {
+body.post-pay-thanks--download-step #landing-legal-content,
+body.post-pay-thanks--download-step .post-pay-thanks__shell {
+  max-width: min(100%, 28rem);
+}
+
+.post-pay-thanks__step {
+  width: 100%;
+  animation: postPayIn 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.post-pay-thanks__step--download {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.25rem;
+  gap: 0.5rem;
 }
 
-.post-pay-thanks__hero {
-  text-align: center;
+.post-pay-thanks__logo--large {
+  width: clamp(100px, 24vw, 140px);
+  height: auto;
+  margin-bottom: 0.5rem;
+  border-radius: 1.75rem;
 }
 
-.post-pay-thanks__subtitle {
-  margin: 0.35rem 0 0;
-  font-size: 1rem;
-  color: var(--post-pay-muted);
+.post-pay-thanks__download-hero {
+  margin-bottom: 0.5rem;
+}
+
+.post-pay-thanks__download-title {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.5rem, 4vw, 1.85rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--post-pay-text);
+}
+
+.post-pay-thanks__download-sub {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #949da5;
+}
+
+.post-pay-thanks__download-sub strong {
+  color: var(--post-pay-text);
+  font-weight: 600;
+}
+
+.post-pay-thanks__download-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 1.25rem;
+  width: 100%;
 }
 
 .post-pay-thanks__logo {
