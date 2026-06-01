@@ -58,6 +58,17 @@ Utilisation au checkout Payment Link mensuel :
 
 `https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01?prefilled_promo_code=FREEDAF352`
 
+### Après paiement (Payment Link)
+
+Redirection Stripe → **`https://myfidpass.fr/merci?session_id={CHECKOUT_SESSION_ID}`** (configuré sur les Payment Links mensuel + annuel).
+
+La page `/merci` :
+1. Confirme le paiement (`GET /api/payment/checkout-success`)
+2. Propose l’e-mail de connexion (prérempli depuis Stripe, modifiable)
+3. Envoie un OTP (`POST /api/payment/claim/send-code`)
+4. Rattache l’abonnement au compte et connecte (`POST /api/payment/claim/verify`)
+5. Envoie un e-mail de bienvenue avec liens `/app` et `/get`
+
 ---
 
 ## 2. Clé secrète

@@ -1,0 +1,143 @@
+.post-pay-thanks {
+  min-height: min(80vh, 720px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem 3rem;
+  background: linear-gradient(165deg, #0f1920 0%, #131821 45%, #0a1218 100%);
+  color: #f4f4f5;
+}
+
+.post-pay-thanks__card {
+  width: min(100%, 440px);
+  padding: 2rem 1.75rem;
+  border-radius: 20px;
+  background: rgba(19, 24, 33, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+}
+
+.post-pay-thanks__eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #27f3a9;
+}
+
+.post-pay-thanks__title {
+  margin: 0 0 0.75rem;
+  font-size: clamp(1.5rem, 4vw, 1.85rem);
+  line-height: 1.15;
+}
+
+.post-pay-thanks__lead {
+  margin: 0 0 1.25rem;
+  color: rgba(244, 244, 245, 0.78);
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.post-pay-thanks__plan {
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  background: rgba(39, 243, 169, 0.1);
+  color: #27f3a9;
+  font-size: 0.875rem;
+}
+
+.post-pay-thanks__label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.post-pay-thanks__input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 0.5rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font-size: 1rem;
+}
+
+.post-pay-thanks__input--code {
+  letter-spacing: 0.25em;
+  text-align: center;
+  font-size: 1.25rem;
+}
+
+.post-pay-thanks__hint {
+  margin: 0 0 1rem;
+  font-size: 0.8rem;
+  color: rgba(244, 244, 245, 0.55);
+}
+
+.post-pay-thanks__cta {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.9rem 1rem;
+  border: none;
+  border-radius: 999px;
+  background: #27f3a9;
+  color: #0f1920;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+}
+
+.post-pay-thanks__cta--secondary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f4f4f5;
+}
+
+.post-pay-thanks__ghost {
+  display: block;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  border: none;
+  background: none;
+  color: rgba(244, 244, 245, 0.65);
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.post-pay-thanks__link {
+  display: inline-block;
+  margin-top: 1rem;
+  color: #27f3a9;
+  font-size: 0.9rem;
+}
+
+.post-pay-thanks__code-intro {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: rgba(244, 244, 245, 0.85);
+}
+
+.post-pay-thanks__success {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  color: #27f3a9;
+}
+
+.post-pay-thanks__state--loading p {
+  margin: 0;
+  color: rgba(244, 244, 245, 0.7);
+}
+
+.page-post-payment-thanks .landing-footer {
+  margin-top: 0;
+}

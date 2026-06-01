@@ -16,6 +16,7 @@ import { applyRouteSeoHead } from "../features/seo-head.js";
 import { matchSeoContentRoute } from "../features/seo-route-match.js";
 import { syncSmartAppBanner } from "../smart-app-banner.js";
 import { FINTAP_SCROLL_TO_COMMERCE_EVENT } from "../landing-cinematic/fintap-hero-scroll-lerp.js";
+import { parseCheckoutSessionId } from "../features/post-purchase-app-modal.js";
 
 export function getRoute() {
   let path = window.location.pathname.replace(/\/$/, "");
@@ -66,6 +67,7 @@ export function getRoute() {
   if (path === "/supprimer-compte") return { type: "legal", page: "delete-account" };
   if (path === "/contact") return { type: "contact" };
   if (path === "/get" || path === "/telecharger") return { type: "get-app" };
+  if (path === "/merci" || path === "/paiement/merci") return { type: "post-payment-thanks" };
   const seoRoute = matchSeoContentRoute(path);
   if (seoRoute) return seoRoute;
   if (path === "") {
@@ -180,6 +182,18 @@ async function loadPage(routeType) {
  */
 export async function initRouting() {
   consumeAuthTransferFromHash();
+
+  if (typeof window !== "undefined") {
+    const path = window.location.pathname.replace(/\/$/, "") || "/";
+    if (path === "/app") {
+      const sessionId = parseCheckoutSessionId(window.location.search);
+      if (sessionId) {
+        window.location.replace(`/merci?session_id=${encodeURIComponent(sessionId)}`);
+        return null;
+      }
+    }
+  }
+
   const route = getRoute();
 
   if (
@@ -200,10 +214,13 @@ export async function initRouting() {
     route.type === "legal" ||
       route.type === "seo-content" ||
       route.type === "contact" ||
-      route.type === "get-app"
+      route.type === "get-app" ||
+      route.type === "post-payment-thanks"
   );
   document.body.classList.toggle("page-get-app", route.type === "get-app");
   document.documentElement.classList.toggle("page-get-app", route.type === "get-app");
+  document.body.classList.toggle("page-post-payment-thanks", route.type === "post-payment-thanks");
+  document.documentElement.classList.toggle("page-post-payment-thanks", route.type === "post-payment-thanks");
   applyRouteSeoHead(route);
   syncSmartAppBanner();
   if (route.type !== "landing") {
@@ -357,6 +374,16 @@ export async function initRouting() {
     if (c.landingMain) c.landingMain.classList.add("hidden");
     c.landingLegal.classList.remove("hidden");
     const page = await loadPage("get-app");
+    await page.init(route);
+    syncWhatsappFabVisibility();
+    return null;
+  }
+
+  if (route.type === "post-payment-thanks" && c.landingMain && c.landingLegal && c.legalContent) {
+    if (c.landing) c.landing.classList.remove("hidden");
+    if (c.landingMain) c.landingMain.classList.add("hidden");
+    c.landingLegal.classList.remove("hidden");
+    const page = await loadPage("post-payment-thanks");
     await page.init(route);
     syncWhatsappFabVisibility();
     return null;

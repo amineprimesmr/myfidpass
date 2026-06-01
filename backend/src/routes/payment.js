@@ -242,8 +242,8 @@ router.post("/create-checkout-session", requireAuth, async (req, res) => {
       mode: "subscription",
       customer_email: email,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${FRONTEND_URL}/app?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${FRONTEND_URL}/app`,
+      success_url: `${FRONTEND_URL}/merci?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${FRONTEND_URL}/`,
       metadata: { user_id: String(userId), plan },
       subscription_data: {
         metadata: { user_id: String(userId), plan },
@@ -1271,5 +1271,12 @@ export async function applePaymentWebhookHandler(req, res) {
     return res.status(status).json({ error: "Impossible de traiter la notification Apple.", code });
   }
 }
+
+export {
+  syncSubscriptionFromStripeObject,
+  payerEmailFromCheckoutSession,
+  extractCheckoutSubscriptionId,
+  isStripeSubscriptionStatusPaying,
+};
 
 export default router;
