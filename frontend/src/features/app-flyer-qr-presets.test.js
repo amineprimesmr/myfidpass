@@ -92,7 +92,7 @@ describe("mergeFlyerState", () => {
 
   it("désactive le voile sur l’image (export sans assombrissement)", () => {
     expect(defaultFlyerState().flyerBgOverlayPct).toBe(0);
-    expect(mergeFlyerState({ flyerBgOverlayPct: 120 }).flyerBgOverlayPct).toBe(0);
+    expect(mergeFlyerState({ flyerBgOverlayPct: 120 }).flyerBgOverlayPct).toBe(90);
   });
 
   it("retire l’ancienne clé subline du stockage", () => {

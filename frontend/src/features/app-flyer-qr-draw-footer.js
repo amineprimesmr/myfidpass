@@ -196,11 +196,12 @@ export async function drawFlyerFooter(ctx, w, h, s) {
 export async function drawFlyerPoweredByBadge(ctx, w, h, bottomY = h) {
   const img = await getMyfidpassFlyerLogo();
   const ds = flyerDesignScale(w);
-  const bottomPad = Math.max(16 * ds, h * 0.006);
-  const yBase = bottomY - bottomPad;
-  const fontPx = Math.max(28, Math.round(40 * ds));
-  const gap = Math.max(10 * ds, w * 0.012);
-  const iconH = Math.max(36, Math.round(52 * ds));
+  /** Plus gros + ancré vers le bas du bandeau (lisible à l’impression). */
+  const fontPx = Math.max(44, Math.round(72 * ds));
+  const gap = Math.max(14 * ds, w * 0.014);
+  const iconH = Math.max(52, Math.round(90 * ds));
+  const bottomLift = Math.max(8 * ds, h * 0.004);
+  const yMid = h - bottomLift - fontPx * 0.48;
 
   ctx.save();
   ctx.textAlign = "left";
@@ -214,23 +215,22 @@ export async function drawFlyerPoweredByBadge(ctx, w, h, bottomY = h) {
   const imgW = img ? (iconH * ((img.naturalWidth || img.width) / (img.naturalHeight || img.height || 1))) : 0;
   const totalW = (img ? imgW + gap : 0) + labelW + brandW;
   let x = (w - totalW) / 2;
-  const yMid = yBase - fontPx * 0.55;
 
   if (img && imgW > 0) {
     try {
-      ctx.globalAlpha = 0.92;
+      ctx.globalAlpha = 0.95;
       ctx.drawImage(img, x, yMid - iconH / 2, imgW, iconH);
     } catch (_) {}
     x += imgW + gap;
   }
 
-  ctx.globalAlpha = 0.88;
+  ctx.globalAlpha = 0.92;
   ctx.font = `600 ${fontPx}px Inter, system-ui, sans-serif`;
   ctx.fillStyle = "#1e293b";
   ctx.textAlign = "left";
   ctx.fillText(label, x, yMid);
   x += labelW;
-  ctx.globalAlpha = 0.95;
+  ctx.globalAlpha = 1;
   ctx.font = `800 ${fontPx}px Inter, system-ui, sans-serif`;
   ctx.fillStyle = "#0f172a";
   ctx.fillText(brand, x, yMid);
