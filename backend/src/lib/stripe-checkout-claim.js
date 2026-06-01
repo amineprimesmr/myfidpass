@@ -2,7 +2,6 @@
  * Réclamation d’un abonnement Stripe après Payment Link / Checkout (sans compte au moment du paiement).
  */
 import Stripe from "stripe";
-import { timingSafeEqual, createHmac } from "crypto";
 import {
   createUserWithEmailOtp,
   getSubscriptionByStripeSubscriptionId,
@@ -11,12 +10,6 @@ import {
   hasOperationalMerchantAccess,
   getBusinessesByUserId,
 } from "../db.js";
-import {
-  deleteEmailOtpChallenge,
-  getEmailOtpChallenge,
-  incrementEmailOtpAttempts,
-} from "../db/email-otp.js";
-import { issueAndSendEmailOtp, hashEmailOtp } from "./email-otp-send.js";
 import { sendMail } from "../email.js";
 import { isReservedStaffEmailOnly } from "../db/users.js";
 import { issueAuthTokensForUser, getAuthPayloadForUser } from "../routes/auth-tokens.js";
@@ -24,7 +17,12 @@ import {
   isValidCheckoutSessionId,
   isValidStripeSubscriptionId,
 } from "./stripe-checkout-ids.js";
-import { bootstrapFirstBusinessForUser, finalizeBusinessForClaimedUser } from "./bootstrap-first-business.js";
+import { finalizeBusinessForClaimedUser } from "./bootstrap-first-business.js";
+import {
+  createPaymentClaimToken,
+  parsePaymentClaimToken,
+  buildPaymentClaimConfirmUrl,
+} from "./payment-claim-token.js";
 
 async function loadStripeSyncHelpers() {
   const mod = await import("../routes/payment.js");
@@ -41,8 +39,6 @@ const stripe =
   process.env.STRIPE_SECRET_KEY && String(process.env.STRIPE_SECRET_KEY).startsWith("sk_")
     ? new Stripe(process.env.STRIPE_SECRET_KEY)
     : null;
-
-const EMAIL_OTP_MAX_ATTEMPTS = 8;
 
 function planLabelFromSession(session) {
   const meta = session?.metadata?.plan || session?.subscription?.metadata?.plan;
@@ -215,7 +211,13 @@ export async function sendPostPurchaseWelcomeEmail(email, planLabel) {
   });
 }
 
-export async function sendClaimLoginCode({ email, sessionId, subscriptionId }) {
+export async function sendClaimLoginLink({
+  email,
+  sessionId,
+  subscriptionId,
+  establishment_name,
+  google_place_id,
+}) {
   const emailNorm = String(email || "").trim().toLowerCase();
   if (!emailNorm || !emailNorm.includes("@")) {
     return { ok: false, code: "invalid_email", message: "Adresse e-mail invalide." };
@@ -241,80 +243,61 @@ export async function sendClaimLoginCode({ email, sessionId, subscriptionId }) {
     };
   }
 
-  const introText =
-    "Merci pour votre achat Myfidpass. Utilisez ce code pour activer votre compte et accéder à votre abonnement.";
-  const introHtml = `<p>Merci pour votre achat <strong>Myfidpass</strong>.</p><p>Utilisez ce code pour activer votre compte et accéder à votre abonnement.</p>`;
+  const token = createPaymentClaimToken({
+    email: emailNorm,
+    sessionId,
+    subscriptionId,
+    establishment_name: establishment_name || null,
+    google_place_id: google_place_id || null,
+  });
+  const confirmUrl = buildPaymentClaimConfirmUrl(token);
 
-  const mail = await issueAndSendEmailOtp({
+  const mail = await sendMail({
     to: emailNorm,
-    subject: "Activez votre compte Myfidpass",
-    introText,
-    introHtml,
+    subject: "Merci — activez votre compte Myfidpass",
+    text: `Merci pour votre achat Myfidpass.\n\nCliquez sur le lien ci-dessous pour confirmer votre e-mail et télécharger l’application commerçant :\n\n${confirmUrl}\n\nCe lien est valable 48 heures.\n\n— L’équipe Myfidpass`,
+    html: `<p>Merci pour votre achat <strong>Myfidpass</strong>.</p><p>Confirmez votre e-mail et accédez à l’application en un clic :</p><p><a href="${confirmUrl}" style="display:inline-block;padding:14px 24px;background:#18181b;color:#fff;text-decoration:none;border-radius:12px;font-weight:600">Télécharger l’app Myfidpass</a></p><p style="color:#666;font-size:13px">Ou copiez ce lien : ${confirmUrl}</p><p style="color:#888;font-size:12px">Lien valable 48 heures.</p><p>— L’équipe Myfidpass</p>`,
   });
 
-  if (!mail.sent && process.env.NODE_ENV === "production") {
+  if (!mail?.sent && process.env.NODE_ENV === "production") {
     return {
       ok: false,
       code: "email_send_failed",
-      message: mail.humanError || "Impossible d’envoyer l’e-mail.",
+      message: "Impossible d’envoyer l’e-mail. Réessayez dans un instant.",
     };
   }
 
-  return { ok: true, plan_label: preview.plan_label };
+  return { ok: true, email_sent: true };
 }
 
-function verifyOtpCode(emailNorm, code) {
-  const row = getEmailOtpChallenge(emailNorm);
-  if (!row) {
-    return { ok: false, status: 400, message: "Aucun code en attente. Demandez un nouveau code." };
-  }
-  if (Date.parse(row.expires_at) < Date.now()) {
-    deleteEmailOtpChallenge(emailNorm);
-    return { ok: false, status: 400, message: "Code expiré. Demandez un nouveau code." };
-  }
-  if ((row.attempts || 0) >= EMAIL_OTP_MAX_ATTEMPTS) {
-    deleteEmailOtpChallenge(emailNorm);
-    return { ok: false, status: 429, message: "Trop de tentatives. Demandez un nouveau code." };
-  }
-  const expected = row.code_hash;
-  const got = hashEmailOtp(emailNorm, String(code || "").trim());
-  let a;
-  let b;
-  try {
-    a = Buffer.from(expected, "hex");
-    b = Buffer.from(got, "hex");
-  } catch {
-    incrementEmailOtpAttempts(emailNorm);
-    return { ok: false, status: 401, message: "Code incorrect." };
-  }
-  if (a.length !== b.length || !timingSafeEqual(a, b)) {
-    incrementEmailOtpAttempts(emailNorm);
-    return { ok: false, status: 401, message: "Code incorrect." };
-  }
-  deleteEmailOtpChallenge(emailNorm);
-  return { ok: true };
+/** @deprecated alias — envoie un lien e-mail (plus de code OTP). */
+export const sendClaimLoginCode = sendClaimLoginLink;
+
+function buildClaimAuthBody(user, tokens, business) {
+  return {
+    ...getAuthPayloadForUser(user),
+    token: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+    subscription_claimed: true,
+    business: business
+      ? { id: business.id, name: business.name, slug: business.slug }
+      : undefined,
+  };
 }
 
-export async function verifyClaimAndIssueAuth({
+export async function completePaymentClaim({
   email,
-  code,
   sessionId,
   subscriptionId,
   establishment_name,
   google_place_id,
 }) {
   const emailNorm = String(email || "").trim().toLowerCase();
-  const otp = verifyOtpCode(emailNorm, code);
-  if (!otp.ok) {
-    return { ok: false, status: otp.status, message: otp.message };
-  }
-
   const preview = await getCheckoutSuccessPreview({ sessionId, subscriptionId });
   if (!preview.ok) {
     return { ok: false, status: 400, code: preview.code, message: preview.message };
   }
 
-  // Abo déjà lié au même e-mail → connexion directe après OTP.
   if (
     preview.already_claimed &&
     preview.claimed_user_email &&
@@ -335,9 +318,6 @@ export async function verifyClaimAndIssueAuth({
         };
       }
       const tokens = issueAuthTokensForUser(linkedUser.id);
-      try {
-        await sendPostPurchaseWelcomeEmail(emailNorm, preview.plan_label);
-      } catch (_) {}
       return {
         ok: true,
         status: 200,
@@ -355,7 +335,7 @@ export async function verifyClaimAndIssueAuth({
       ok: false,
       status: 409,
       code: "subscription_already_claimed",
-      message: `Cet abonnement est déjà actif sur ${preview.claimed_user_email}. Connectez-vous avec ce compte.`,
+      message: `Cet abonnement est déjà actif sur ${preview.claimed_user_email}.`,
     };
   }
 
@@ -369,7 +349,7 @@ export async function verifyClaimAndIssueAuth({
       if (e?.code === "EMAIL_TAKEN") {
         user = getUserByEmail(emailNorm);
       } else {
-        console.error("[claim verify] create user:", e);
+        console.error("[claim complete] create user:", e);
         return { ok: false, status: 409, message: "Impossible de créer le compte." };
       }
     }
@@ -404,12 +384,6 @@ export async function verifyClaimAndIssueAuth({
     };
   }
 
-  try {
-    await sendPostPurchaseWelcomeEmail(emailNorm, preview.plan_label);
-  } catch (e) {
-    console.warn("[claim verify] welcome email:", e?.message || e);
-  }
-
   const tokens = issueAuthTokensForUser(user.id);
   return {
     ok: true,
@@ -418,14 +392,22 @@ export async function verifyClaimAndIssueAuth({
   };
 }
 
-function buildClaimAuthBody(user, tokens, business) {
-  return {
-    ...getAuthPayloadForUser(user),
-    token: tokens.accessToken,
-    refreshToken: tokens.refreshToken,
-    subscription_claimed: true,
-    business: business
-      ? { id: business.id, name: business.name, slug: business.slug }
-      : undefined,
-  };
+export async function confirmClaimFromToken(token) {
+  const parsed = parsePaymentClaimToken(token);
+  if (!parsed.ok) {
+    return { ok: false, status: 400, code: parsed.code, message: parsed.message };
+  }
+  const p = parsed.payload;
+  return completePaymentClaim({
+    email: p.email,
+    sessionId: p.sessionId,
+    subscriptionId: p.subscriptionId,
+    establishment_name: p.establishment_name,
+    google_place_id: p.google_place_id,
+  });
+}
+
+/** @deprecated — préférer confirmClaimFromToken (lien e-mail). */
+export async function verifyClaimAndIssueAuth(input) {
+  return completePaymentClaim(input);
 }

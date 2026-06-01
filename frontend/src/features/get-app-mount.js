@@ -1,3 +1,4 @@
+import { API_BASE, setAuthToken, setRefreshToken } from "../config.js";
 import { getAndroidAppStoreUrl, getIosAppStoreUrl } from "./app-store-urls.js";
 
 const QR_SCRIPT = "/js/qr_code_styling.js";
@@ -59,20 +60,73 @@ function openStorePage(platform) {
 
 function shouldStayOnPage() {
   const params = new URLSearchParams(window.location.search);
+  if (params.get("claim_token")) return true;
   return ["1", "true", "yes"].includes(String(params.get("stay") || "").toLowerCase());
 }
 
-function applyWelcomeCopy() {
+function applyWelcomeCopy(commerceName) {
   const params = new URLSearchParams(window.location.search);
-  if (params.get("welcome") !== "1") return;
-  const commerce = String(params.get("commerce") || "").trim();
+  const commerce =
+    commerceName ||
+    String(params.get("commerce") || "").trim() ||
+    "";
+  const isWelcome = params.get("welcome") === "1" || params.get("claim_token");
+  if (!isWelcome && !commerce) return;
+
   const title = document.getElementById("get-app-title");
   const subtitle = document.getElementById("get-app-subtitle");
   if (title) {
-    title.textContent = commerce ? `${commerce} est prêt.` : "Votre compte est prêt.";
+    title.textContent = commerce ? `${commerce} est prêt.` : "Merci — votre compte est prêt.";
   }
   if (subtitle) {
     subtitle.textContent = "Téléchargez l’app Myfidpass pour gérer votre programme fidélité.";
+  }
+}
+
+function stripClaimTokenFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has("claim_token")) return;
+  params.delete("claim_token");
+  params.set("welcome", "1");
+  params.set("stay", "1");
+  const qs = params.toString();
+  const next = `${window.location.pathname}${qs ? `?${qs}` : ""}`;
+  window.history.replaceState(null, "", next);
+}
+
+async function confirmClaimTokenIfPresent() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("claim_token");
+  if (!token) return null;
+
+  const loadingEl = document.getElementById("get-app-subtitle");
+  if (loadingEl) loadingEl.textContent = "Activation de votre compte…";
+
+  try {
+    const res = await fetch(
+      `${API_BASE}/api/payment/claim/confirm?token=${encodeURIComponent(token)}`
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) {
+      if (loadingEl) {
+        loadingEl.textContent = data.message || "Lien invalide ou expiré.";
+      }
+      return null;
+    }
+    if (data.token) setAuthToken(data.token);
+    if (data.refreshToken) setRefreshToken(data.refreshToken);
+    stripClaimTokenFromUrl();
+    const commerce = data.business?.name || null;
+    if (commerce) {
+      const p = new URLSearchParams(window.location.search);
+      p.set("commerce", commerce);
+      window.history.replaceState(null, "", `${window.location.pathname}?${p.toString()}`);
+    }
+    applyWelcomeCopy(data.business?.name);
+    return data;
+  } catch {
+    if (loadingEl) loadingEl.textContent = "Impossible d’activer le compte. Réessayez.";
+    return null;
   }
 }
 
@@ -91,7 +145,7 @@ async function renderQR() {
     qrOptions: { typeNumber: 0, errorCorrectionLevel: "H" },
     image: "/assets/icone.png?v=20260416",
     dotsOptions: { color: "#F6F4EC", type: "dots" },
-    cornersSquareOptions: { color: "#27f3a9", type: "extra-rounded" },
+    cornersSquareOptions: { color: "#fafafa", type: "extra-rounded" },
     cornersDotOptions: { color: "#F6F4EC", type: "square" },
     backgroundOptions: { color: "#0F1920" },
     imageOptions: { crossOrigin: "anonymous", margin: 4, imageSize: 0.5 },
@@ -110,7 +164,8 @@ function wireStoreButtons() {
 
 /** Initialise la page /get (clone Tuyo). */
 export async function mountGetAppPage() {
-  applyWelcomeCopy();
+  await confirmClaimTokenIfPresent();
+  applyWelcomeCopy(null);
 
   if (isMobileDevice() && !shouldStayOnPage()) {
     const platform = detectDevicePlatform();

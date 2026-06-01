@@ -23,13 +23,8 @@ export function getPostPaymentThanksHtml() {
       </div>
       <h1 class="post-pay-thanks__title">Paiement confirmé</h1>
       <p class="post-pay-thanks__lead" id="post-pay-thanks-lead">
-        Dernière étape : indiquez votre commerce et votre e-mail pour accéder à l’app.
+        Indiquez votre commerce et votre e-mail — nous vous enverrons un lien pour télécharger l’app.
       </p>
-
-      <ol class="post-pay-thanks__steps" aria-label="Étapes">
-        <li class="post-pay-thanks__step is-active" id="post-pay-step-1">1. Commerce</li>
-        <li class="post-pay-thanks__step" id="post-pay-step-2">2. Vérification</li>
-      </ol>
 
       <form class="post-pay-thanks__form" id="post-pay-thanks-setup-form" novalidate>
         <div class="post-pay-thanks__field" id="post-pay-commerce-field">
@@ -64,44 +59,25 @@ export function getPostPaymentThanksHtml() {
           />
         </div>
 
-        <button type="submit" class="post-pay-thanks__cta" id="post-pay-thanks-send-code">
-          Continuer
+        <button type="submit" class="post-pay-thanks__cta" id="post-pay-thanks-send-link">
+          Valider mon e-mail
         </button>
       </form>
 
-      <form class="post-pay-thanks__form hidden" id="post-pay-thanks-code-form" novalidate>
-        <p class="post-pay-thanks__code-intro">
-          Code envoyé à <strong id="post-pay-thanks-email-display"></strong>
+      <div class="post-pay-thanks__email-sent hidden" id="post-pay-thanks-email-sent">
+        <div class="post-pay-thanks__mail-icon" aria-hidden="true">✉</div>
+        <h2 class="post-pay-thanks__sent-title">Consultez votre boîte mail</h2>
+        <p class="post-pay-thanks__sent-text">
+          Un lien d’activation a été envoyé à <strong id="post-pay-email-sent-to"></strong>.
         </p>
-        <div class="post-pay-thanks__field">
-          <label class="post-pay-thanks__label" for="post-pay-thanks-code">Code à 6 chiffres</label>
-          <input
-            id="post-pay-thanks-code"
-            class="post-pay-thanks__input post-pay-thanks__input--code"
-            type="text"
-            inputmode="numeric"
-            autocomplete="one-time-code"
-            maxlength="6"
-            pattern="[0-9]{6}"
-            required
-            placeholder="000000"
-          />
-        </div>
-        <button type="submit" class="post-pay-thanks__cta" id="post-pay-thanks-verify">
-          Finaliser et télécharger l’app
+        <p class="post-pay-thanks__sent-hint">Cliquez sur le lien dans l’e-mail pour télécharger l’app Myfidpass.</p>
+        <button type="button" class="post-pay-thanks__cta post-pay-thanks__cta--secondary" id="post-pay-thanks-resend">
+          Renvoyer l’e-mail
         </button>
-        <button type="button" class="post-pay-thanks__ghost" id="post-pay-thanks-back-email">
+        <button type="button" class="post-pay-thanks__ghost" id="post-pay-thanks-back-setup">
           Modifier mes informations
         </button>
-      </form>
-    </div>
-
-    <div class="post-pay-thanks__state hidden" id="post-pay-thanks-done">
-      <div class="post-pay-thanks__badge post-pay-thanks__badge--done" aria-hidden="true">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10.5L8 14.5L16 6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <p class="post-pay-thanks__success">Tout est prêt !</p>
-      <p class="post-pay-thanks__success-sub">Redirection vers le téléchargement de l’app…</p>
     </div>
   </div>
 </div>`;

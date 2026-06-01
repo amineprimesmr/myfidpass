@@ -276,6 +276,44 @@ body.page-landing-subpage.page-post-payment-thanks #landing-legal {
   opacity: 0.92;
 }
 
+.post-pay-thanks__cta--secondary {
+  background: transparent;
+  color: var(--post-pay-text);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.post-pay-thanks__email-sent {
+  text-align: center;
+  padding-top: 0.25rem;
+}
+
+.post-pay-thanks__mail-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.85;
+}
+
+.post-pay-thanks__sent-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+  font-weight: 650;
+  color: var(--post-pay-text);
+}
+
+.post-pay-thanks__sent-text {
+  margin: 0 0 0.5rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--post-pay-muted);
+}
+
+.post-pay-thanks__sent-hint {
+  margin: 0 0 1.25rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: rgba(250, 250, 250, 0.48);
+}
+
 .post-pay-thanks__cta:disabled {
   opacity: 0.5;
   cursor: not-allowed;

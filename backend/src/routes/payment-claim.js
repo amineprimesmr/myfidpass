@@ -2,8 +2,8 @@ import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
 import {
   getCheckoutSuccessPreview,
-  sendClaimLoginCode,
-  verifyClaimAndIssueAuth,
+  sendClaimLoginLink,
+  confirmClaimFromToken,
   claimCheckoutForUser,
 } from "../lib/stripe-checkout-claim.js";
 import {
@@ -39,12 +39,39 @@ router.get("/checkout-success", async (req, res) => {
   }
 });
 
-/** POST /api/payment/claim/send-code — envoie un OTP pour activer le compte lié au paiement. */
+/** POST /api/payment/claim/send-link — envoie un lien d’activation par e-mail. */
+router.post("/claim/send-link", async (req, res) => {
+  try {
+    const { sessionId, subscriptionId } = readCheckoutRef(req.body, {});
+    const result = await sendClaimLoginLink({
+      email: req.body?.email,
+      sessionId,
+      subscriptionId,
+      establishment_name: req.body?.establishment_name,
+      google_place_id: req.body?.google_place_id,
+    });
+    if (!result.ok) {
+      const status = result.code === "email_send_failed" ? 502 : 400;
+      return res.status(status).json(result);
+    }
+    return res.json(result);
+  } catch (e) {
+    console.error("[payment] claim/send-link:", e?.message || e);
+    return res.status(500).json({ ok: false, message: "Envoi impossible." });
+  }
+});
+
+/** Alias legacy — même comportement que send-link. */
 router.post("/claim/send-code", async (req, res) => {
   try {
-    const email = req.body?.email;
     const { sessionId, subscriptionId } = readCheckoutRef(req.body, {});
-    const result = await sendClaimLoginCode({ email, sessionId, subscriptionId });
+    const result = await sendClaimLoginLink({
+      email: req.body?.email,
+      sessionId,
+      subscriptionId,
+      establishment_name: req.body?.establishment_name,
+      google_place_id: req.body?.google_place_id,
+    });
     if (!result.ok) {
       const status = result.code === "email_send_failed" ? 502 : 400;
       return res.status(status).json(result);
@@ -56,18 +83,14 @@ router.post("/claim/send-code", async (req, res) => {
   }
 });
 
-/** POST /api/payment/claim/verify — vérifie OTP, rattache l’abo, connecte l’utilisateur. */
-router.post("/claim/verify", async (req, res) => {
+/** GET /api/payment/claim/confirm — active le compte via le lien e-mail. */
+router.get("/claim/confirm", async (req, res) => {
   try {
-    const { sessionId, subscriptionId } = readCheckoutRef(req.body, {});
-    const result = await verifyClaimAndIssueAuth({
-      email: req.body?.email,
-      code: req.body?.code,
-      sessionId,
-      subscriptionId,
-      establishment_name: req.body?.establishment_name,
-      google_place_id: req.body?.google_place_id,
-    });
+    const token = String(req.query?.token || req.query?.claim_token || "").trim();
+    if (!token) {
+      return res.status(400).json({ ok: false, message: "Lien invalide." });
+    }
+    const result = await confirmClaimFromToken(token);
     if (!result.ok) {
       return res.status(result.status || 400).json({
         ok: false,
@@ -75,9 +98,9 @@ router.post("/claim/verify", async (req, res) => {
         message: result.message,
       });
     }
-    return res.status(result.status || 200).json(result.body);
+    return res.status(result.status || 200).json({ ok: true, ...result.body });
   } catch (e) {
-    console.error("[payment] claim/verify:", e?.message || e);
+    console.error("[payment] claim/confirm:", e?.message || e);
     return res.status(500).json({ ok: false, message: "Activation impossible." });
   }
 });

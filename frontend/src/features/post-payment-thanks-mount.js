@@ -25,21 +25,9 @@ function hide(el) {
   el?.classList.add("hidden");
 }
 
-function setStep(active) {
-  document.getElementById("post-pay-step-1")?.classList.toggle("is-active", active === 1);
-  document.getElementById("post-pay-step-2")?.classList.toggle("is-active", active === 2);
-}
-
-function redirectToGetApp(commerceName) {
-  const params = new URLSearchParams({ welcome: "1", stay: "1" });
-  if (commerceName) params.set("commerce", commerceName);
-  window.location.replace(`/get?${params.toString()}`);
-}
-
 function setError(msg) {
   hide(document.getElementById("post-pay-thanks-loading"));
   hide(document.getElementById("post-pay-thanks-main"));
-  hide(document.getElementById("post-pay-thanks-done"));
   const err = document.getElementById("post-pay-thanks-error");
   const txt = document.getElementById("post-pay-thanks-error-text");
   if (txt) txt.textContent = msg;
@@ -51,11 +39,8 @@ export async function mountPostPaymentThanksPage(refs) {
   const loading = document.getElementById("post-pay-thanks-loading");
   const mainCard = document.getElementById("post-pay-thanks-main");
   const setupForm = document.getElementById("post-pay-thanks-setup-form");
-  const codeForm = document.getElementById("post-pay-thanks-code-form");
+  const emailSent = document.getElementById("post-pay-thanks-email-sent");
   const emailInput = document.getElementById("post-pay-thanks-email");
-  const codeInput = document.getElementById("post-pay-thanks-code");
-  const emailDisplay = document.getElementById("post-pay-thanks-email-display");
-  const doneEl = document.getElementById("post-pay-thanks-done");
   const commerceField = document.getElementById("post-pay-commerce-field");
 
   const { sessionId, subscriptionId } = refs;
@@ -89,9 +74,7 @@ export async function mountPostPaymentThanksPage(refs) {
       if (res.ok && data.token) {
         setAuthToken(data.token);
         if (data.refreshToken) setRefreshToken(data.refreshToken);
-        hide(loading);
-        show(doneEl);
-        window.setTimeout(() => redirectToGetApp(null), 900);
+        window.location.replace("/get?welcome=1&stay=1");
         return;
       }
     } catch {
@@ -124,7 +107,7 @@ export async function mountPostPaymentThanksPage(refs) {
     hide(commerceField);
     const lead = document.getElementById("post-pay-thanks-lead");
     if (lead) {
-      lead.textContent = "Votre commerce est déjà configuré. Confirmez votre e-mail pour accéder à l’app.";
+      lead.textContent = "Confirmez votre e-mail — nous vous enverrons un lien pour télécharger l’app.";
     }
   }
 
@@ -133,75 +116,28 @@ export async function mountPostPaymentThanksPage(refs) {
     const lead = document.getElementById("post-pay-thanks-lead");
     if (lead) {
       lead.textContent = preview.has_business
-        ? `Abonnement actif sur ${claimed}. Confirmez votre e-mail pour télécharger l’app.`
-        : `Abonnement actif sur ${claimed}. Indiquez votre commerce puis confirmez votre e-mail.`;
+        ? `Abonnement actif sur ${claimed}. Validez cet e-mail pour recevoir le lien de téléchargement.`
+        : `Abonnement actif sur ${claimed}. Indiquez votre commerce puis validez votre e-mail.`;
     }
     if (emailInput) emailInput.value = claimed;
   }
 
-  document.getElementById("post-pay-thanks-back-email")?.addEventListener("click", () => {
-    hide(codeForm);
-    show(setupForm);
-    setStep(1);
-    codeInput.value = "";
-  });
-
-  setupForm?.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  async function submitActivationLink() {
     const email = emailInput?.value?.trim();
-    if (!email) return;
+    if (!email) return null;
 
     if (requiresCommerce) {
       if (!placesSearch?.hasSelection()) {
         window.alert("Sélectionnez votre commerce dans la liste de suggestions.");
-        return;
+        return null;
       }
       pendingCommerce = placesSearch.getSelection();
     } else {
       pendingCommerce = null;
     }
 
-    const btn = document.getElementById("post-pay-thanks-send-code");
-    if (btn instanceof HTMLButtonElement) btn.disabled = true;
-    try {
-      const res = await fetch(`${API_BASE}/api/payment/claim/send-code`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          session_id: sessionId,
-          subscription_id: subscriptionId,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        window.alert(data.message || "Envoi impossible.");
-        return;
-      }
-      if (emailDisplay) emailDisplay.textContent = email;
-      hide(setupForm);
-      show(codeForm);
-      setStep(2);
-      codeInput?.focus();
-    } catch {
-      window.alert("Erreur réseau.");
-    } finally {
-      if (btn instanceof HTMLButtonElement) btn.disabled = false;
-    }
-  });
-
-  codeForm?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const email = emailInput?.value?.trim();
-    const code = codeInput?.value?.trim();
-    if (!email || !code) return;
-
-    const btn = document.getElementById("post-pay-thanks-verify");
-    if (btn instanceof HTMLButtonElement) btn.disabled = true;
-
     const body = {
       email,
-      code,
       session_id: sessionId,
       subscription_id: subscriptionId,
     };
@@ -210,26 +146,53 @@ export async function mountPostPaymentThanksPage(refs) {
       body.google_place_id = pendingCommerce.placeId;
     }
 
+    const res = await fetch(`${API_BASE}/api/payment/claim/send-link`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      window.alert(data.message || "Envoi impossible.");
+      return null;
+    }
+    return email;
+  }
+
+  function showEmailSent(email) {
+    const toEl = document.getElementById("post-pay-email-sent-to");
+    if (toEl) toEl.textContent = email;
+    hide(setupForm);
+    show(emailSent);
+  }
+
+  document.getElementById("post-pay-thanks-back-setup")?.addEventListener("click", () => {
+    hide(emailSent);
+    show(setupForm);
+  });
+
+  setupForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById("post-pay-thanks-send-link");
+    if (btn instanceof HTMLButtonElement) btn.disabled = true;
     try {
-      const res = await fetch(`${API_BASE}/api/payment/claim/verify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        window.alert(data.message || "Code incorrect ou activation impossible.");
-        return;
+      const email = await submitActivationLink();
+      if (email) showEmailSent(email);
+    } catch {
+      window.alert("Erreur réseau.");
+    } finally {
+      if (btn instanceof HTMLButtonElement) btn.disabled = false;
+    }
+  });
+
+  document.getElementById("post-pay-thanks-resend")?.addEventListener("click", async () => {
+    const btn = document.getElementById("post-pay-thanks-resend");
+    if (btn instanceof HTMLButtonElement) btn.disabled = true;
+    try {
+      const email = await submitActivationLink();
+      if (email) {
+        window.alert(`Un nouvel e-mail a été envoyé à ${email}.`);
       }
-      if (data.token) setAuthToken(data.token);
-      if (data.refreshToken) setRefreshToken(data.refreshToken);
-
-      const commerceName =
-        data.business?.name || pendingCommerce?.establishmentName || preview?.business_name || null;
-
-      hide(mainCard);
-      show(doneEl);
-      window.setTimeout(() => redirectToGetApp(commerceName), 1100);
     } catch {
       window.alert("Erreur réseau.");
     } finally {
