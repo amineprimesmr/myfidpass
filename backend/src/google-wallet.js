@@ -5,6 +5,7 @@
 
 import jwt from "jsonwebtoken";
 import { GoogleAuth } from "google-auth-library";
+import { stampNextRewardFaceLabelAndValue } from "./pass/stamp-next-reward-face.js";
 
 const GOOGLE_SAVE_BASE = "https://pay.google.com/gp/v/save";
 const DEFAULT_CLASS_SUFFIX = "myfidpass_loyalty";
@@ -93,11 +94,27 @@ function publicLogoUrlForBusiness(apiBase, business) {
   return `${base}/api/businesses/${slug}/public/logo${imageVersionParam(business?.logo_updated_at || business?.updated_at)}`;
 }
 
-function publicHeroImageUrlForBusiness(apiBase, business) {
+function publicStampHeroUrlForBusiness(apiBase, business, filled = 0) {
+  const slug = business?.slug ? encodeURIComponent(String(business.slug)) : "";
+  const base = String(apiBase || "https://api.myfidpass.fr").replace(/\/$/, "");
+  if (!slug) return null;
+  const programType = String(business?.program_type || "").toLowerCase();
+  if (programType !== "stamps") return null;
+  const f = Math.max(0, Math.min(10, Math.floor(Number(filled) || 0)));
+  return `${base}/api/businesses/${slug}/public/wallet-stamp-hero?filled=${f}${imageVersionParam(business?.logo_updated_at || business?.updated_at)}`;
+}
+
+function publicCardBackgroundUrlForBusiness(apiBase, business) {
   const slug = business?.slug ? encodeURIComponent(String(business.slug)) : "";
   const base = String(apiBase || "https://api.myfidpass.fr").replace(/\/$/, "");
   if (!slug || !hasBusinessAsset(business, "card_background")) return null;
   return `${base}/api/businesses/${slug}/public/wallet-card-background${imageVersionParam(business?.card_background_updated_at || business?.updated_at)}`;
+}
+
+function publicHeroImageUrlForBusiness(apiBase, business, filledStamps = 0) {
+  const bg = publicCardBackgroundUrlForBusiness(apiBase, business);
+  if (bg) return bg;
+  return publicStampHeroUrlForBusiness(apiBase, business, filledStamps);
 }
 
 function publicStampIconUrlForBusiness(apiBase, business) {
@@ -159,78 +176,84 @@ function rewardSummaryForBusiness(business, programType) {
   return `${firstTier.label || "Récompense"} à ${firstTier.points} points`;
 }
 
-function cardTemplateInfo(includeStampIcon) {
-  const balanceField = { fieldPath: "object.textModulesData['balance']" };
-  const rewardField = { fieldPath: "object.textModulesData['reward']" };
-  const merchantField = { fieldPath: "class.textModulesData['merchant']" };
-  const template = {
-    cardTemplateOverride: {
-      cardRowTemplateInfos: [
-        {
-          twoItems: {
-            startItem: { firstValue: { fields: [balanceField] } },
-            endItem: { firstValue: { fields: [rewardField] } },
-          },
-        },
-        {
-          oneItem: {
-            item: { firstValue: { fields: [merchantField] } },
-          },
-        },
-      ],
-    },
-    listTemplateOverride: {
-      firstRowOption: {
-        fieldOption: { fields: [{ fieldPath: "class.textModulesData['merchant']" }] },
-      },
-      secondRowOption: {
-        fields: [{ fieldPath: "object.textModulesData['balance']" }],
-      },
-    },
+function nextPointsRewardForBalance(business, balance) {
+  const tiers = parseRewardTiers(business?.points_reward_tiers)
+    .map((tier) => ({
+      points: Math.max(0, Math.floor(Number(tier?.points) || 0)),
+      label: String(tier?.label || tier?.reward || tier?.name || "").trim(),
+    }))
+    .filter((tier) => tier.points > 0 && tier.label)
+    .sort((a, b) => a.points - b.points);
+  const next = tiers.find((tier) => balance < tier.points);
+  if (!next) {
+    const last = tiers[tiers.length - 1];
+    return last
+      ? { label: "Objectif atteint", value: last.label }
+      : { label: "Récompense", value: "Barème du commerce" };
+  }
+  const need = next.points - balance;
+  return {
+    label: need === 1 ? "Dans 1 point" : `Dans ${need} points`,
+    value: next.label,
   };
-  if (includeStampIcon) {
-    template.detailsTemplateOverride = {
-      detailsItemInfos: [
-        {
-          item: {
-            firstValue: {
-              fields: [{ fieldPath: "class.imageModulesData['stamp_icon']" }],
-            },
-          },
-        },
-      ],
+}
+
+function loyaltyBalancesForMember(member, business, programType, apiBase) {
+  const requiredStamps = Math.max(1, Math.floor(Number(business?.required_stamps) || 10));
+  const currentBalance = Math.max(0, Math.floor(Number(member.points) || 0));
+
+  if (programType === "stamps") {
+    const filled = Math.min(currentBalance, requiredStamps);
+    const next = stampNextRewardFaceLabelAndValue({
+      stampsCollected: filled,
+      totalStamps: requiredStamps,
+      midReward: business?.stamp_mid_reward_label,
+      finalReward: business?.stamp_reward_label,
+    });
+    return {
+      loyaltyPoints: {
+        label: "Tampons",
+        balance: { int: filled },
+      },
+      secondaryLoyaltyPoints: {
+        label: truncateGoogleText(next.label, 32),
+        balance: { string: truncateGoogleText(next.value, 40) },
+      },
+      heroFilled: filled,
     };
   }
-  return template;
+
+  const next = nextPointsRewardForBalance(business, currentBalance);
+  return {
+    loyaltyPoints: {
+      label: "Points",
+      balance: { int: currentBalance },
+    },
+    secondaryLoyaltyPoints: {
+      label: truncateGoogleText(next.label, 32),
+      balance: { string: truncateGoogleText(next.value, 40) },
+    },
+    heroFilled: 0,
+  };
 }
 
 function buildLoyaltyClass(classId, business = null, apiBase = null) {
   const merchantName = displayNameForBusiness(business);
   const logoUrl = business ? publicLogoUrlForBusiness(apiBase, business) : DEFAULT_PROGRAM_LOGO_URL;
-  const heroUrl = business ? publicHeroImageUrlForBusiness(apiBase, business) : null;
-  const stampIconUrl = business ? publicStampIconUrlForBusiness(apiBase, business) : null;
+  const heroUrl = business ? publicHeroImageUrlForBusiness(apiBase, business, 0) : null;
   const programType = String(business?.program_type || "").toLowerCase() === "stamps" ? "stamps" : "points";
-  const pointsLabel = programType === "stamps" ? "Tampons" : "Points";
-  const rewardSummary = rewardSummaryForBusiness(business, programType);
+  const accountNameLabel = String(business?.label_member || "").trim() || "Client";
+  const accountIdLabel = "Carte";
   return {
     id: classId,
     issuerName: merchantName.slice(0, 20),
     programName: merchantName.slice(0, 50),
     reviewStatus: "UNDER_REVIEW",
     hexBackgroundColor: normalizeHexColor(business?.background_color, "#2563EB"),
-    accountNameLabel: "Client",
-    accountIdLabel: "Carte",
+    accountNameLabel: accountNameLabel.slice(0, 20),
+    accountIdLabel,
     programLogo: googleImage(logoUrl, `Logo ${merchantName}`),
     ...(heroUrl ? { heroImage: googleImage(heroUrl, `Carte ${merchantName}`) } : {}),
-    textModulesData: [
-      { id: "merchant", header: "Commerce", body: merchantName },
-      { id: "balance", header: pointsLabel, body: `Solde ${pointsLabel.toLowerCase()}` },
-      { id: "reward", header: "Récompense", body: rewardSummary },
-    ],
-    ...(stampIconUrl
-      ? { imageModulesData: [{ id: "stamp_icon", mainImage: googleImage(stampIconUrl, `Icône tampon ${merchantName}`) }] }
-      : {}),
-    classTemplateInfo: cardTemplateInfo(Boolean(stampIconUrl)),
     homepageUri: {
       uri: business?.slug ? `https://myfidpass.fr/fidelity/${encodeURIComponent(String(business.slug))}` : "https://myfidpass.fr",
       description: "Carte fidélité",
@@ -240,33 +263,24 @@ function buildLoyaltyClass(classId, business = null, apiBase = null) {
 
 function buildLoyaltyObject(objectId, classId, member, business, apiBase = null) {
   const programType = String(business?.program_type || "").toLowerCase() === "stamps" ? "stamps" : "points";
-  const balanceLabel = programType === "stamps" ? "Tampons" : "Points";
-  const rewardSummary = rewardSummaryForBusiness(business, programType);
-  const requiredStamps = Math.max(1, Math.floor(Number(business?.required_stamps) || 10));
-  const currentBalance = Math.max(0, Math.floor(Number(member.points) || 0));
+  const balances = loyaltyBalancesForMember(member, business, programType, apiBase);
   const accountName = (member.name || member.email || "Client").slice(0, 20);
   const accountId = (member.email || member.id).slice(0, 20);
-  const loyaltyClass = buildLoyaltyClass(classId, business, apiBase);
+  const heroUrl = publicHeroImageUrlForBusiness(apiBase, business, balances.heroFilled);
   return {
     id: objectId,
     classId,
     state: "ACTIVE",
     accountName,
     accountId,
-    loyaltyPoints: {
-      label: balanceLabel,
-      balance: { int: currentBalance },
-    },
-    secondaryLoyaltyPoints: {
-      label: programType === "stamps" ? "Objectif" : "Récompense",
-      balance: { string: programType === "stamps" ? `${requiredStamps} tampons` : rewardSummary },
-    },
+    loyaltyPoints: balances.loyaltyPoints,
+    secondaryLoyaltyPoints: balances.secondaryLoyaltyPoints,
     barcode: {
       type: "QR_CODE",
       value: member.id,
       alternateText: member.id,
     },
-    ...(loyaltyClass.heroImage ? { heroImage: loyaltyClass.heroImage } : {}),
+    ...(heroUrl ? { heroImage: googleImage(heroUrl, `Carte ${displayNameForBusiness(business)}`) } : {}),
     textModulesData: [
       {
         header: "Commerce",
@@ -274,19 +288,9 @@ function buildLoyaltyObject(objectId, classId, member, business, apiBase = null)
         id: "merchant",
       },
       {
-        header: "Carte client",
+        header: "Scan",
         body: "Présentez le QR code en caisse pour créditer votre fidélité.",
         id: "scan_hint",
-      },
-      {
-        header: balanceLabel,
-        body: programType === "stamps" ? `${currentBalance}/${requiredStamps} tampons` : `${currentBalance} points`,
-        id: "balance",
-      },
-      {
-        header: programType === "stamps" ? "Récompense tampons" : "Récompense points",
-        body: rewardSummary,
-        id: "reward",
       },
     ],
   };
@@ -335,14 +339,16 @@ async function ensureGoogleWalletClass(classDef, config) {
       changed((x) => x.hexBackgroundColor) ||
       changed((x) => x.programLogo) ||
       changed((x) => x.heroImage) ||
-      changed((x) => x.textModulesData) ||
-      changed((x) => x.imageModulesData) ||
-      changed((x) => x.classTemplateInfo) ||
-      changed((x) => x.homepageUri);
+      changed((x) => x.accountNameLabel) ||
+      changed((x) => x.homepageUri) ||
+      Boolean(current.data?.classTemplateInfo) ||
+      Boolean(current.data?.textModulesData?.length) ||
+      Boolean(current.data?.imageModulesData?.length);
     let patched = false;
     let patchStatus = null;
     if (needsPatch) {
-      const patch = await googleWalletApiRequest(config, "PATCH", getPath, classDef);
+      const patchBody = { ...classDef, classTemplateInfo: {} };
+      const patch = await googleWalletApiRequest(config, "PATCH", getPath, patchBody);
       patched = patch.ok;
       patchStatus = patch.status;
     }
@@ -582,9 +588,7 @@ export function getGoogleWalletSaveUrl(member, business, frontendOrigin, options
   const classId = options.classId || getBusinessClassId(issuerId, business);
   const objectId = options.objectId || getBusinessObjectId(issuerId, member, business);
   const loyaltyClass = buildLoyaltyClass(classId, business, options.apiBase);
-  const loyaltyObject = options.existingObject
-    ? { id: objectId, classId }
-    : buildLoyaltyObject(objectId, classId, member, business, options.apiBase);
+  const loyaltyObject = buildLoyaltyObject(objectId, classId, member, business, options.apiBase);
 
   const origins = [];
   if (frontendOrigin) origins.push(frontendOrigin.replace(/\/$/, ""));

@@ -699,8 +699,6 @@ router.get("/:memberId/google-wallet-url", async (req, res) => {
       apiBase,
       classId,
       objectId: objectReady.objectId,
-      omitClass: true,
-      existingObject: true,
     });
     if (!result) {
       return res.status(503).json({

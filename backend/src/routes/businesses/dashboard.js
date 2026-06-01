@@ -174,6 +174,7 @@ router.get("/settings", (req, res) => {
     stamp_emoji: business.stamp_emoji ?? undefined,
     stamp_reward_label: business.stamp_reward_label ?? undefined,
     stamp_mid_reward_label: business.stamp_mid_reward_label ?? undefined,
+    start_game_reward_label: business.start_game_reward_label ?? undefined,
     points_per_euro: business.points_per_euro != null ? Number(business.points_per_euro) : undefined,
     points_per_visit: business.points_per_visit != null ? Number(business.points_per_visit) : undefined,
     program_type: resolveBusinessProgramType(business),
@@ -325,6 +326,7 @@ router.patch("/settings", async (req, res) => {
   const required_stamps = body.required_stamps ?? body.requiredStamps;
   const stamp_emoji = body.stamp_emoji ?? body.stampEmoji;
   const stamp_reward_label = body.stamp_reward_label ?? body.stampRewardLabel;
+  const start_game_reward_label = body.start_game_reward_label ?? body.startGameRewardLabel;
   const program_type = body.program_type ?? body.programType;
   const points_per_euro = body.points_per_euro ?? body.pointsPerEuro;
   const points_per_visit = body.points_per_visit ?? body.pointsPerVisit;
@@ -452,6 +454,13 @@ router.patch("/settings", async (req, res) => {
   if (stamp_reward_label !== undefined) {
     const v = stamp_reward_label == null || stamp_reward_label === "" ? null : String(stamp_reward_label).trim().slice(0, 120);
     updates.stamp_reward_label = v || null;
+  }
+  if (start_game_reward_label !== undefined) {
+    const v =
+      start_game_reward_label == null || start_game_reward_label === ""
+        ? null
+        : String(start_game_reward_label).trim().slice(0, 120);
+    updates.start_game_reward_label = v || null;
   }
   {
     const stampMidIncoming =

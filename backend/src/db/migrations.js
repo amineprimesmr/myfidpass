@@ -154,6 +154,11 @@ export function runMigrations(db) {
     db.exec("ALTER TABLE businesses ADD COLUMN stamp_mid_reward_label TEXT");
   }
 
+  const bizColsStartGame = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+  if (!bizColsStartGame.includes("start_game_reward_label")) {
+    db.exec("ALTER TABLE businesses ADD COLUMN start_game_reward_label TEXT");
+  }
+
   function ensureDemoBusiness() {
     let b = db.prepare("SELECT * FROM businesses WHERE slug = ?").get("demo");
     if (!b) {

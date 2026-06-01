@@ -9,6 +9,8 @@ import {
 } from "../../lib/resolve-flyer-prefs-custom-logo.js";
 import { resolvePublicWalletLogoPng } from "../../lib/resolve-public-business-logo.js";
 import { resizeLogoForWebFlyerQrHero } from "../../pass/images-logo.js";
+import { createStripBuffer } from "../../pass/images-strip.js";
+import { drawStampsOnStrip } from "../../pass/images-stamps.js";
 import { mergeBusinessAssetsForPass } from "../../db.js";
 
 const router = Router();
@@ -71,6 +73,38 @@ router.get("/logo", async (req, res) => {
     return res.send(resolved.buffer);
   } catch (err) {
     console.warn("[public/logo]", err?.message || err);
+    return res.status(500).send();
+  }
+});
+
+/** Grille tampons (strip PassKit) pour heroImage Google Wallet — tampons mode sans fond image. */
+router.get("/wallet-stamp-hero", async (req, res) => {
+  const business = mergeBusinessAssetsForPass(req.business);
+  if (!business) return res.status(404).send();
+  try {
+    const programType = String(business.program_type || "").toLowerCase();
+    if (programType !== "stamps") return res.status(404).send();
+    const stampMax = Math.max(1, Math.min(10, Math.floor(Number(business.required_stamps) || 10)));
+    const filledRaw = parseInt(String(req.query.filled ?? "0"), 10);
+    const filled = Number.isFinite(filledRaw) ? Math.min(Math.max(0, filledRaw), stampMax) : 0;
+    const stripColorHex = business.background_color || "#FFFFFF";
+    const baseStrip = createStripBuffer("classic", stripColorHex);
+    const png = await drawStampsOnStrip(
+      baseStrip,
+      "classic",
+      filled,
+      stampMax,
+      business.stamp_emoji,
+      business.stamp_icon_base64,
+      stripColorHex,
+    );
+    if (!png?.length) return res.status(500).send();
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Cache-Control", "public, max-age=1800");
+    return res.send(png);
+  } catch (err) {
+    console.warn("[public/wallet-stamp-hero]", err?.message || err);
     return res.status(500).send();
   }
 });
