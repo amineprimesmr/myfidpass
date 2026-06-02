@@ -1,57 +1,32 @@
 import { detectWalletPlatform } from "../../utils/walletPlatform.js";
+import { walletStepShowsAddPassCta } from "../lib/wallet-rewards-gate.js";
+
+export { walletStepShowsAddPassCta };
 
 /**
- * True si l’utilisateur doit encore ajouter au moins un pass (Apple et/ou Google selon la plateforme).
- * @param {{ platform?: string, appleWalletRegistered?: boolean, hasGoogleWallet?: boolean }} [options]
- */
-export function walletStepShowsAddPassCta(options = {}) {
-  const platform = options.platform ?? detectWalletPlatform();
-  const appleWalletRegistered = options.appleWalletRegistered === true;
-  const hasGoogleWallet = Boolean(options.hasGoogleWallet);
-
-  if (platform === "ios") return !appleWalletRegistered;
-  /** Android : même priorité qu’Apple avant enregistrement — le hero doit montrer « Ajouter la carte », pas les missions.
-   * L’URL Google peut être résolue au tap (`getGoogleWalletSaveLink`) si le préchargement a échoué. */
-  if (platform === "android") return true;
-  return !appleWalletRegistered || hasGoogleWallet;
-}
-
-/**
- * CTA hero Apple : badge type « Ajouter à Apple Wallet » + bordure shiny.
+ * CTA hero : « Débloquer ma récompense » → ouvre Apple / Google Wallet.
  * @param {(s: string) => string} esc
- * @param {{ platform?: string, appleWalletRegistered?: boolean, hasGoogleWallet?: boolean }} [options]
+ * @param {{ platform?: string; appleWalletRegistered?: boolean; hasGoogleWallet?: boolean; slug?: string; memberId?: string }} [options]
  */
 export function renderWalletPassHeroShinyMarkup(esc, options = {}) {
   const platform = options.platform ?? detectWalletPlatform();
   const appleWalletRegistered = options.appleWalletRegistered === true;
   const hasGoogleWallet = Boolean(options.hasGoogleWallet);
 
-  const shinyApple = () => `<div class="fidelity-earn-points-cta-wrap fidelity-earn-points-cta-wrap--wallet-attention">
-            <a href="#" id="fidelity-v2-apple" class="fidelity-shiny-cta fidelity-shiny-cta--apple-wallet" aria-label="${esc("Ajouter à Apple Wallet")}">
-              <span class="fidelity-shiny-cta__label fidelity-apple-wallet-badge">
-                <span class="fidelity-apple-wallet-badge__logo" aria-hidden="true">${appleWalletIconImg()}</span>
-                <span class="fidelity-apple-wallet-badge__text">
-                  <span class="fidelity-apple-wallet-badge__line1">${esc("Ajouter à")}</span>
-                  <span class="fidelity-apple-wallet-badge__line2">${esc("Apple Wallet")}</span>
-                </span>
-              </span>
-            </a>
-          </div>`;
-
-  const shinyGoogle = (label) => `<div class="fidelity-earn-points-cta-wrap">
-            <a href="#" id="fidelity-v2-google" class="fidelity-shiny-cta" aria-label="${esc("Google Wallet")}">
-              <span class="fidelity-shiny-cta__label">${esc(label)}</span>
+  const unlockCta = (id, extraClass = "") => `<div class="fidelity-earn-points-cta-wrap fidelity-earn-points-cta-wrap--wallet-attention">
+            <a href="#" id="${id}" class="fidelity-shiny-cta fidelity-shiny-cta--unlock-reward ${extraClass}" aria-label="${esc("Débloquer ma récompense")}">
+              <span class="fidelity-shiny-cta__label"><span>${esc("Débloquer ma récompense")}</span></span>
             </a>
           </div>`;
 
   const blocks = [];
   if (platform === "ios") {
-    if (!appleWalletRegistered) blocks.push(shinyApple());
+    if (!appleWalletRegistered) blocks.push(unlockCta("fidelity-v2-apple", "fidelity-shiny-cta--apple-wallet"));
   } else if (platform === "android") {
-    blocks.push(shinyGoogle("Ajouter la carte"));
+    blocks.push(unlockCta("fidelity-v2-google"));
   } else {
-    if (!appleWalletRegistered) blocks.push(shinyApple());
-    if (hasGoogleWallet) blocks.push(shinyGoogle("Google Wallet"));
+    if (!appleWalletRegistered) blocks.push(unlockCta("fidelity-v2-apple", "fidelity-shiny-cta--apple-wallet"));
+    if (hasGoogleWallet) blocks.push(unlockCta("fidelity-v2-google"));
   }
 
   if (!blocks.length) return "";
@@ -72,16 +47,16 @@ function googleSvg() {
 }
 
 /**
- * Boutons Wallet seuls — pas de carte / cadre.
+ * Boutons Wallet seuls — pas de carte / cadre (hero porte le CTA principal).
  * @param {(s: string) => string} _esc
- * @param {{ platform?: string, appleWalletRegistered?: boolean, hasGoogleWallet?: boolean }} [options]
+ * @param {{ platform?: string; appleWalletRegistered?: boolean; hasGoogleWallet?: boolean; slug?: string; memberId?: string }} [options]
  */
 export function renderWalletStepMarkup(_esc, options = {}) {
   const platform = options.platform ?? detectWalletPlatform();
   const appleWalletRegistered = options.appleWalletRegistered === true;
   const hasGoogleWallet = Boolean(options.hasGoogleWallet);
 
-  if (walletStepShowsAddPassCta({ platform, appleWalletRegistered, hasGoogleWallet })) {
+  if (walletStepShowsAddPassCta(options)) {
     return "";
   }
 
@@ -122,7 +97,6 @@ export function renderWalletStepMarkup(_esc, options = {}) {
   if (platform === "ios") {
     inner = appleWalletRegistered ? "" : appleOnly;
   } else if (platform === "android") {
-    /** Toujours afficher le CTA sur Android : l’URL est résolue au tap si le préchargement a échoué. */
     inner = googleOnly;
   } else {
     const applePart = appleWalletRegistered ? "" : appleDesktop;

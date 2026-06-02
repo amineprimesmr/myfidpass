@@ -26,6 +26,10 @@ import {
   renderMissionsSheetMarkup,
 } from "./missions-sheet-markup.js";
 import { balanceUnitShort, stampsStepSectionTitle } from "../lib/program-copy.js";
+import {
+  memberRewardsUnlocked,
+  renderRewardsWalletLockedMarkup,
+} from "../lib/wallet-rewards-gate.js";
 import { renderDeliveryReceiptFabAndModalMarkup } from "./delivery-receipt-intro-markup.js";
 import { renderRewardRedeemModalMarkup } from "./reward-redeem-modal-markup.js";
 import { renderRewardCelebrationModalMarkup } from "./reward-celebration-modal-markup.js";
@@ -139,12 +143,22 @@ export function renderClientPage(root, state, options = {}) {
       : isStampsProgram
         ? "À chaque passage validé, tu te rapproches de la récompense prévue."
         : `Présente ta carte chez <strong>${esc(businessName)}</strong> pour cumuler tes avantages.`;
-  const rewardsStepHtml = renderRewardsStepMarkup(esc, {
-    business: state.business,
-    member: state.member,
-    programType,
-    balanceUnit: headerBalanceUnit,
-  });
+  const slugForRewardsGate = slugForAssets;
+  const walletPlatformForGate = detectWalletPlatform();
+  const rewardsUnlocked = hasMember
+    ? memberRewardsUnlocked(
+        { member: state.member, slug: slugForRewardsGate },
+        { platform: walletPlatformForGate },
+      )
+    : false;
+  const rewardsStepHtml = rewardsUnlocked
+    ? renderRewardsStepMarkup(esc, {
+        business: state.business,
+        member: state.member,
+        programType,
+        balanceUnit: headerBalanceUnit,
+      })
+    : renderRewardsWalletLockedMarkup(esc);
   const matchPredictionsHtml = hasMember ? renderMatchPredictionsMarkup(esc, state.matchPredictions) : "";
 
   const hasMissionsSheet = hasMember && actionsForDisplay.length > 0;
@@ -168,15 +182,22 @@ export function renderClientPage(root, state, options = {}) {
         `;
 
   const memberPoints = hasMember ? Math.max(0, Math.floor(Number(state.member?.points) || 0)) : 0;
-  const appleWalletRegistered = hasMember && state.member?.apple_wallet_registered === true;
+  const appleWalletRegistered =
+    hasMember &&
+    (state.member?.apple_wallet_registered === true || state.member?.appleWalletRegistered === true);
   const hasGoogleWallet = hasMember && Boolean(state.wallet?.google);
-  const walletPlatform = detectWalletPlatform();
+  const walletPlatform = walletPlatformForGate;
+  const memberIdForGate = hasMember ? String(state.member.id) : "";
   const showWalletPassHero =
     hasMember &&
+    !rewardsUnlocked &&
     walletStepShowsAddPassCta({
       platform: walletPlatform,
       appleWalletRegistered,
       hasGoogleWallet,
+      slug: slugForRewardsGate,
+      memberId: memberIdForGate,
+      member: state.member,
     });
   /** iOS : pas de rail missions tant que le hero affiche le wallet. Android : wallet au hero mais missions toujours ouvrables. */
   const showMissionsEntry =
@@ -237,6 +258,8 @@ export function renderClientPage(root, state, options = {}) {
                       platform: walletPlatform,
                       appleWalletRegistered,
                       hasGoogleWallet,
+                      slug: slugForRewardsGate,
+                      memberId: memberIdForGate,
                     })
                   : showMissionsEntry
                     ? renderEarnMorePointsButtonMarkup(esc, programType)
@@ -284,6 +307,9 @@ export function renderClientPage(root, state, options = {}) {
             ? renderWalletStepMarkup(esc, {
                 appleWalletRegistered,
                 hasGoogleWallet,
+                slug: slugForRewardsGate,
+                memberId: memberIdForGate,
+                member: state.member,
               })
             : ""
         }
@@ -306,8 +332,8 @@ export function renderClientPage(root, state, options = {}) {
 
     ${hasMember ? renderPoweredByMyfidpassMarkup(esc, "fidelity-powered-by--member") : ""}
 
-    ${hasMember ? renderRewardRedeemModalMarkup(esc) : ""}
-    ${hasMember && !isGuestPlaceholder ? renderRewardCelebrationModalMarkup(esc) : ""}
+    ${hasMember && rewardsUnlocked ? renderRewardRedeemModalMarkup(esc) : ""}
+    ${hasMember && !isGuestPlaceholder && rewardsUnlocked ? renderRewardCelebrationModalMarkup(esc) : ""}
 
     ${deliveryReceiptEnabled ? renderDeliveryReceiptFabAndModalMarkup(esc, programType) : ""}
 

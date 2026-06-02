@@ -2,6 +2,7 @@
  * Retour Safari après ajout Apple / Google Wallet — même principe que l’avis Google :
  * clé sessionStorage + visibility/pageshow + overlay « vérification » + polling membre + rerender.
  */
+import { markRewardsWalletUnlocked } from "./lib/wallet-rewards-gate.js";
 
 export const APPLE_WALLET_PENDING_KEY = "fidelity_apple_wallet_pending";
 export const GOOGLE_WALLET_PENDING_KEY = "fidelity_google_wallet_pending";
@@ -166,6 +167,7 @@ export async function runWalletReturnRefresh(opts) {
   const state = opts.getState?.();
   if (pending.platform === "apple" && state?.member && memberAppleWalletReady(state.member)) {
     clearWalletPending(pending.key);
+    markRewardsWalletUnlocked(slug, memberId);
     return false;
   }
 
@@ -204,6 +206,7 @@ export async function runWalletReturnRefresh(opts) {
   clearWalletPending(pending.key);
 
   if (success) {
+    markRewardsWalletUnlocked(slug, memberId);
     if (panel) panel.classList.add("fidelity-qr-modal--verify-done");
     if (bar instanceof HTMLElement) {
       bar.classList.remove("fidelity-qr-verify-progress-bar--animate");

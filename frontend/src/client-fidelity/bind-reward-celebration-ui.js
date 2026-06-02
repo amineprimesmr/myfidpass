@@ -5,6 +5,8 @@ import {
 import { buildCelebrationQueue } from "./lib/member-reward-celebrations.js";
 import { waitForFidelityRouteLoadingDismissed } from "./fidelity-route-loading.js";
 import { openRewardRedeemUnlocked } from "./bind-reward-redeem-ui.js";
+import { memberRewardsUnlocked } from "./lib/wallet-rewards-gate.js";
+import { detectWalletPlatform } from "../utils/walletPlatform.js";
 import {
   prefetchQRCodeModule,
   rewardRedeemQrDataUrl,
@@ -266,6 +268,8 @@ export function maybeScheduleRewardCelebrations(ctx) {
   if (!member?.id) return;
   const email = String(member.email || "");
   if (email.toLowerCase().endsWith("@guest.invalid")) return;
+
+  if (!memberRewardsUnlocked(state, { slug, platform: detectWalletPlatform() })) return;
 
   const programType = String(state.business?.program_type || "points").toLowerCase();
   const balance = Math.max(0, Math.floor(Number(member.points) || 0));

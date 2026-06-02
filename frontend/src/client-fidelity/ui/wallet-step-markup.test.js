@@ -36,7 +36,7 @@ describe("walletStepShowsAddPassCta", () => {
 });
 
 describe("renderWalletPassHeroShinyMarkup", () => {
-  it("iOS sans enregistrement : lien Apple shiny « Ajouter la carte »", () => {
+  it("iOS sans enregistrement : CTA « Débloquer ma récompense »", () => {
     const html = renderWalletPassHeroShinyMarkup(esc, {
       platform: "ios",
       appleWalletRegistered: false,
@@ -44,22 +44,18 @@ describe("renderWalletPassHeroShinyMarkup", () => {
     });
     expect(html).toContain("fidelity-shiny-cta");
     expect(html).toContain('id="fidelity-v2-apple"');
-    expect(html).toContain("fidelity-apple-wallet-badge");
-    expect(html).toContain("Ajouter à");
-    expect(html).toContain("Apple Wallet");
+    expect(html).toContain("Débloquer ma récompense");
     expect(html).toContain("fidelity-earn-points-cta-wrap--wallet-attention");
-    expect(html).toContain("fidelity-cta-pill-icon");
-    expect(html).toContain("/assets/iconapplewallet.png");
   });
 
-  it("Android sans URL préchargée : CTA Google « Ajouter la carte » au hero", () => {
+  it("Android : CTA « Débloquer ma récompense » au hero", () => {
     const html = renderWalletPassHeroShinyMarkup(esc, {
       platform: "android",
       appleWalletRegistered: false,
       hasGoogleWallet: false,
     });
     expect(html).toContain('id="fidelity-v2-google"');
-    expect(html).toContain("Ajouter la carte");
+    expect(html).toContain("Débloquer ma récompense");
   });
 
   it("desktop avec Apple et Google : deux CTA", () => {
@@ -92,13 +88,14 @@ describe("renderWalletStepMarkup", () => {
     expect(html.trim()).toBe("");
   });
 
-  it("sur desktop, ne duplique pas Apple/Google quand le hero les affiche", () => {
+  it("sur desktop avec Apple OK : rangée Google optionnelle si lien dispo", () => {
     const html = renderWalletStepMarkup(esc, {
       platform: "desktop",
       appleWalletRegistered: true,
       hasGoogleWallet: true,
     });
-    expect(html.trim()).toBe("");
+    expect(html).toContain('id="fidelity-v2-google"');
+    expect(html).not.toContain('id="fidelity-v2-apple"');
   });
 
   it("sur desktop sans lien Google, ne rend rien si Apple est déjà enregistré", () => {
@@ -110,7 +107,7 @@ describe("renderWalletStepMarkup", () => {
     expect(html.trim()).toBe("");
   });
 
-  it("Android : pas de rangée wallet dupliquée — le hero porte déjà « Ajouter la carte »", () => {
+  it("Android : pas de rangée wallet dupliquée — le hero porte le CTA", () => {
     const html = renderWalletStepMarkup(esc, {
       platform: "android",
       appleWalletRegistered: false,
