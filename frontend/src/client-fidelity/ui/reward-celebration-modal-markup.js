@@ -7,7 +7,6 @@ export function renderRewardCelebrationModalMarkup(esc) {
 <div id="fidelity-reward-celebration-modal" class="fidelity-reward-celebration hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="fidelity-reward-celebration-title">
   <button type="button" class="fidelity-reward-celebration__backdrop" data-fid-celebration-close aria-label="${esc("Fermer")}" tabindex="-1"></button>
   <div class="fidelity-reward-celebration__panel" role="document">
-    <button type="button" class="fidelity-reward-celebration__close" data-fid-celebration-close aria-label="${esc("Fermer")}"><span aria-hidden="true">×</span></button>
     <div class="fidelity-reward-celebration__hero" aria-hidden="true">
       <div class="fidelity-reward-celebration__glow"></div>
       <div class="fidelity-reward-celebration__ring"></div>

@@ -6,7 +6,7 @@ const openUnlockedMap = new WeakMap();
 /**
  * Ouvre la modale QR caisse (récompense débloquée) depuis une autre UI (célébration palier).
  * @param {HTMLElement} rootEl
- * @param {{ label: string; costLine: string; tierIndex?: number; points?: number }} p
+ * @param {{ label: string; costLine: string; tierIndex?: number; points?: number; qrDataUrl?: string; qrPrefetchPromise?: Promise<string> }} p
  */
 export function openRewardRedeemUnlocked(rootEl, p) {
   const fn = openUnlockedMap.get(rootEl);
@@ -58,7 +58,7 @@ export function bindRewardRedeemUi({ rootEl, getState, signal }) {
 
   closeMap.set(rootEl, closeModal);
 
-  async function openUnlocked({ label, costLine, tierIndex, points }) {
+  async function openUnlocked({ label, costLine, tierIndex, points, qrDataUrl, qrPrefetchPromise }) {
     if (!unlockedEl || !lockedEl || !heading || !fineEl || !qrImg || !qrSkel) return;
     const state = getState();
     const memberId = state?.member?.id;
@@ -71,27 +71,45 @@ export function bindRewardRedeemUi({ rootEl, getState, signal }) {
     modal.setAttribute("aria-hidden", "false");
     modal.setAttribute("aria-labelledby", "fidelity-reward-redeem-heading");
     document.body.style.overflow = "hidden";
-    requestAnimationFrame(() => {
-      modal.classList.add("fidelity-reward-redeem-modal--open");
-      if (prefersReducedMotion()) modal.classList.add("fidelity-reward-redeem-modal--instant");
-      else modal.classList.remove("fidelity-reward-redeem-modal--instant");
-    });
-    if (!memberId) return;
-    qrSkel.classList.remove("hidden");
-    qrImg.classList.add("hidden");
-    try {
-      qrImg.src = await rewardRedeemQrDataUrl({
-        memberId: String(memberId),
-        programType,
-        tierIndex,
-        points,
-      });
+    const instant =
+      prefersReducedMotion() ||
+      document.documentElement.classList.contains("fidpass-low-perf-mobile");
+    if (instant) modal.classList.add("fidelity-reward-redeem-modal--instant");
+    else modal.classList.remove("fidelity-reward-redeem-modal--instant");
+    modal.classList.add("fidelity-reward-redeem-modal--open");
+
+    const applyQrSrc = (src) => {
+      if (!src) return;
+      qrImg.src = src;
       qrImg.alt = `QR récompense : ${label}`;
       qrImg.classList.remove("hidden");
       qrSkel.classList.add("hidden");
-    } catch {
-      qrSkel.classList.add("hidden");
-      fineEl.textContent = `Récompense : ${label} · ${costLine}. Ouvre ta carte Wallet pour te faire scanner, ou communique ton identifiant au personnel.`;
+    };
+
+    if (qrDataUrl) {
+      applyQrSrc(qrDataUrl);
+    } else {
+      qrSkel.classList.remove("hidden");
+      qrImg.classList.add("hidden");
+    }
+
+    if (!memberId) return;
+
+    if (!qrDataUrl) {
+      try {
+        const src = qrPrefetchPromise
+          ? await qrPrefetchPromise
+          : await rewardRedeemQrDataUrl({
+              memberId: String(memberId),
+              programType,
+              tierIndex,
+              points,
+            });
+        applyQrSrc(src);
+      } catch {
+        qrSkel.classList.add("hidden");
+        fineEl.textContent = `Récompense : ${label} · ${costLine}. Ouvre ta carte Wallet pour te faire scanner, ou communique ton identifiant au personnel.`;
+      }
     }
   }
 

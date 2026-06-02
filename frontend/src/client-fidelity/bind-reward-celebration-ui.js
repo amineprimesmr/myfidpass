@@ -4,6 +4,11 @@ import {
 } from "./lib/reward-celebration-storage.js";
 import { buildCelebrationQueue } from "./lib/member-reward-celebrations.js";
 import { waitForFidelityRouteLoadingDismissed } from "./fidelity-route-loading.js";
+import { openRewardRedeemUnlocked } from "./bind-reward-redeem-ui.js";
+import {
+  prefetchQRCodeModule,
+  rewardRedeemQrDataUrl,
+} from "./lib/member-qr-dataurl.js";
 /** @typedef {{ kind: "welcome"|"tier_unlocked"; threshold: number; tierIndex?: number; points?: number; label: string; imageUrl?: string; costLine?: string; bonusChip?: string; unlocked?: boolean }} CelebrationItem */
 
 const pendingByRoot = new WeakMap();
@@ -11,6 +16,13 @@ const pendingByRoot = new WeakMap();
 function prefersReducedMotion() {
   if (typeof globalThis.matchMedia !== "function") return false;
   return globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function useInstantCelebrationMotion() {
+  return (
+    prefersReducedMotion() ||
+    document.documentElement.classList.contains("fidpass-low-perf-mobile")
+  );
 }
 
 /**
@@ -28,16 +40,22 @@ function closeCelebrationModal(modal) {
   modal.classList.remove("fidelity-reward-celebration--open", "fidelity-reward-celebration--instant");
   modal.classList.add("hidden");
   modal.setAttribute("aria-hidden", "true");
-  document.body.style.overflow = "";
+  const redeemOpen = document.querySelector(
+    "#fidelity-reward-redeem-modal.fidelity-reward-redeem-modal--open",
+  );
+  if (!redeemOpen) document.body.style.overflow = "";
 }
 
 /**
  * @param {HTMLElement} rootEl
  * @param {CelebrationItem} item
+ * @param {{ getState: () => Record<string, unknown> }} ctx
  * @returns {Promise<void>}
  */
-async function showOneCelebration(rootEl, item) {
-  await waitForFidelityRouteLoadingDismissed();
+async function showOneCelebration(rootEl, item, ctx) {
+  if (isFidelityRouteLoadingOverlayActiveQuick()) {
+    await waitForFidelityRouteLoadingDismissed(1200);
+  }
   const modal = getModal(rootEl);
   if (!modal) return;
 
@@ -50,6 +68,9 @@ async function showOneCelebration(rootEl, item) {
   const primary = modal.querySelector("#fidelity-reward-celebration-primary");
 
   const isWelcome = item.kind === "welcome";
+  const unlocked =
+    item.kind === "tier_unlocked" || (item.kind === "welcome" && item.unlocked === true);
+
   if (kicker) {
     kicker.textContent = isWelcome ? "Bienvenue" : "Palier atteint";
   }
@@ -57,11 +78,15 @@ async function showOneCelebration(rootEl, item) {
     title.textContent = isWelcome ? "Ta récompense t'attend" : "Félicitations !";
   }
   if (lead) {
-    lead.textContent = isWelcome
-      ? item.unlocked
-        ? "C’est la récompense configurée par le commerce — tu peux déjà en profiter en magasin."
-        : "C’est la récompense que tu pourras débloquer en cumulant sur ta carte fidélité."
-      : "Tu viens de débloquer une récompense sur ta carte fidélité.";
+    if (isWelcome && unlocked) {
+      lead.textContent = "";
+      lead.classList.add("hidden");
+    } else {
+      lead.classList.remove("hidden");
+      lead.textContent = isWelcome
+        ? "C’est la récompense que tu pourras débloquer en cumulant sur ta carte fidélité."
+        : "Tu viens de débloquer une récompense sur ta carte fidélité.";
+    }
   }
   if (img instanceof HTMLImageElement) {
     img.src = item.imageUrl || "/assets/gift/gift1.png";
@@ -81,15 +106,42 @@ async function showOneCelebration(rootEl, item) {
       bonus.classList.add("hidden");
     }
   }
-  if (primary) {
-    const unlocked =
-      item.kind === "tier_unlocked" || (item.kind === "welcome" && item.unlocked === true);
+  if (primary instanceof HTMLButtonElement) {
+    primary.disabled = false;
+    primary.removeAttribute("aria-busy");
     primary.textContent = unlocked ? "Obtenir ma récompense" : "Compris";
+  }
+
+  const state = ctx.getState();
+  const memberId = state?.member?.id;
+  const programType = String(state?.business?.program_type || "points").toLowerCase();
+  const tierIndex = Math.max(0, Number(item.tierIndex) || 0);
+  const points = Math.max(0, Number(item.points ?? item.threshold) || 0);
+
+  let prefetchedQr = "";
+  /** @type {Promise<string> | null} */
+  let qrPrefetchPromise = null;
+  if (unlocked && memberId) {
+    prefetchQRCodeModule();
+    qrPrefetchPromise = rewardRedeemQrDataUrl({
+      memberId: String(memberId),
+      programType,
+      tierIndex,
+      points,
+    }).then((url) => {
+      prefetchedQr = url;
+      return url;
+    });
   }
 
   modal.classList.remove("hidden");
   modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
+
+  const instant = useInstantCelebrationMotion();
+  if (instant) modal.classList.add("fidelity-reward-celebration--instant");
+  else modal.classList.remove("fidelity-reward-celebration--instant");
+  modal.classList.add("fidelity-reward-celebration--open");
 
   return new Promise((resolve) => {
     const done = () => {
@@ -99,45 +151,56 @@ async function showOneCelebration(rootEl, item) {
 
     const onPrimary = () => {
       cleanup();
+      if (unlocked) {
+        closeCelebrationModal(modal);
+        openRewardRedeemUnlocked(rootEl, {
+          label: item.label || "Récompense",
+          costLine: String(item.costLine || ""),
+          tierIndex,
+          points,
+          qrDataUrl: prefetchedQr || undefined,
+          qrPrefetchPromise: qrPrefetchPromise ?? undefined,
+        });
+        resolve();
+        return;
+      }
       done();
     };
 
-    const onClose = () => {
+    const onBackdropClose = () => {
       cleanup();
       done();
     };
 
     const cleanup = () => {
       primary?.removeEventListener("click", onPrimary);
-      for (const btn of modal.querySelectorAll("[data-fid-celebration-close]")) {
-        btn.removeEventListener("click", onClose);
-      }
+      const backdrop = modal.querySelector(".fidelity-reward-celebration__backdrop");
+      backdrop?.removeEventListener("click", onBackdropClose);
     };
 
-    requestAnimationFrame(() => {
-      modal.classList.add("fidelity-reward-celebration--open");
-      if (prefersReducedMotion()) modal.classList.add("fidelity-reward-celebration--instant");
-      else modal.classList.remove("fidelity-reward-celebration--instant");
-      primary?.addEventListener("click", onPrimary, { once: true });
-      for (const btn of modal.querySelectorAll("[data-fid-celebration-close]")) {
-        btn.addEventListener("click", onClose, { once: true });
-      }
-    });
+    primary?.addEventListener("click", onPrimary, { once: true });
+    const backdrop = modal.querySelector(".fidelity-reward-celebration__backdrop");
+    backdrop?.addEventListener("click", onBackdropClose, { once: true });
   });
+}
+
+function isFidelityRouteLoadingOverlayActiveQuick() {
+  const el = document.getElementById("fidelity-route-loading-overlay");
+  return !!(el && document.body.contains(el));
 }
 
 /**
  * @param {HTMLElement} rootEl
  * @param {CelebrationItem[]} queue
- * @param {{ slug: string; memberId: string; onDone?: () => void }} opts
+ * @param {{ slug: string; memberId: string; getState: () => Record<string, unknown>; onDone?: () => void }} opts
  */
 export async function runRewardCelebrationQueue(rootEl, queue, opts) {
   if (!queue.length) return;
-  const { slug, memberId, onDone } = opts;
+  const { slug, memberId, onDone, getState } = opts;
   let storage = loadRewardCelebrationStorage(slug, memberId);
 
   for (const item of queue) {
-    await showOneCelebration(rootEl, item);
+    await showOneCelebration(rootEl, item, { getState });
     if (item.kind === "welcome") {
       storage = { ...storage, welcomeShown: true };
     }
@@ -155,7 +218,7 @@ export async function runRewardCelebrationQueue(rootEl, queue, opts) {
 /**
  * @param {HTMLElement} rootEl
  * @param {CelebrationItem[]} queue
- * @param {{ slug: string; memberId: string }} meta
+ * @param {{ slug: string; memberId: string; getState: () => Record<string, unknown> }} meta
  */
 export function scheduleRewardCelebrations(rootEl, queue, meta) {
   if (!queue.length) return;
@@ -180,7 +243,7 @@ export function scheduleRewardCelebrations(rootEl, queue, meta) {
  * }} ctx
  */
 export function bindRewardCelebrationUi(ctx) {
-  const { rootEl, slug, getState, signal } = ctx;
+  const { rootEl, signal } = ctx;
   const modal = getModal(rootEl);
   if (!modal) return;
 
@@ -223,6 +286,10 @@ export function maybeScheduleRewardCelebrations(ctx) {
   setPreviousBalance(balance);
 
   if (queue.length) {
-    scheduleRewardCelebrations(rootEl, queue, { slug, memberId: String(member.id) });
+    scheduleRewardCelebrations(rootEl, queue, {
+      slug,
+      memberId: String(member.id),
+      getState,
+    });
   }
 }

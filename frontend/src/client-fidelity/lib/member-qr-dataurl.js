@@ -1,12 +1,25 @@
 import { buildRewardRedeemQrPayload } from "./reward-redeem-qr.js";
 
+/** @type {Promise<import("qrcode").default> | null} */
+let qrcodeModulePromise = null;
+
+function loadQRCodeModule() {
+  qrcodeModulePromise ??= import("qrcode").then((m) => m.default);
+  return qrcodeModulePromise;
+}
+
+/** Précharge la lib QR (évite latence au premier « Obtenir ma récompense »). */
+export function prefetchQRCodeModule() {
+  void loadQRCodeModule();
+}
+
 /**
  * QR = même identifiant que le code-barres Wallet (member.id) pour scan en caisse.
  * @param {string} memberId
  * @returns {Promise<string>} data URL PNG
  */
 export async function memberIdToQrDataUrl(memberId) {
-  const QRCode = (await import("qrcode")).default;
+  const QRCode = await loadQRCodeModule();
   return QRCode.toDataURL(String(memberId).trim(), {
     width: 232,
     margin: 1,
@@ -22,7 +35,7 @@ export async function memberIdToQrDataUrl(memberId) {
  */
 export async function rewardRedeemQrDataUrl(p) {
   const payload = buildRewardRedeemQrPayload(p);
-  const QRCode = (await import("qrcode")).default;
+  const QRCode = await loadQRCodeModule();
   return QRCode.toDataURL(payload, {
     width: 232,
     margin: 1,

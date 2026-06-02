@@ -82,21 +82,6 @@ html.fidpass-low-perf-mobile .fidelity-reward-celebration__backdrop {
   transition: none;
 }
 
-.fidelity-reward-celebration__close {
-  position: absolute;
-  top: 0.65rem;
-  right: 0.65rem;
-  width: 2rem;
-  height: 2rem;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.06);
-  color: #334155;
-  font-size: 1.35rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
 .fidelity-reward-celebration__hero {
   position: relative;
   width: 5.5rem;
@@ -219,6 +204,16 @@ html.fidpass-low-perf-mobile .fidelity-reward-celebration__backdrop {
   color: #fff;
   background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
   box-shadow: 0 10px 24px rgba(219, 39, 119, 0.28);
+}
+
+.fidelity-reward-celebration__cta--primary:disabled {
+  opacity: 0.72;
+  cursor: wait;
+}
+
+html.fidpass-low-perf-mobile .fidelity-reward-celebration--open .fidelity-reward-celebration__panel,
+html.fidpass-low-perf-mobile .fidelity-reward-celebration--open .fidelity-reward-celebration__backdrop {
+  transition: none;
 }
 
 .fidelity-reward-celebration__cta--ghost {
