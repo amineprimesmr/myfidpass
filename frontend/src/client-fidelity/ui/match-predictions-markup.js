@@ -20,7 +20,9 @@ function choiceLabel(match, choice) {
 export function renderMatchPredictionsMarkup(esc, data = {}) {
   if (!data?.enabled || !Array.isArray(data.matches) || data.matches.length === 0) return "";
   const points = Math.max(1, Math.floor(Number(data.points_per_correct_prediction) || 10));
-  const cards = data.matches
+  const visible = data.matches.filter((m) => m.predictions_open !== false);
+  if (!visible.length) return "";
+  const cards = visible
     .map((match) => {
       const prediction = match.prediction || null;
       const locked = Boolean(match.locked);
@@ -32,7 +34,9 @@ export function renderMatchPredictionsMarkup(esc, data = {}) {
         : lost
           ? `Résultat : ${choiceLabel(match, match.result_choice)}`
           : locked
-            ? "Pronostics verrouillés"
+            ? match.predictions_open === false
+              ? "Équipes à confirmer — pronostic bientôt ouvert"
+              : "Pronostics verrouillés"
             : prediction
               ? `Ton choix : ${choiceLabel(match, prediction.predicted_choice)}`
               : "Choisis ton pronostic";
@@ -57,7 +61,7 @@ export function renderMatchPredictionsMarkup(esc, data = {}) {
       return `<article class="fidelity-match-predictions__match">
         <div class="fidelity-match-predictions__match-head">
           <div>
-            <p class="fidelity-match-predictions__eyebrow">${esc(match.title || "Match sélectionné")}</p>
+            <p class="fidelity-match-predictions__eyebrow">${esc(match.round_label || match.title || "Match sélectionné")}</p>
             <h3>${esc(match.team_home)} <span>vs</span> ${esc(match.team_away)}</h3>
           </div>
           <time datetime="${esc(match.starts_at)}">${esc(formatMatchDate(match.starts_at))}</time>
@@ -73,9 +77,9 @@ export function renderMatchPredictionsMarkup(esc, data = {}) {
   return `<section class="fidelity-match-predictions fidelity-v2-card" id="fidelity-match-predictions">
     <div class="fidelity-match-predictions__header">
       <div>
-        <p class="fidelity-match-predictions__eyebrow">Challenge</p>
+        <p class="fidelity-match-predictions__eyebrow">Coupe du monde 2026</p>
         <h2>Pronostics foot</h2>
-        <p>Pronostique les matchs sélectionnés. Chaque bon résultat rapporte automatiquement des points.</p>
+        <p>Pronostique les matchs de la Coupe du monde. Les 8es et suivants s’ouvrent automatiquement quand les équipes sont connues.</p>
       </div>
       <span>+${points} pts</span>
     </div>

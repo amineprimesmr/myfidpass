@@ -232,6 +232,7 @@ export function initAppFlyerQr(slug, opts) {
   const shareUrl = () => buildFidelityClientUrl(opts.pageOrigin, slug, { qrGame: true });
 
   let state = loadStoredFlyerState(flyerStorageKey);
+  let matchPredictionsEnabled = false;
   const flyerAssets = createFlyerAssetState();
 
   /** @type {{ syncPreview: () => void } | undefined} */
@@ -328,6 +329,8 @@ export function initAppFlyerQr(slug, opts) {
       if (j.flyer_prefs && typeof j.flyer_prefs === "object") {
         applyServerFlyerPrefs(j.flyer_prefs);
       }
+      const mp = j.match_predictions_enabled ?? j.matchPredictionsEnabled;
+      matchPredictionsEnabled = mp === true || mp === 1 || mp === "1" || mp === "true";
       schedulePaint();
     } catch (_) {
       /* réseau ou session */
@@ -418,6 +421,7 @@ export function initAppFlyerQr(slug, opts) {
     try {
       await renderFlyerCanvas(canvas, state, shareUrl(), logoForCanvas, bgForCanvas, {
         shouldBlit: () => gen === flyerpaintGen,
+        matchPredictionsEnabled,
       });
       syncFlyerBgColorRowVisibility();
     } catch (e) {

@@ -34,16 +34,25 @@ function pointsFromBusinessGame(row) {
 }
 
 function publicMatch(row, entry = null) {
-  const locked = Date.parse(row.cutoff_at) <= Date.now();
+  const locked =
+    Date.parse(row.cutoff_at) <= Date.now() ||
+    Number(row.predictions_open ?? 1) === 0 ||
+    row.status !== "scheduled";
   return {
     id: row.id,
     code: row.code,
+    external_id: row.external_id || null,
     title: row.title,
     team_home: row.team_home,
     team_away: row.team_away,
     starts_at: row.starts_at,
     cutoff_at: row.cutoff_at,
     status: row.status,
+    stage: row.stage || "group",
+    group_code: row.group_code || null,
+    round_label: row.round_label || null,
+    venue: row.venue || null,
+    predictions_open: Number(row.predictions_open ?? 1) === 1,
     result_choice: row.result_choice || null,
     locked,
     prediction: entry
@@ -157,6 +166,7 @@ export function submitMatchPrediction({ businessId, memberId, matchId, choice })
   if (!normalizedChoice) return { error: "invalid_choice" };
   const match = db.prepare("SELECT * FROM match_prediction_matches WHERE id = ? AND active = 1").get(matchId);
   if (!match) return { error: "match_not_found" };
+  if (Number(match.predictions_open ?? 1) === 0) return { error: "match_locked" };
   if (Date.parse(match.cutoff_at) <= Date.now()) return { error: "match_locked" };
   if (match.status !== "scheduled") return { error: "match_locked" };
 

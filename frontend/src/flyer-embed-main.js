@@ -109,15 +109,17 @@ function parseBootstrap() {
     typeof window.__FIDPASS_FLYER_B64__ === "string" && window.__FIDPASS_FLYER_B64__
       ? window.__FIDPASS_FLYER_B64__
       : document.getElementById("fidpass-flyer-b64")?.textContent?.trim() || "";
-  if (!b64) return { flyer_prefs: null, share_url: "" };
+  if (!b64) return { flyer_prefs: null, share_url: "", match_predictions_enabled: false };
   try {
     const api = JSON.parse(atob(b64));
+    const mp = api.match_predictions_enabled ?? api.matchPredictionsEnabled;
     return {
       flyer_prefs: api.flyer_prefs ?? null,
       share_url: typeof api.share_url === "string" ? api.share_url : "",
+      match_predictions_enabled: mp === true || mp === 1 || mp === "1" || mp === "true",
     };
   } catch (_) {
-    return { flyer_prefs: null, share_url: "" };
+    return { flyer_prefs: null, share_url: "", match_predictions_enabled: false };
   }
 }
 
@@ -130,7 +132,7 @@ let __flyerEmbedApplyGen = 0;
  */
 async function renderFromCurrentBootstrap() {
   const gen = ++__flyerEmbedApplyGen;
-  const { flyer_prefs, share_url } = parseBootstrap();
+  const { flyer_prefs, share_url, match_predictions_enabled } = parseBootstrap();
   const canvas = document.getElementById("fidpass-flyer-canvas");
   if (!canvas || !(canvas instanceof HTMLCanvasElement)) return;
 
@@ -194,6 +196,7 @@ async function renderFromCurrentBootstrap() {
   try {
     await renderFlyerCanvas(canvas, state, targetUrl || "https://myfidpass.fr", logoIn, bgIn, {
       shouldBlit: () => gen === __flyerEmbedApplyGen,
+      matchPredictionsEnabled: match_predictions_enabled,
     });
   } catch (e) {
     if (typeof console !== "undefined" && console.warn) console.warn("[flyer-embed]", e);

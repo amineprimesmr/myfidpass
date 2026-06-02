@@ -1740,4 +1740,48 @@ export function runMigrations(db) {
     }
     markMigrationApplied(db, 43, "members_wallet_tier_unlock_pending");
   }
+
+  // v44 : Coupe du monde 2026 — sync auto matchs pronostics (external_id, API, placeholders)
+  const m44 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 44").get();
+  if (!m44) {
+    const cols = db.prepare("PRAGMA table_info(match_prediction_matches)").all().map((c) => c.name);
+    if (!cols.includes("external_id")) {
+      safeRun(db, () => db.exec("ALTER TABLE match_prediction_matches ADD COLUMN external_id TEXT"));
+    }
+    if (!cols.includes("api_fixture_id")) {
+      safeRun(db, () => db.exec("ALTER TABLE match_prediction_matches ADD COLUMN api_fixture_id INTEGER"));
+    }
+    if (!cols.includes("stage")) {
+      safeRun(db, () =>
+        db.exec("ALTER TABLE match_prediction_matches ADD COLUMN stage TEXT NOT NULL DEFAULT 'group'"),
+      );
+    }
+    if (!cols.includes("group_code")) {
+      safeRun(db, () => db.exec("ALTER TABLE match_prediction_matches ADD COLUMN group_code TEXT"));
+    }
+    if (!cols.includes("round_label")) {
+      safeRun(db, () => db.exec("ALTER TABLE match_prediction_matches ADD COLUMN round_label TEXT"));
+    }
+    if (!cols.includes("venue")) {
+      safeRun(db, () => db.exec("ALTER TABLE match_prediction_matches ADD COLUMN venue TEXT"));
+    }
+    if (!cols.includes("predictions_open")) {
+      safeRun(db, () =>
+        db.exec(
+          "ALTER TABLE match_prediction_matches ADD COLUMN predictions_open INTEGER NOT NULL DEFAULT 1",
+        ),
+      );
+    }
+    safeRun(db, () =>
+      db.exec(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_match_prediction_matches_external_id ON match_prediction_matches(external_id) WHERE external_id IS NOT NULL",
+      ),
+    );
+    safeRun(db, () =>
+      db.exec(
+        "UPDATE match_prediction_matches SET external_id = code WHERE external_id IS NULL AND code IS NOT NULL",
+      ),
+    );
+    markMigrationApplied(db, 44, "world_cup_match_sync_columns");
+  }
 }

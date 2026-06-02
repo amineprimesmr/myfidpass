@@ -77,6 +77,7 @@ import { runCampaignEventJobsCron } from "./lib/campaign-event-jobs.js";
 import { startNotificationJobWorker, getQueueStats as getNotificationQueueStats } from "./lib/notification-job-queue.js";
 import { startFlyerGenerationJobWorker } from "./lib/flyer-generation-jobs.js";
 import { withCronLock, cleanExpiredCronLocks } from "./lib/cron-lock.js";
+import { syncWorldCup2026Matches } from "./lib/world-cup-match-sync.js";
 import { checkpointWAL } from "./db/connection.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -483,6 +484,30 @@ function scheduleGoogleBusinessReviewsSyncLoop() {
   logger.info("[gbp-sync] planifié : 1er passage dans ~3 min, puis toutes les 10 min (verrou distribué)");
 }
 
+/** Coupe du monde 2026 : sync calendrier pronostics (catalogue + API-Football), toutes les 6 h. */
+function scheduleWorldCupMatchSyncLoop() {
+  if (process.env.NODE_ENV === "test") return;
+  const INTERVAL_MS = 6 * 60 * 60 * 1000;
+  const LOCK_TTL_MS = 20 * 60 * 1000;
+  const run = () => {
+    withCronLock("world-cup-match-sync", LOCK_TTL_MS, () => syncWorldCup2026Matches())
+      .then((r) => {
+        if (r?.inserted || r?.updated) {
+          logger.info(
+            { source: r.source, inserted: r.inserted, updated: r.updated, api_rows: r.api_rows },
+            "[world-cup-sync] calendrier mis à jour",
+          );
+        }
+      })
+      .catch((err) => logger.error({ err }, "[world-cup-sync] échec"));
+  };
+  setTimeout(() => {
+    run();
+    setInterval(run, INTERVAL_MS);
+  }, 90_000);
+  logger.info("[world-cup-sync] planifié : 1er passage dans ~90 s, puis toutes les 6 h");
+}
+
 /** Maintenance SQLite : checkpoint WAL + nettoyage locks orphelins, toutes les heures. */
 function scheduleMaintenanceLoop() {
   if (process.env.NODE_ENV === "test") return;
@@ -519,6 +544,7 @@ function startServer(port) {
     scheduleCampaignAutomationLoop();
     scheduleCampaignEventJobsLoop();
     scheduleGoogleBusinessReviewsSyncLoop();
+    scheduleWorldCupMatchSyncLoop();
     scheduleMaintenanceLoop();
     // Reprend les campagnes de notification interrompues par un crash ou un redémarrage.
     startNotificationJobWorker();

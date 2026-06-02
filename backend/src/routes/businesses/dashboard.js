@@ -32,6 +32,7 @@ import {
 } from "../../db.js";
 import { deleteMemberForBusiness, deleteAllMembersForBusiness } from "../../db/member-delete.js";
 import { getRoulettePublicSegments } from "../../db/games.js";
+import { getMatchPredictionConfig } from "../../db/match-predictions.js";
 import { resolveBusinessProgramType } from "../../db/businesses.js";
 import { sendPassKitUpdateIfCustomerAlertsAllowed } from "../../lib/passkit-member-push.js";
 import {
@@ -1027,6 +1028,7 @@ router.get("/flyer", (req, res) => {
   const slug = req.params.slug ?? business.slug;
   const fe = (process.env.FRONTEND_URL || "https://www.myfidpass.fr").replace(/\/$/, "");
   const shareUrl = buildPublicFidelityClientUrl(fe, slug, business.id);
+  const mpConfig = getMatchPredictionConfig(business.id);
   let flyer_prefs = null;
   if (business.flyer_prefs_json && String(business.flyer_prefs_json).trim()) {
     try {
@@ -1044,6 +1046,7 @@ router.get("/flyer", (req, res) => {
     flyer_prefs,
     updated_at: business.flyer_prefs_updated_at ?? null,
     share_url: shareUrl,
+    match_predictions_enabled: mpConfig?.enabled === true,
     flyer_ai_unlimited: unlimited,
     flyer_ai_generations_used: used,
     /** Générations achetées (pack) — cumul sur plusieurs mois. */

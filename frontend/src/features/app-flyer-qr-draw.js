@@ -19,6 +19,11 @@ import {
 import { getFlyergameCenterImage, drawFlyergameCenter } from "./app-flyer-qr-draw-center.js";
 import { drawFlyerFooter } from "./app-flyer-qr-draw-footer.js";
 import { drawFlyerCommerceLogo } from "./app-flyer-qr-draw-logo.js";
+import {
+  effectiveCtaBannerText,
+  getWorldCupCtaBannerImage,
+  isWorldCupFlyerCtaEnabled,
+} from "./app-flyer-world-cup-cta.js";
 import giftflyerDataUrl from "../assets/flyer-wheels/giftflyer.png?inline";
 
 export { FLYER_EXPORT };
@@ -82,12 +87,14 @@ function splitCtaBannerLines(raw) {
 }
 
 /**
- * Pastille « Scanne pour jouer » à gauche du QR — axe horizontal, 1re ligne plus grande (comme affiche papier).
+ * Pastille CTA à gauche du QR — mode standard ou Coupe du monde (fond stade + « Pronostiquez et gagnez »).
  * @param {CanvasRenderingContext2D} ctx
  * @param {import("./app-flyer-qr-presets.js").FlyerState} s
+ * @param {{ worldCupMode?: boolean, worldCupBgImage?: HTMLImageElement | null }} [ctaOpts]
  */
-function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, ds) {
-  const raw = (s.ctaBanner || "").trim();
+function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, ds, ctaOpts = {}) {
+  const worldCupMode = isWorldCupFlyerCtaEnabled(ctaOpts.worldCupMode);
+  const raw = effectiveCtaBannerText(s, { matchPredictionsEnabled: worldCupMode });
   if (!raw) return;
 
   const { line1, line2 } = splitCtaBannerLines(raw);
@@ -127,13 +134,36 @@ function drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, ds) {
   const fill = (s.ctaBannerBgColor && /^#[0-9A-Fa-f]{6}$/.test(String(s.ctaBannerBgColor).trim()))
     ? String(s.ctaBannerBgColor).trim()
     : "#ec4899";
-  const textFill = (s.ctaTextColor && /^#[0-9A-Fa-f]{6}$/.test(String(s.ctaTextColor).trim()))
+  let textFill = (s.ctaTextColor && /^#[0-9A-Fa-f]{6}$/.test(String(s.ctaTextColor).trim()))
     ? String(s.ctaTextColor).trim()
     : "#ffffff";
 
-  ctx.fillStyle = fill;
+  const wcBg = worldCupMode ? ctaOpts.worldCupBgImage : null;
+  if (worldCupMode && wcBg) textFill = "#ffffff";
   roundRect(ctx, pillLeft, pillTop, pillW, pillH, rr);
-  ctx.fill();
+  if (worldCupMode && wcBg) {
+    const sw = wcBg.naturalWidth || wcBg.width;
+    const sh = wcBg.naturalHeight || wcBg.height;
+    if (sw > 0 && sh > 0) {
+      ctx.save();
+      ctx.clip();
+      const scale = Math.max(pillW / sw, pillH / sh);
+      const dw = sw * scale;
+      const dh = sh * scale;
+      const dx = pillLeft + (pillW - dw) / 2;
+      const dy = pillTop + (pillH - dh) / 2;
+      ctx.drawImage(wcBg, dx, dy, dw, dh);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.42)";
+      ctx.fillRect(pillLeft, pillTop, pillW, pillH);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = fill;
+      ctx.fill();
+    }
+  } else {
+    ctx.fillStyle = fill;
+    ctx.fill();
+  }
 
   ctx.strokeStyle = "#000000";
   ctx.lineWidth = Math.max(4, 8 * ds);
@@ -196,10 +226,12 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   /** QR local — taille pixel-perfect (modules entiers). */
   const qrFetchPx = qrInner;
 
-  const [qrImg, flyergameImg, giftflyerImg] = await Promise.all([
+  const worldCupMode = isWorldCupFlyerCtaEnabled(options?.matchPredictionsEnabled);
+  const [qrImg, flyergameImg, giftflyerImg, worldCupCtaBg] = await Promise.all([
     loadQrAsImage(qrTargetUrl, qrFetchPx),
     getFlyergameCenterImage(),
     getFlyerGiftflyerImage(),
+    worldCupMode ? getWorldCupCtaBannerImage() : Promise.resolve(null),
   ]);
 
   const [logoImg, bgCanvasImg] = await Promise.all([
@@ -241,7 +273,10 @@ export async function renderFlyerCanvas(canvas, s, qrTargetUrl, logoInput, bgInp
   const qrTiltRad = (-6 * Math.PI) / 180;
 
   // Pastille **au-dessus** de l’illustration cadeau ; légèrement derrière le QR.
-  drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, ds);
+  drawFlyerQrCtaPill(ctx, s, qx, qy, qSize, ds, {
+    worldCupMode,
+    worldCupBgImage: worldCupCtaBg,
+  });
 
   ctx.save();
   ctx.translate(qCx, qCy);
