@@ -54,10 +54,15 @@ function buildGroupStageMatches(groupCode, teams, dayStarts, sortBase) {
   const out = [];
   let n = 0;
   for (let md = 0; md < ROUND_ROBIN_PAIRINGS.length; md += 1) {
-    const day = dayStarts[md] || dayStarts[0];
+    const dayBase = Date.parse(dayStarts[md] || dayStarts[0]);
+    let pairIdx = 0;
     for (const [hi, ai] of ROUND_ROBIN_PAIRINGS[md]) {
       const home = teams[hi];
       const away = teams[ai];
+      const startsAt = Number.isFinite(dayBase)
+        ? new Date(dayBase + pairIdx * 3 * 60 * 60 * 1000).toISOString()
+        : dayStarts[md] || dayStarts[0];
+      pairIdx += 1;
       const externalId = `wc2026-group-${groupCode.toLowerCase()}-m${md + 1}-${hi + 1}v${ai + 1}`;
       const title =
         md === 0 && groupCode === "A" && hi === 0 && ai === 1
@@ -68,7 +73,7 @@ function buildGroupStageMatches(groupCode, teams, dayStarts, sortBase) {
         title,
         team_home: home,
         team_away: away,
-        starts_at: day,
+        starts_at: startsAt,
         stage: "group",
         group_code: groupCode,
         round_label: `Phase de groupes · Groupe ${groupCode}`,

@@ -4,18 +4,19 @@ import {
   listMatchPredictionMatchesForMember,
   submitMatchPrediction,
 } from "../../db.js";
-import { syncWorldCup2026Matches } from "../../lib/world-cup-match-sync.js";
+import { syncWorldCup2026Matches, ensureWorldCupCatalogSeeded } from "../../lib/world-cup-match-sync.js";
 
 const router = Router({ mergeParams: true });
 
 async function memberMatchPayload(businessId, memberId) {
+  ensureWorldCupCatalogSeeded();
   let data = listMatchPredictionMatchesForMember(businessId, memberId || null);
   if (!data.matches?.length) {
     try {
       await syncWorldCup2026Matches();
       data = listMatchPredictionMatchesForMember(businessId, memberId || null);
-    } catch (_) {
-      /* ignore */
+    } catch (err) {
+      console.warn("[match-predictions-public] sync CDM:", err?.message || err);
     }
   }
   return data;

@@ -4,6 +4,13 @@ import { buildWorldCup2026Catalog } from "./world-cup-2026-catalog.js";
 
 const db = getDb();
 
+/** SQLite `datetime('…T…Z')` renvoie souvent NULL → INSERT échoue (cutoff_at NOT NULL). */
+export function cutoffFromStartsAt(startsAt) {
+  const ms = Date.parse(String(startsAt || ""));
+  if (!Number.isFinite(ms)) return String(startsAt || "");
+  return new Date(ms - 15 * 60 * 1000).toISOString();
+}
+
 const PLACEHOLDER_RE =
   /à confirmer|vainqueur|perdant|équipe à|tbd|winner|loser/i;
 
@@ -35,8 +42,9 @@ function resultChoiceFromGoals(homeGoals, awayGoals) {
 /**
  * @param {import("./world-cup-2026-catalog.js").CatalogMatch} row
  */
-function upsertCatalogRow(row) {
-  const existing = db
+function upsertCatalogRow(row, conn = db) {
+  const cutoff = cutoffFromStartsAt(row.starts_at);
+  const existing = conn
     .prepare("SELECT id, status, result_choice FROM match_prediction_matches WHERE external_id = ?")
     .get(row.external_id);
 
@@ -44,19 +52,20 @@ function upsertCatalogRow(row) {
     row.predictions_open != null ? Number(row.predictions_open) : predictionsOpenForTeams(row.team_home, row.team_away);
 
   if (existing) {
-    db.prepare(
+    conn.prepare(
       `UPDATE match_prediction_matches SET
          title = ?,
          team_home = ?,
          team_away = ?,
          starts_at = ?,
-         cutoff_at = datetime(?, '-15 minutes'),
+         cutoff_at = ?,
          stage = ?,
          group_code = ?,
          round_label = ?,
          venue = COALESCE(?, venue),
          predictions_open = ?,
          sort_order = ?,
+         active = 1,
          updated_at = datetime('now')
        WHERE external_id = ?`,
     ).run(
@@ -64,7 +73,7 @@ function upsertCatalogRow(row) {
       row.team_home,
       row.team_away,
       row.starts_at,
-      row.starts_at,
+      cutoff,
       row.stage,
       row.group_code || null,
       row.round_label || null,
@@ -77,10 +86,10 @@ function upsertCatalogRow(row) {
   }
 
   const id = randomUUID();
-  db.prepare(
+  conn.prepare(
     `INSERT INTO match_prediction_matches
-     (id, external_id, code, title, team_home, team_away, starts_at, cutoff_at, status, stage, group_code, round_label, venue, predictions_open, sort_order)
-     VALUES (?, ?, ?, ?, ?, ?, ?, datetime(?, '-15 minutes'), 'scheduled', ?, ?, ?, ?, ?, ?)`,
+     (id, external_id, code, title, team_home, team_away, starts_at, cutoff_at, status, stage, group_code, round_label, venue, predictions_open, sort_order, active)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'scheduled', ?, ?, ?, ?, ?, ?, 1)`,
   ).run(
     id,
     row.external_id,
@@ -89,7 +98,7 @@ function upsertCatalogRow(row) {
     row.team_home,
     row.team_away,
     row.starts_at,
-    row.starts_at,
+    cutoff,
     row.stage,
     row.group_code || null,
     row.round_label || null,
@@ -176,8 +185,9 @@ async function fetchApiFootballFixtures() {
 /**
  * @param {ReturnType<typeof mapApiFootballFixtures>[number]} row
  */
-function upsertApiRow(row) {
-  const existing = db
+function upsertApiRow(row, conn = db) {
+  const cutoff = cutoffFromStartsAt(row.starts_at);
+  const existing = conn
     .prepare("SELECT id FROM match_prediction_matches WHERE external_id = ? OR api_fixture_id = ?")
     .get(row.external_id, row.api_fixture_id);
 
@@ -186,7 +196,7 @@ function upsertApiRow(row) {
   const resultChoice = row.result_choice;
 
   if (existing) {
-    db.prepare(
+    conn.prepare(
       `UPDATE match_prediction_matches SET
          external_id = ?,
          api_fixture_id = ?,
@@ -194,7 +204,7 @@ function upsertApiRow(row) {
          team_home = ?,
          team_away = ?,
          starts_at = ?,
-         cutoff_at = datetime(?, '-15 minutes'),
+         cutoff_at = ?,
          stage = ?,
          round_label = ?,
          venue = COALESCE(?, venue),
@@ -202,6 +212,7 @@ function upsertApiRow(row) {
          sort_order = ?,
          status = CASE WHEN status = 'scored' THEN status ELSE ? END,
          result_choice = COALESCE(result_choice, ?),
+         active = 1,
          updated_at = datetime('now')
        WHERE id = ?`,
     ).run(
@@ -211,7 +222,7 @@ function upsertApiRow(row) {
       row.team_home,
       row.team_away,
       row.starts_at,
-      row.starts_at,
+      cutoff,
       row.stage,
       row.round_label,
       row.venue,
@@ -225,10 +236,10 @@ function upsertApiRow(row) {
   }
 
   const id = randomUUID();
-  db.prepare(
+  conn.prepare(
     `INSERT INTO match_prediction_matches
-     (id, external_id, api_fixture_id, code, title, team_home, team_away, starts_at, cutoff_at, status, result_choice, stage, round_label, venue, predictions_open, sort_order)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime(?, '-15 minutes'), ?, ?, ?, ?, ?, ?, ?)`,
+     (id, external_id, api_fixture_id, code, title, team_home, team_away, starts_at, cutoff_at, status, result_choice, stage, round_label, venue, predictions_open, sort_order, active)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
   ).run(
     id,
     row.external_id,
@@ -238,7 +249,7 @@ function upsertApiRow(row) {
     row.team_home,
     row.team_away,
     row.starts_at,
-    row.starts_at,
+    cutoff,
     status,
     resultChoice,
     row.stage,
@@ -248,6 +259,32 @@ function upsertApiRow(row) {
     row.sort_order,
   );
   return { action: "inserted", id };
+}
+
+/** Seed synchrone du catalogue local (72 groupes + knockout) — sans appel API. */
+export function syncWorldCup2026CatalogSync(conn = db) {
+  let inserted = 0;
+  let updated = 0;
+  for (const row of buildWorldCup2026Catalog()) {
+    const r = upsertCatalogRow(row, conn);
+    if (r.action === "inserted") inserted += 1;
+    else updated += 1;
+  }
+  return { ok: true, inserted, updated };
+}
+
+export function countActiveMatchPredictionMatches(conn = db) {
+  return Number(conn.prepare("SELECT COUNT(*) as n FROM match_prediction_matches WHERE active = 1").get()?.n) || 0;
+}
+
+/** Garantit au moins 72 matchs de phase de groupes en base. */
+export function ensureWorldCupCatalogSeeded(conn = db) {
+  const groupCount =
+    Number(
+      conn.prepare("SELECT COUNT(*) as n FROM match_prediction_matches WHERE active = 1 AND stage = 'group'").get()?.n,
+    ) || 0;
+  if (groupCount >= 72) return { skipped: true, groupCount };
+  return { ...syncWorldCup2026CatalogSync(conn), skipped: false, groupCount };
 }
 
 /**
@@ -260,11 +297,9 @@ export async function syncWorldCup2026Matches() {
   let apiRows = 0;
   let source = "catalog";
 
-  for (const row of buildWorldCup2026Catalog()) {
-    const r = upsertCatalogRow(row);
-    if (r.action === "inserted") inserted += 1;
-    else updated += 1;
-  }
+  const catalogRun = syncWorldCup2026CatalogSync(db);
+  inserted += catalogRun.inserted;
+  updated += catalogRun.updated;
 
   try {
     const apiList = await fetchApiFootballFixtures();

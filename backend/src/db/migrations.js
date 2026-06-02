@@ -1784,4 +1784,21 @@ export function runMigrations(db) {
     );
     markMigrationApplied(db, 44, "world_cup_match_sync_columns");
   }
+
+  // v45 : cutoff_at NULL (datetime ISO cassé en SQLite) + réparation des lignes existantes
+  const m45 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 45").get();
+  if (!m45) {
+    const broken = db
+      .prepare(
+        "SELECT id, starts_at FROM match_prediction_matches WHERE cutoff_at IS NULL OR TRIM(cutoff_at) = ''",
+      )
+      .all();
+    for (const row of broken) {
+      const ms = Date.parse(String(row.starts_at || ""));
+      if (!Number.isFinite(ms)) continue;
+      const cutoff = new Date(ms - 15 * 60 * 1000).toISOString();
+      db.prepare("UPDATE match_prediction_matches SET cutoff_at = ? WHERE id = ?").run(cutoff, row.id);
+    }
+    markMigrationApplied(db, 45, "world_cup_cutoff_iso_fix");
+  }
 }

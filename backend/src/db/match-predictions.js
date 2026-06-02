@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
+import { ensureWorldCupCatalogSeeded } from "../lib/world-cup-match-sync.js";
 import { addPoints, getMemberForBusiness } from "./members.js";
 import { createTransaction, getTransactionByIdempotencyKey } from "./transactions.js";
 import { getGameByCode } from "./games-helpers.js";
@@ -147,11 +148,12 @@ export function updateMatchPredictionConfig(businessId, updates = {}) {
 }
 
 export function listMatchPredictionMatchesForMember(businessId, memberId) {
+  ensureWorldCupCatalogSeeded();
   const config = getMatchPredictionConfig(businessId);
   const matches = db
     .prepare(
       `SELECT * FROM match_prediction_matches
-       WHERE active = 1
+       WHERE active = 1 AND (stage = 'group' OR predictions_open = 1)
        ORDER BY datetime(starts_at) ASC, sort_order ASC`,
     )
     .all();
@@ -199,6 +201,7 @@ export function submitMatchPrediction({ businessId, memberId, matchId, choice })
 }
 
 export function listMatchPredictionDashboard(businessId) {
+  ensureWorldCupCatalogSeeded();
   const config = getMatchPredictionConfig(businessId);
   const matches = db
     .prepare(
@@ -208,7 +211,7 @@ export function listMatchPredictionDashboard(businessId) {
               SUM(COALESCE(e.points_awarded, 0)) as points_distributed
        FROM match_prediction_matches m
        LEFT JOIN match_prediction_entries e ON e.match_id = m.id AND e.business_id = ?
-       WHERE m.active = 1
+       WHERE m.active = 1 AND (m.stage = 'group' OR m.predictions_open = 1)
        GROUP BY m.id
        ORDER BY datetime(m.starts_at) ASC, m.sort_order ASC`,
     )

@@ -77,8 +77,8 @@ import { runCampaignEventJobsCron } from "./lib/campaign-event-jobs.js";
 import { startNotificationJobWorker, getQueueStats as getNotificationQueueStats } from "./lib/notification-job-queue.js";
 import { startFlyerGenerationJobWorker } from "./lib/flyer-generation-jobs.js";
 import { withCronLock, cleanExpiredCronLocks } from "./lib/cron-lock.js";
-import { syncWorldCup2026Matches } from "./lib/world-cup-match-sync.js";
-import { checkpointWAL } from "./db/connection.js";
+import { syncWorldCup2026Matches, ensureWorldCupCatalogSeeded } from "./lib/world-cup-match-sync.js";
+import { checkpointWAL, getDb } from "./db/connection.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -569,6 +569,17 @@ function startServer(port) {
 }
 
 if (process.env.NODE_ENV !== "test") {
+  try {
+    const seeded = ensureWorldCupCatalogSeeded(getDb());
+    if (!seeded.skipped) {
+      logger.info(
+        { inserted: seeded.inserted, updated: seeded.updated, groupCount: seeded.groupCount },
+        "[world-cup] catalogue CDM 2026 initialisé au démarrage",
+      );
+    }
+  } catch (err) {
+    logger.error({ err }, "[world-cup] seed catalogue au boot échoué");
+  }
   startServer(PORT);
 }
 
