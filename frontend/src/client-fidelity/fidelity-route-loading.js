@@ -11,6 +11,12 @@ const FALLBACK_LOADING_LOGO_SRC = "/assets/chargement.png";
 /** @type { { kill: () => void } | null } */
 let logoSpinTween = null;
 
+/** @type {ReturnType<typeof setTimeout> | null} */
+let overlaySafetyTimer = null;
+
+/** Incrémenté à chaque mount — dismiss ignore les overlays obsolètes. */
+let overlayGeneration = 0;
+
 function prefersReducedMotion() {
   return globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
 }
@@ -21,6 +27,20 @@ function doubleRAF() {
       requestAnimationFrame(resolve);
     });
   });
+}
+
+/** Retire immédiatement le voile (sans animation) — filet de sécurité. */
+export function forceDismissFidelityRouteLoadingOverlay() {
+  logoSpinTween?.kill();
+  logoSpinTween = null;
+  const g = typeof globalThis.gsap !== "undefined" ? globalThis.gsap : undefined;
+  const el = document.getElementById(OVERLAY_ID);
+  if (el) {
+    if (g) g.killTweensOf(el);
+    el.remove();
+  }
+  document.documentElement.classList.remove(HTML_LOADING_CLASS);
+  document.body.removeAttribute("aria-busy");
 }
 
 /** Voile de chargement encore présent (évite modales floues en dessous, z-index 10050). */
@@ -39,9 +59,11 @@ export async function waitForFidelityRouteLoadingDismissed(maxMs = 4000) {
 
 /** @returns {HTMLElement} */
 export function mountFidelityRouteLoadingOverlay() {
-  document.getElementById(OVERLAY_ID)?.remove();
+  forceDismissFidelityRouteLoadingOverlay();
+  const generation = ++overlayGeneration;
   const el = document.createElement("div");
   el.id = OVERLAY_ID;
+  el.dataset.fidLoadingGeneration = String(generation);
   el.className = "fidelity-route-loading-overlay";
   el.setAttribute("aria-busy", "true");
   el.innerHTML = `
@@ -55,8 +77,22 @@ export function mountFidelityRouteLoadingOverlay() {
   document.body.setAttribute("aria-busy", "true");
   document.documentElement.classList.add(HTML_LOADING_CLASS);
   requestAnimationFrame(() => {
-    el.classList.add("fidelity-route-loading-overlay--visible");
+    if (document.body.contains(el)) el.classList.add("fidelity-route-loading-overlay--visible");
   });
+
+  if (overlaySafetyTimer) clearTimeout(overlaySafetyTimer);
+  overlaySafetyTimer = setTimeout(() => {
+    overlaySafetyTimer = null;
+    const current = document.getElementById(OVERLAY_ID);
+    if (
+      current &&
+      current.dataset.fidLoadingGeneration === String(generation) &&
+      document.body.contains(current)
+    ) {
+      forceDismissFidelityRouteLoadingOverlay();
+    }
+  }, 10000);
+
   return el;
 }
 
@@ -116,16 +152,17 @@ export function startFidelityRouteLoadingAnimations(overlayEl) {
  */
 export async function dismissFidelityRouteLoadingOverlay(overlayEl, opts = {}) {
   const { minVisibleMs = 0 } = opts;
-  const el = overlayEl && document.body.contains(overlayEl) ? overlayEl : document.getElementById(OVERLAY_ID);
-
-  const cleanupHtmlClass = () => {
-    document.documentElement.classList.remove(HTML_LOADING_CLASS);
-    document.body.removeAttribute("aria-busy");
-  };
+  const el = overlayEl && document.body.contains(overlayEl) ? overlayEl : null;
 
   if (!el) {
-    cleanupHtmlClass();
+    document.documentElement.classList.remove(HTML_LOADING_CLASS);
+    document.body.removeAttribute("aria-busy");
     return;
+  }
+
+  if (overlaySafetyTimer) {
+    clearTimeout(overlaySafetyTimer);
+    overlaySafetyTimer = null;
   }
 
   logoSpinTween?.kill();
@@ -133,35 +170,44 @@ export async function dismissFidelityRouteLoadingOverlay(overlayEl, opts = {}) {
   el.classList.remove("fidelity-route-loading-overlay--css-spin");
 
   const g = typeof globalThis.gsap !== "undefined" ? globalThis.gsap : undefined;
+  const lowPerf =
+    document.documentElement.classList.contains("fidpass-low-perf-mobile") ||
+    prefersReducedMotion();
 
-  /* Laisser un frame peindre #fidelity-app (masqué) puis fondu court */
   await doubleRAF();
   if (minVisibleMs > 0) {
     await new Promise((r) => setTimeout(r, minVisibleMs));
   }
 
-  const OUT_MS = 0.2;
+  const OUT_MS = lowPerf ? 0 : 0.2;
 
   try {
-    if (g) {
+    if (!lowPerf && g) {
       g.killTweensOf(el);
-      await new Promise((resolve) => {
-        g.to(el, {
-          opacity: 0,
-          duration: OUT_MS,
-          ease: "power2.out",
-          onComplete: () => {
-            el.remove();
-            resolve();
-          },
-        });
-      });
+      await Promise.race([
+        new Promise((resolve) => {
+          g.to(el, {
+            opacity: 0,
+            duration: OUT_MS,
+            ease: "power2.out",
+            onComplete: () => {
+              if (document.body.contains(el)) el.remove();
+              resolve();
+            },
+          });
+        }),
+        new Promise((resolve) => setTimeout(resolve, Math.round(OUT_MS * 1000) + 120)),
+      ]);
     } else {
       el.classList.add("fidelity-route-loading-overlay--out");
-      await new Promise((r) => setTimeout(r, Math.round(OUT_MS * 1000) + 30));
-      el.remove();
+      if (OUT_MS > 0) {
+        await new Promise((r) => setTimeout(r, Math.round(OUT_MS * 1000) + 30));
+      }
+      if (document.body.contains(el)) el.remove();
     }
   } finally {
-    cleanupHtmlClass();
+    document.documentElement.classList.remove(HTML_LOADING_CLASS);
+    document.body.removeAttribute("aria-busy");
+    if (document.getElementById(OVERLAY_ID) === el) el.remove();
   }
 }

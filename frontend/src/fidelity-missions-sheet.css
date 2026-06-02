@@ -369,9 +369,9 @@ body.fidelity-missions-sheet-locked {
 .fidelity-missions-sheet__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, 0.42);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.5);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   opacity: 0;
   transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }

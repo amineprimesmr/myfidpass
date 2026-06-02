@@ -25,9 +25,9 @@
   border: 0;
   padding: 0;
   margin: 0;
-  background: rgba(15, 23, 42, 0.52);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   opacity: 0;
   transition: opacity 0.28s ease;
 }
@@ -60,21 +60,6 @@
 .fidelity-reward-celebration--open .fidelity-reward-celebration__panel {
   opacity: 1;
   transform: translate3d(0, 0, 0) scale(1);
-}
-
-/* Safari iOS : backdrop-filter sur le voile peut flouter la carte sœur — assombrir sans blur. */
-@supports (-webkit-touch-callout: none) {
-  .fidelity-reward-celebration__backdrop {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: rgba(15, 23, 42, 0.62);
-  }
-}
-
-html.fidpass-low-perf-mobile .fidelity-reward-celebration__backdrop {
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  background: rgba(15, 23, 42, 0.58);
 }
 
 .fidelity-reward-celebration--instant .fidelity-reward-celebration__backdrop,

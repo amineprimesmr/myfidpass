@@ -35,6 +35,7 @@ import {
   setFidelityRouteLoadingLogo,
   startFidelityRouteLoadingAnimations,
 } from "./fidelity-route-loading.js";
+import { resetFidelityClientPageUi } from "./fidelity-overlay-guard.js";
 import { applyFidelityClientPageBackground } from "./lib/apply-fidelity-client-bg.js";
 import { bindFidelityMemberFooterVisualViewport } from "./lib/sync-fidelity-member-footer-visual-viewport.js";
 import {
@@ -103,7 +104,12 @@ function isLikelyLowPerfMobile() {
 /** Annule les écouteurs document de la session précédente (évite doublons à chaque navigation SPA). */
 let fidelityDocumentListenersAbort = null;
 
+/** Ignore les `finally` d’une init obsolète si une nouvelle a démarré. */
+let clientFidelityInitGeneration = 0;
+
 export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
+  const initGen = ++clientFidelityInitGeneration;
+  resetFidelityClientPageUi(rootEl);
   const api = createClientFidelityApi(apiBase);
   const store = createClientFidelityStore({ slug });
   const lowPerfMobile = isLikelyLowPerfMobile();
@@ -127,7 +133,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
 
   bindFidelityMemberFooterVisualViewport(signal);
 
-  const loadingOverlay = mountFidelityRouteLoadingOverlay();
+  const showRouteLoader = !rootEl.querySelector("main.fidelity-v2-main");
+  const loadingOverlay = showRouteLoader ? mountFidelityRouteLoadingOverlay() : null;
 
   try {
   function applyMemberCorePatch(member, tickets, actionsData) {
@@ -407,7 +414,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   }
 
   function rerender() {
-    document.body.style.overflow = "";
+    resetFidelityClientPageUi(rootEl);
     renderClientPage(rootEl, store.get(), { slug, apiBase });
     applyFidelityClientPageBackground(store.get().business);
     /* Après refreshMemberData le HTML est reconstruit : réaligne le hero si l’état « Merci » est actif. */
@@ -1157,6 +1164,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   }
 
   function resumeMemberOnTabVisible() {
+    resetFidelityClientPageUi(rootEl);
     const memberId = store.get().member?.id;
     if (!memberId || document.visibilityState !== "visible") return;
     if (isSpinning || isQrModalOpen()) return;
@@ -1188,17 +1196,21 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       }
       const celeb = rootEl.querySelector("#fidelity-reward-celebration-modal");
       if (celeb && !celeb.classList.contains("hidden")) {
-        celeb.classList.add("hidden");
-        celeb.setAttribute("aria-hidden", "true");
-        document.body.style.overflow = "";
+        resetFidelityClientPageUi(rootEl);
       }
     },
     { signal }
   );
 
-  await dismissFidelityRouteLoadingOverlay(loadingOverlay);
-  rerender();
-  } finally {
+  if (initGen === clientFidelityInitGeneration) {
     await dismissFidelityRouteLoadingOverlay(loadingOverlay);
+    rerender();
+  }
+  } finally {
+    if (initGen === clientFidelityInitGeneration) {
+      await dismissFidelityRouteLoadingOverlay(loadingOverlay);
+    } else {
+      resetFidelityClientPageUi(rootEl);
+    }
   }
 }
