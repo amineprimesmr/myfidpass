@@ -16,7 +16,6 @@ export function renderProfileMissionModalMarkup(esc, data) {
     <div id="fidelity-profile-mission-modal" class="fidelity-profile-mission-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="fidelity-profile-mission-modal-title">
       <button type="button" class="fidelity-profile-mission-modal__backdrop" aria-label="Fermer"></button>
       <div class="fidelity-profile-mission-modal__panel">
-        <div class="fidelity-profile-mission-modal__accent" aria-hidden="true"></div>
         <div class="fidelity-profile-mission-modal__head">
           <div class="fidelity-profile-mission-modal__head-text">
             <h2 id="fidelity-profile-mission-modal-title" class="fidelity-profile-mission-modal__title">${esc("Complète ton profil")}</h2>

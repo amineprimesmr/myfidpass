@@ -10,7 +10,6 @@ import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
 import {
   blockStaffDashboardWrites,
   ensureDashboardAccess,
-  ensureOperationalSubscription,
 } from "./shared.js";
 
 const router = Router({ mergeParams: true });
@@ -46,7 +45,6 @@ router.get("/matches/:matchId/entries", (req, res) => {
 });
 
 router.post("/matches/:matchId/result", async (req, res) => {
-  if (!ensureOperationalSubscription(req, res, req.business)) return;
   const result = setMatchPredictionResult({
     businessId: req.business.id,
     matchId: req.params.matchId,

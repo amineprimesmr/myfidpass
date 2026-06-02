@@ -359,10 +359,12 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   }
 
   function openProfileMissionModal() {
+    closeMissionsSheet(rootEl);
     const m = rootEl.querySelector("#fidelity-profile-mission-modal");
     if (!m) return;
     m.classList.remove("hidden");
     m.setAttribute("aria-hidden", "false");
+    document.body.classList.remove("fidelity-missions-sheet-locked");
     document.body.style.overflow = "hidden";
     requestAnimationFrame(() => rootEl.querySelector("#fidelity-v2-profile-phone")?.focus());
   }

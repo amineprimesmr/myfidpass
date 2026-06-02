@@ -2,12 +2,13 @@
 .fidelity-profile-mission-modal {
   position: fixed;
   inset: 0;
-  z-index: 1200;
+  z-index: 2147482600;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   padding: 0;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 @media (min-width: 480px) {
@@ -39,19 +40,14 @@
   width: 100%;
   max-width: 420px;
   max-height: min(90vh, 720px);
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   margin: 0;
-  padding: 0 1.25rem 1.4rem;
+  padding: 1.25rem 1.25rem 1.4rem;
   border-radius: 1.25rem 1.25rem 0 0;
   background: #fff;
   box-shadow: 0 -8px 40px rgba(15, 23, 42, 0.18);
-}
-
-.fidelity-profile-mission-modal__accent {
-  height: 4px;
-  margin: 0 -1.25rem 0.85rem;
-  border-radius: 1.25rem 1.25rem 0 0;
-  background: linear-gradient(90deg, #2563eb 0%, #7c3aed 55%, #db2777 100%);
+  box-sizing: border-box;
 }
 
 @media (min-width: 480px) {
