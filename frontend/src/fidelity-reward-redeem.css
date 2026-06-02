@@ -109,36 +109,21 @@
   padding-right: 0.25rem;
 }
 
-.fidelity-reward-redeem-modal__kicker {
-  margin: 0 0 0.35rem;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #64748b;
-}
-
 .fidelity-reward-redeem-modal__title {
-  margin: 0 0 0.65rem;
+  margin: 0 0 1rem;
   font-size: 1.28rem;
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1.2;
   color: #0f172a;
   padding-right: 2rem;
-}
-
-.fidelity-reward-redeem-modal__lead {
-  margin: 0 0 1rem;
-  font-size: 0.9rem;
-  line-height: 1.55;
-  color: #475569;
+  text-align: center;
 }
 
 .fidelity-reward-redeem-modal__qr-wrap {
   display: flex;
   justify-content: center;
-  margin: 0 auto 1.15rem;
+  margin: 0 auto;
   padding: 0.85rem;
   border-radius: 1rem;
   background: #f8fafc;
@@ -173,70 +158,11 @@
   }
 }
 
-.fidelity-reward-redeem-modal__steps {
-  margin: 0 0 1rem;
-  padding: 0 0 0 0.15rem;
-  list-style: none;
-  counter-reset: fid-step;
-}
-
-.fidelity-reward-redeem-modal__step {
-  display: flex;
-  gap: 0.65rem;
-  align-items: flex-start;
-  margin-bottom: 0.65rem;
-  font-size: 0.86rem;
-  line-height: 1.45;
-  color: #334155;
-  opacity: 0;
-  transform: translateY(8px);
-}
-
-.fidelity-reward-redeem-modal--open .fidelity-reward-redeem-modal__step {
-  animation: fid-redeem-step-in 0.45s cubic-bezier(0.32, 0.72, 0, 1) forwards;
-}
-
-.fidelity-reward-redeem-modal--open .fidelity-reward-redeem-modal__step:nth-child(1) {
-  animation-delay: 0.08s;
-}
-.fidelity-reward-redeem-modal--open .fidelity-reward-redeem-modal__step:nth-child(2) {
-  animation-delay: 0.16s;
-}
-.fidelity-reward-redeem-modal--open .fidelity-reward-redeem-modal__step:nth-child(3) {
-  animation-delay: 0.24s;
-}
-
-.fidelity-reward-redeem-modal--instant .fidelity-reward-redeem-modal__step {
-  animation: none;
-  opacity: 1;
-  transform: none;
-}
-
-@keyframes fid-redeem-step-in {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.fidelity-reward-redeem-modal__step-num {
-  flex-shrink: 0;
-  width: 1.45rem;
-  height: 1.45rem;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: #0f172a;
-  background: #e2e8f0;
-}
-
-.fidelity-reward-redeem-modal__fine {
-  margin: 0;
-  font-size: 0.75rem;
-  line-height: 1.45;
+.fidelity-reward-redeem-modal__error {
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  text-align: center;
   color: #64748b;
 }
 
@@ -254,17 +180,11 @@
 }
 
 .fidelity-reward-redeem-modal__locked-body {
-  margin: 0 0 0.85rem;
+  margin: 0;
   font-size: 0.95rem;
   line-height: 1.5;
   color: #334155;
-}
-
-.fidelity-reward-redeem-modal__locked-hint {
-  margin: 0;
-  font-size: 0.8rem;
-  line-height: 1.45;
-  color: #64748b;
+  text-align: center;
 }
 
 @media (prefers-reduced-motion: reduce) {

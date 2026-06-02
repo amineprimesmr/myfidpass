@@ -3,6 +3,7 @@
  */
 
 import { renderPoweredByMyfidpassMarkup } from "./powered-by-markup.js";
+import { renderEngagementVerifyOverlayMarkup } from "./engagement-verify-overlay-markup.js";
 
 /**
  * @param {string} titleEsc
@@ -227,6 +228,8 @@ export function renderQrGamePage(esc, p) {
         </form>
       </div>
     </div>
+
+    ${renderEngagementVerifyOverlayMarkup()}
 
   `;
 }

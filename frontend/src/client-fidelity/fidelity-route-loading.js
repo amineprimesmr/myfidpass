@@ -8,6 +8,15 @@ const OVERLAY_ID = "fidelity-route-loading-overlay";
 const HTML_LOADING_CLASS = "fidpass-fidelity-route-loading";
 const FALLBACK_LOADING_LOGO_SRC = "/assets/chargement.png";
 
+const ROUTE_LOADING_MESSAGES = [
+  "Préparation de votre carte fidélité…",
+  "Récupération de vos avantages…",
+  "Presque prêt…",
+];
+
+/** @type {ReturnType<typeof setInterval> | null} */
+let routeLoadingMsgTimer = null;
+
 /** @type { { kill: () => void } | null } */
 let logoSpinTween = null;
 
@@ -33,6 +42,10 @@ function doubleRAF() {
 export function forceDismissFidelityRouteLoadingOverlay() {
   logoSpinTween?.kill();
   logoSpinTween = null;
+  if (routeLoadingMsgTimer) {
+    clearInterval(routeLoadingMsgTimer);
+    routeLoadingMsgTimer = null;
+  }
   const g = typeof globalThis.gsap !== "undefined" ? globalThis.gsap : undefined;
   const el = document.getElementById(OVERLAY_ID);
   if (el) {
@@ -71,6 +84,19 @@ export function mountFidelityRouteLoadingOverlay() {
     <div class="fidelity-route-loading-overlay__content">
       <div class="fidelity-route-loading__logo-ring">
         <img class="fidelity-route-loading__logo" alt="" width="120" height="120" decoding="async" />
+      </div>
+      <div class="fidelity-route-loading__status" role="status" aria-live="polite">
+        <p class="fidelity-route-loading__title">Chargement de votre espace</p>
+        <div
+          class="fidelity-route-loading__progress"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuetext="Chargement en cours"
+        >
+          <span class="fidelity-route-loading__progress-bar"></span>
+        </div>
+        <p class="fidelity-route-loading__msg" id="fidelity-route-loading-msg">Préparation de votre carte fidélité…</p>
       </div>
     </div>`;
   document.body.appendChild(el);
@@ -134,10 +160,24 @@ export function setFidelityRouteLoadingLogo(overlayEl, business, slug, apiBase) 
 export function startFidelityRouteLoadingAnimations(overlayEl) {
   if (!overlayEl) return;
   const content = overlayEl.querySelector(".fidelity-route-loading-overlay__content");
+  const msgEl = overlayEl.querySelector("#fidelity-route-loading-msg");
+  const bar = overlayEl.querySelector(".fidelity-route-loading__progress-bar");
   logoSpinTween?.kill();
   logoSpinTween = null;
   const g = typeof globalThis.gsap !== "undefined" ? globalThis.gsap : undefined;
   overlayEl.classList.toggle("fidelity-route-loading-overlay--css-spin", !prefersReducedMotion());
+  if (bar instanceof HTMLElement) {
+    bar.classList.remove("fidelity-route-loading__progress-bar--animate");
+    bar.getBoundingClientRect();
+    bar.classList.add("fidelity-route-loading__progress-bar--animate");
+  }
+  if (routeLoadingMsgTimer) clearInterval(routeLoadingMsgTimer);
+  let idx = 0;
+  if (msgEl) msgEl.textContent = ROUTE_LOADING_MESSAGES[0];
+  routeLoadingMsgTimer = setInterval(() => {
+    idx = (idx + 1) % ROUTE_LOADING_MESSAGES.length;
+    if (msgEl) msgEl.textContent = ROUTE_LOADING_MESSAGES[idx];
+  }, 1400);
 
   if (g && content && !prefersReducedMotion()) {
     g.fromTo(content, { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.55, ease: "power3.out" });
@@ -167,6 +207,10 @@ export async function dismissFidelityRouteLoadingOverlay(overlayEl, opts = {}) {
 
   logoSpinTween?.kill();
   logoSpinTween = null;
+  if (routeLoadingMsgTimer) {
+    clearInterval(routeLoadingMsgTimer);
+    routeLoadingMsgTimer = null;
+  }
   el.classList.remove("fidelity-route-loading-overlay--css-spin");
 
   const g = typeof globalThis.gsap !== "undefined" ? globalThis.gsap : undefined;

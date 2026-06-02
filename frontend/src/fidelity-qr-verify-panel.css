@@ -199,8 +199,9 @@
 .fidelity-engagement-verify-root__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, 0.52);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .fidelity-engagement-verify-panel {

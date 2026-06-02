@@ -35,7 +35,7 @@ export function bindRewardRedeemUi({ rootEl, getState, signal }) {
   const unlockedEl = modal.querySelector("#fidelity-reward-redeem-state-unlocked");
   const lockedEl = modal.querySelector("#fidelity-reward-redeem-state-locked");
   const heading = modal.querySelector("#fidelity-reward-redeem-heading");
-  const fineEl = modal.querySelector("#fidelity-reward-redeem-fine");
+  const errorEl = modal.querySelector("#fidelity-reward-redeem-error");
   const qrImg = modal.querySelector("#fidelity-reward-redeem-qr");
   const qrSkel = modal.querySelector("#fidelity-reward-redeem-qr-skel");
   const lockedHead = modal.querySelector("#fidelity-reward-redeem-locked-heading");
@@ -54,19 +54,26 @@ export function bindRewardRedeemUi({ rootEl, getState, signal }) {
       qrImg.classList.add("hidden");
     }
     if (qrSkel) qrSkel.classList.remove("hidden");
+    if (errorEl) {
+      errorEl.textContent = "";
+      errorEl.classList.add("hidden");
+    }
   }
 
   closeMap.set(rootEl, closeModal);
 
   async function openUnlocked({ label, costLine, tierIndex, points, qrDataUrl, qrPrefetchPromise }) {
-    if (!unlockedEl || !lockedEl || !heading || !fineEl || !qrImg || !qrSkel) return;
+    if (!unlockedEl || !lockedEl || !heading || !qrImg || !qrSkel) return;
     const state = getState();
     const memberId = state?.member?.id;
     const programType = String(state?.business?.program_type || "points").toLowerCase();
     unlockedEl.classList.remove("hidden");
     lockedEl.classList.add("hidden");
     heading.textContent = label;
-    fineEl.textContent = `Présentez ce QR en caisse : le commerce valide « ${label} » (${costLine}) et votre solde est débité automatiquement.`;
+    if (errorEl) {
+      errorEl.textContent = "";
+      errorEl.classList.add("hidden");
+    }
     modal.classList.remove("hidden");
     modal.setAttribute("aria-hidden", "false");
     modal.setAttribute("aria-labelledby", "fidelity-reward-redeem-heading");
@@ -108,7 +115,10 @@ export function bindRewardRedeemUi({ rootEl, getState, signal }) {
         applyQrSrc(src);
       } catch {
         qrSkel.classList.add("hidden");
-        fineEl.textContent = `Récompense : ${label} · ${costLine}. Ouvre ta carte Wallet pour te faire scanner, ou communique ton identifiant au personnel.`;
+        if (errorEl) {
+          errorEl.textContent = "QR indisponible. Présente ta carte Wallet.";
+          errorEl.classList.remove("hidden");
+        }
       }
     }
   }

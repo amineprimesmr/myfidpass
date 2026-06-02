@@ -28,9 +28,9 @@ export function completeMemberProfileForTicket(businessId, memberId, payload) {
       return { ticket_granted: 0, already_done: true };
     }
     if (businessUsesTicketBonuses(businessId)) {
-      addTicketsForProfileComplete(businessId, memberId, 1);
+      addTicketsForProfileComplete(businessId, memberId, 5);
       db.prepare("UPDATE members SET profile_ticket_bonus_granted = 1 WHERE id = ?").run(memberId);
-      return { ticket_granted: 1, already_done: false };
+      return { ticket_granted: 5, already_done: false };
     }
     return { ticket_granted: 0, already_done: false };
   });

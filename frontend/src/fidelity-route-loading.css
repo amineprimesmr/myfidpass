@@ -41,8 +41,67 @@ html.fidpass-fidelity-route-loading #fidelity-app {
   position: relative;
   z-index: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 1.15rem;
+  max-width: min(92vw, 22rem);
+}
+
+.fidelity-route-loading__status {
+  width: 100%;
+  text-align: center;
+}
+
+.fidelity-route-loading__title {
+  margin: 0 0 0.65rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.fidelity-route-loading__progress {
+  height: 6px;
+  margin: 0 0 0.75rem;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.fidelity-route-loading__progress-bar {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #4f46e5 0%, #6366f1 45%, #818cf8 100%);
+}
+
+.fidelity-route-loading__progress-bar--animate {
+  animation: fidelity-route-loading-progress-fill 2.4s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+@keyframes fidelity-route-loading-progress-fill {
+  0% {
+    width: 8%;
+    transform: translateX(0);
+  }
+  50% {
+    width: 72%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.fidelity-route-loading__msg {
+  margin: 0;
+  min-height: 2.6em;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #334155;
 }
 
 .fidelity-route-loading-overlay__content--in {
@@ -152,6 +211,11 @@ html.fidpass-low-perf-mobile .fidelity-route-loading__logo {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .fidelity-route-loading__progress-bar--animate {
+    animation: none;
+    width: 100%;
+  }
+
   .fidelity-route-loading__logo-ring::before {
     animation: none;
   }
@@ -160,5 +224,38 @@ html.fidpass-low-perf-mobile .fidelity-route-loading__logo {
     animation: none;
     opacity: 1;
     transform: none;
+  }
+}
+
+/* Boutons CTA : état chargement explicite (inscription, récompense QR, etc.) */
+.fidelity-cta-pill--busy,
+.fidelity-shiny-cta--busy {
+  opacity: 0.92;
+  cursor: wait;
+  pointer-events: none;
+}
+
+.fidelity-cta-pill--busy::before,
+.fidelity-shiny-cta--busy::before {
+  content: "";
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.15rem;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  animation: fidelity-cta-busy-spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+.fidelity-shiny-cta--busy .fidelity-shiny-cta__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+@keyframes fidelity-cta-busy-spin {
+  to {
+    transform: rotate(360deg);
   }
 }

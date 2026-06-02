@@ -3,6 +3,12 @@
  */
 
 import { applyQrThanksHero, runQrThanksHeroTransition } from "./qr-game-hero-thanks.js";
+import {
+  closeFidelityBusyOverlay,
+  openFidelityBusyOverlay,
+  setFidelitySubmitButtonBusy,
+  startFidelityBusyOverlayUx,
+} from "./lib/fidelity-busy-overlay.js";
 
 export const QR_GATE_KEY = "fid_qr_spin_gate";
 export const QR_GOOGLE_PENDING_KEY = "fid_qr_google_pending";
@@ -696,12 +702,25 @@ export function bindQrGameUi(ctx) {
         return;
       }
       if (errEl) errEl.classList.add("hidden");
-      if (submitBtn) submitBtn.disabled = true;
+      setFidelitySubmitButtonBusy(submitBtn, true, { busyLabel: "Enregistrement…" });
+      openFidelityBusyOverlay(rootEl);
+      const stopUx = startFidelityBusyOverlayUx(rootEl, {
+        title: "Réception de votre récompense",
+        messages: [
+          "Enregistrement de vos informations…",
+          "Création de votre carte fidélité…",
+          "Presque prêt…",
+        ],
+        durationMs: 2600,
+      });
       try {
         const st = getState();
         const claimRes = await api.claimGuestIdentity(slug, st.member.id, { name, email });
         onGuestIdentityClaimed?.(claimRes);
         closeQrModalRoot(rootEl);
+        stopUx();
+        closeFidelityBusyOverlay(rootEl);
+        setFidelitySubmitButtonBusy(submitBtn, false);
         await refreshMemberData();
         rerender();
       } catch (err) {
@@ -710,7 +729,9 @@ export function bindQrGameUi(ctx) {
           errEl.classList.remove("hidden");
         }
       } finally {
-        if (submitBtn) submitBtn.disabled = false;
+        stopUx();
+        closeFidelityBusyOverlay(rootEl);
+        setFidelitySubmitButtonBusy(submitBtn, false);
       }
     },
     { signal },

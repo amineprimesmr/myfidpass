@@ -3,6 +3,14 @@
  * clé sessionStorage + visibility/pageshow + overlay « vérification » + polling membre + rerender.
  */
 import { markRewardsWalletUnlocked } from "./lib/wallet-rewards-gate.js";
+import {
+  closeFidelityBusyOverlay,
+  isWalletReturnPending,
+  openFidelityBusyOverlay,
+  startFidelityBusyOverlayUx,
+} from "./lib/fidelity-busy-overlay.js";
+
+export { isWalletReturnPending };
 
 export const APPLE_WALLET_PENDING_KEY = "fidelity_apple_wallet_pending";
 export const GOOGLE_WALLET_PENDING_KEY = "fidelity_google_wallet_pending";
@@ -62,46 +70,11 @@ function clearWalletPending(key) {
 }
 
 function openVerifyOverlay(rootEl) {
-  const root = rootEl.querySelector("#fidelity-engagement-verify-root");
-  if (!root) return false;
-  root.classList.remove("hidden");
-  root.setAttribute("aria-hidden", "false");
-  document.body.style.overflow = "hidden";
-  return true;
+  return openFidelityBusyOverlay(rootEl);
 }
 
 function closeVerifyOverlay(rootEl) {
-  const root = rootEl.querySelector("#fidelity-engagement-verify-root");
-  if (!root) return;
-  root.classList.add("hidden");
-  root.setAttribute("aria-hidden", "true");
-  if (!document.querySelector("#fidelity-qr-modal-root:not(.hidden)")) {
-    document.body.style.overflow = "";
-  }
-}
-
-function startVerifyPanelUx(rootEl, durationMs, messages, title) {
-  const panel = rootEl.querySelector("#fidelity-engagement-panel-verify");
-  const titleEl = rootEl.querySelector("#fidelity-engagement-verify-title");
-  const msgEl = rootEl.querySelector("#fidelity-engagement-verify-text");
-  const bar = rootEl.querySelector("#fidelity-engagement-verify-progress-bar");
-  const msgs = messages.length ? messages : VERIFY_MESSAGES_APPLE;
-
-  if (titleEl && title) titleEl.textContent = title;
-  if (panel) panel.style.setProperty("--verify-duration", `${durationMs}ms`);
-  if (bar) {
-    bar.classList.remove("fidelity-qr-verify-progress-bar--animate");
-    bar.getBoundingClientRect();
-    bar.classList.add("fidelity-qr-verify-progress-bar--animate");
-  }
-  let idx = 0;
-  if (msgEl) msgEl.textContent = msgs[0];
-  const step = Math.max(260, Math.floor(durationMs / (msgs.length + 1)));
-  const id = window.setInterval(() => {
-    idx = (idx + 1) % msgs.length;
-    if (msgEl) msgEl.textContent = msgs[idx];
-  }, step);
-  return () => window.clearInterval(id);
+  closeFidelityBusyOverlay(rootEl);
 }
 
 function memberAppleWalletReady(member) {
@@ -185,7 +158,7 @@ export async function runWalletReturnRefresh(opts) {
   }
 
   const durationMs = VERIFY_MIN_MS + Math.floor(Math.random() * VERIFY_JITTER_MS);
-  const stopUx = startVerifyPanelUx(rootEl, durationMs, messages, title);
+  const stopUx = startFidelityBusyOverlayUx(rootEl, { durationMs, messages, title });
   await new Promise((r) => globalThis.setTimeout(r, durationMs));
   stopUx();
 

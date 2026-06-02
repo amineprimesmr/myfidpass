@@ -1,5 +1,5 @@
 /**
- * Modale « utiliser une récompense » : QR membre (identique Wallet) + parcours en magasin.
+ * Modale « utiliser une récompense » : QR membre (identique Wallet).
  * @param {(s: string) => string} esc
  */
 export function renderRewardRedeemModalMarkup(esc) {
@@ -9,19 +9,12 @@ export function renderRewardRedeemModalMarkup(esc) {
   <div class="fidelity-reward-redeem-modal__panel" role="document">
     <button type="button" class="fidelity-reward-redeem-modal__close" data-fid-redeem-close aria-label="${esc("Fermer")}"><span aria-hidden="true">×</span></button>
     <div id="fidelity-reward-redeem-state-unlocked" class="fidelity-reward-redeem-modal__state hidden">
-      <p class="fidelity-reward-redeem-modal__kicker">${esc("En boutique")}</p>
       <h2 id="fidelity-reward-redeem-heading" class="fidelity-reward-redeem-modal__title"></h2>
-      <p class="fidelity-reward-redeem-modal__lead">${esc("Présente ce QR en caisse : c’est le même code que sur ta carte Wallet. Le personnel te scanne et valide ta récompense sur Fidpass.")}</p>
       <div class="fidelity-reward-redeem-modal__qr-wrap">
         <div id="fidelity-reward-redeem-qr-skel" class="fidelity-reward-redeem-modal__qr-skel" aria-hidden="true"></div>
         <img id="fidelity-reward-redeem-qr" class="fidelity-reward-redeem-modal__qr hidden" alt="" width="232" height="232" decoding="async" />
       </div>
-      <ol class="fidelity-reward-redeem-modal__steps">
-        <li class="fidelity-reward-redeem-modal__step"><span class="fidelity-reward-redeem-modal__step-num" aria-hidden="true">1</span><span>${esc("Rends-toi en magasin.")}</span></li>
-        <li class="fidelity-reward-redeem-modal__step"><span class="fidelity-reward-redeem-modal__step-num" aria-hidden="true">2</span><span>${esc("Passe commande puis ouvre cet écran au moment du paiement.")}</span></li>
-        <li class="fidelity-reward-redeem-modal__step"><span class="fidelity-reward-redeem-modal__step-num" aria-hidden="true">3</span><span>${esc("Le staff scanne le QR et enregistre la récompense sur ton compte.")}</span></li>
-      </ol>
-      <p id="fidelity-reward-redeem-fine" class="fidelity-reward-redeem-modal__fine"></p>
+      <p id="fidelity-reward-redeem-error" class="fidelity-reward-redeem-modal__error hidden" role="status"></p>
     </div>
     <div id="fidelity-reward-redeem-state-locked" class="fidelity-reward-redeem-modal__state hidden">
       <div class="fidelity-reward-redeem-modal__locked-visual" aria-hidden="true">
@@ -29,7 +22,6 @@ export function renderRewardRedeemModalMarkup(esc) {
       </div>
       <h2 id="fidelity-reward-redeem-locked-heading" class="fidelity-reward-redeem-modal__title"></h2>
       <p id="fidelity-reward-redeem-locked-body" class="fidelity-reward-redeem-modal__locked-body"></p>
-      <p class="fidelity-reward-redeem-modal__locked-hint">${esc("Continue à cumuler : ta jauge en haut de page indique où tu en es.")}</p>
     </div>
   </div>
 </div>`;

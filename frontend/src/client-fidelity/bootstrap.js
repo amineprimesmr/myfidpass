@@ -59,10 +59,17 @@ import {
 import {
   bindWalletReturnListeners,
   consumeWalletHeroReveal,
+  isWalletReturnPending,
   markAppleWalletPending,
   markGoogleWalletPending,
   runWalletReadyHeroReveal,
 } from "./wallet-return-flow.js";
+import {
+  closeFidelityBusyOverlay,
+  openFidelityBusyOverlay,
+  setFidelitySubmitButtonBusy,
+  startFidelityBusyOverlayUx,
+} from "./lib/fidelity-busy-overlay.js";
 
 function genIdempotencyKey() {
   return `fid-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -185,7 +192,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   /** Complète le store après le premier rendu (refresh, retour onglet). */
   function scheduleHydrateMemberExtras(memberId) {
     void hydrateMemberExtras(memberId).then(() => {
-      if (isSpinning || isQrModalOpen()) return;
+      if (isSpinning || isQrModalOpen() || isWalletReturnPending(slug)) return;
       rerender();
     });
   }
@@ -414,6 +421,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   }
 
   function rerender() {
+    if (isWalletReturnPending(slug)) return;
     resetFidelityClientPageUi(rootEl);
     renderClientPage(rootEl, store.get(), { slug, apiBase });
     applyFidelityClientPageBackground(store.get().business);
@@ -450,6 +458,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
      * seraient détruits et le popup disparaîtrait. Le code appelant (claimForm submit)
      * appelle rerender() explicitement après avoir fermé la modale. */
     if (isQrModalOpen()) return;
+    if (isWalletReturnPending(slug)) return;
     deferredRerenderAfterSpin = false;
     rerender();
   }
@@ -498,6 +507,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     const name = rootEl.querySelector("#fidelity-v2-name")?.value?.trim();
     const email = rootEl.querySelector("#fidelity-v2-email")?.value?.trim();
     const errorEl = rootEl.querySelector("#fidelity-v2-error");
+    const submitBtn = rootEl.querySelector("#fidelity-v2-submit");
     if (!name || !email) {
       if (errorEl) {
         errorEl.textContent = "Renseigne ton nom et ton email.";
@@ -505,6 +515,18 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       }
       return;
     }
+    if (errorEl) errorEl.classList.add("hidden");
+    setFidelitySubmitButtonBusy(submitBtn, true, { busyLabel: "Création de votre espace…" });
+    openFidelityBusyOverlay(rootEl);
+    const stopUx = startFidelityBusyOverlayUx(rootEl, {
+      title: "Création de votre compte",
+      messages: [
+        "Enregistrement de vos informations…",
+        "Préparation de votre carte fidélité…",
+        "Presque prêt…",
+      ],
+      durationMs: 2400,
+    });
     try {
       const data = await api.createMember(slug, { name, email });
       const memberId = data.memberId || data.member?.id;
@@ -513,12 +535,19 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       lastTrackedMemberBalance = 0;
       localStorage.setItem(memberStorageKey(slug), JSON.stringify({ memberId, createdAt: Date.now() }));
       await hydrateMember(memberId);
+      stopUx();
+      closeFidelityBusyOverlay(rootEl);
+      setFidelitySubmitButtonBusy(submitBtn, false);
       rerender();
     } catch (err) {
       if (errorEl) {
         errorEl.textContent = messageUtilisateurPourErreur(err, err.message || "Erreur lors de la création.");
         errorEl.classList.remove("hidden");
       }
+    } finally {
+      stopUx();
+      closeFidelityBusyOverlay(rootEl);
+      setFidelitySubmitButtonBusy(submitBtn, false);
     }
   }
 
@@ -953,16 +982,34 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
           const mid = store.get().member?.id;
           if (!mid) return;
           markGoogleWalletPending(slug);
-          const result = await api.getGoogleWalletSaveLink(slug, mid);
-          if (result.ok) {
-            window.location.href = result.url;
-            return;
+          openFidelityBusyOverlay(rootEl);
+          const stopUx = startFidelityBusyOverlayUx(rootEl, {
+            title: "Google Wallet",
+            messages: [
+              "Préparation de votre carte…",
+              "Connexion au service Google…",
+              "Ouverture imminente…",
+            ],
+            durationMs: 3200,
+          });
+          try {
+            const result = await api.getGoogleWalletSaveLink(slug, mid);
+            stopUx();
+            if (result.ok) {
+              window.location.href = result.url;
+              return;
+            }
+            closeFidelityBusyOverlay(rootEl);
+            const message =
+              result.code === "google_wallet_unavailable"
+                ? "Google Wallet est temporairement indisponible. Réessaie plus tard ou contacte le magasin."
+                : result.error || "Impossible d’ouvrir Google Wallet.";
+            globalThis.alert(message);
+          } catch {
+            stopUx();
+            closeFidelityBusyOverlay(rootEl);
+            globalThis.alert("Impossible d’ouvrir Google Wallet pour le moment. Réessaie.");
           }
-          const message =
-            result.code === "google_wallet_unavailable"
-              ? "Google Wallet est temporairement indisponible. Réessaie plus tard ou contacte le magasin."
-              : result.error || "Impossible d’ouvrir Google Wallet.";
-          globalThis.alert(message);
         },
         { signal },
       );
@@ -1164,6 +1211,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   }
 
   function resumeMemberOnTabVisible() {
+    if (isWalletReturnPending(slug)) return;
     resetFidelityClientPageUi(rootEl);
     const memberId = store.get().member?.id;
     if (!memberId || document.visibilityState !== "visible") return;

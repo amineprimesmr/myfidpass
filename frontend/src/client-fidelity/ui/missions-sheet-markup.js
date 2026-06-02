@@ -30,7 +30,10 @@ export function renderEarnMorePointsButtonMarkup(esc, programType = "points") {
  */
 export function renderMissionsSheetMarkup(esc, p) {
   const title = esc(String(p.sheetTitle || "Missions"));
-  const sub = esc(missionsSheetSubtext(p.programType ?? "points"));
+  const subRaw = missionsSheetSubtext(p.programType ?? "points");
+  const subBlock = subRaw
+    ? `<p class="fidelity-missions-sheet__sub">${esc(subRaw)}</p>`
+    : "";
   return `
     <div
       id="fidelity-missions-sheet"
@@ -47,9 +50,8 @@ export function renderMissionsSheetMarkup(esc, p) {
         </div>
         <header class="fidelity-missions-sheet__head">
           <div class="fidelity-missions-sheet__head-text">
-            <p class="fidelity-missions-sheet__kicker">${esc("Bonus fidélité")}</p>
             <h2 id="fidelity-missions-sheet-title" class="fidelity-missions-sheet__title">${title}</h2>
-            <p class="fidelity-missions-sheet__sub">${sub}</p>
+            ${subBlock}
           </div>
           <button
             type="button"

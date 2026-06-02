@@ -354,7 +354,7 @@ export function renderClientPage(root, state, options = {}) {
         })
       : ""}
 
-    ${hasMember && !isGuestPlaceholder ? renderEngagementVerifyOverlayMarkup() : ""}
+    ${renderEngagementVerifyOverlayMarkup()}
 
     ${
       hasMember

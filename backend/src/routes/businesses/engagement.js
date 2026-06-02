@@ -38,7 +38,7 @@ export function engagementActionsHandler(req, res) {
     actions.unshift({
       action_type: "profile_complete",
       label: "Complète ton profil",
-      points: 1,
+      points: 5,
       url: "#",
     });
   }
