@@ -4,13 +4,26 @@ import {
   listMatchPredictionMatchesForMember,
   submitMatchPrediction,
 } from "../../db.js";
+import { syncWorldCup2026Matches } from "../../lib/world-cup-match-sync.js";
 
 const router = Router({ mergeParams: true });
 
-router.get("/matches", (req, res) => {
+async function memberMatchPayload(businessId, memberId) {
+  let data = listMatchPredictionMatchesForMember(businessId, memberId || null);
+  if (!data.matches?.length) {
+    try {
+      await syncWorldCup2026Matches();
+      data = listMatchPredictionMatchesForMember(businessId, memberId || null);
+    } catch (_) {
+      /* ignore */
+    }
+  }
+  return data;
+}
+
+router.get("/matches", async (req, res) => {
   const memberId = String(req.query.memberId || "").trim();
-  const data = listMatchPredictionMatchesForMember(req.business.id, memberId || null);
-  return res.json(data);
+  return res.json(await memberMatchPayload(req.business.id, memberId || null));
 });
 
 router.post("/matches/:matchId/predictions", (req, res) => {
@@ -31,11 +44,11 @@ router.post("/matches/:matchId/predictions", (req, res) => {
   return res.json({ ok: true, match: result.entry });
 });
 
-router.get("/", (req, res) => {
+router.get("/", async (req, res) => {
   const memberId = String(req.params.memberId || "").trim();
   const member = getMemberForBusiness(memberId, req.business.id);
   if (!member) return res.status(404).json({ error: "Membre introuvable", code: "MEMBER_NOT_FOUND" });
-  return res.json(listMatchPredictionMatchesForMember(req.business.id, memberId));
+  return res.json(await memberMatchPayload(req.business.id, memberId));
 });
 
 export default router;

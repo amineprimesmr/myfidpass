@@ -501,11 +501,9 @@ function scheduleWorldCupMatchSyncLoop() {
       })
       .catch((err) => logger.error({ err }, "[world-cup-sync] échec"));
   };
-  setTimeout(() => {
-    run();
-    setInterval(run, INTERVAL_MS);
-  }, 90_000);
-  logger.info("[world-cup-sync] planifié : 1er passage dans ~90 s, puis toutes les 6 h");
+  run();
+  setInterval(run, INTERVAL_MS);
+  logger.info("[world-cup-sync] planifié : immédiat au démarrage, puis toutes les 6 h");
 }
 
 /** Maintenance SQLite : checkpoint WAL + nettoyage locks orphelins, toutes les heures. */

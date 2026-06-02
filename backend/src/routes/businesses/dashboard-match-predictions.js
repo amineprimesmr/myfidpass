@@ -5,6 +5,7 @@ import {
   setMatchPredictionResult,
   updateMatchPredictionConfig,
 } from "../../db.js";
+import { syncWorldCup2026Matches } from "../../lib/world-cup-match-sync.js";
 import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
 import {
   blockStaffDashboardWrites,
@@ -17,12 +18,20 @@ const router = Router({ mergeParams: true });
 router.use((req, res, next) => {
   if (!ensureDashboardAccess(req, res, req.business)) return;
   if (!blockStaffDashboardWrites(req, res, req.business)) return;
-  if (req.method !== "GET" && !ensureOperationalSubscription(req, res, req.business)) return;
   next();
 });
 
-router.get("/", (req, res) => {
-  return res.json(listMatchPredictionDashboard(req.business.id));
+router.get("/", async (req, res) => {
+  let payload = listMatchPredictionDashboard(req.business.id);
+  if (!payload.matches?.length) {
+    try {
+      await syncWorldCup2026Matches();
+      payload = listMatchPredictionDashboard(req.business.id);
+    } catch (_) {
+      /* catalogue déjà présent ou sync indisponible — on renvoie la liste vide */
+    }
+  }
+  return res.json(payload);
 });
 
 router.patch("/config", (req, res) => {
@@ -37,6 +46,7 @@ router.get("/matches/:matchId/entries", (req, res) => {
 });
 
 router.post("/matches/:matchId/result", async (req, res) => {
+  if (!ensureOperationalSubscription(req, res, req.business)) return;
   const result = setMatchPredictionResult({
     businessId: req.business.id,
     matchId: req.params.matchId,

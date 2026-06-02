@@ -77,8 +77,22 @@ function dashboardMatch(row) {
   };
 }
 
+function resolveMatchPredictionsGameRow() {
+  let game = getGameByCode("match_predictions");
+  if (game) return game;
+  const db = getDb();
+  game = db.prepare("SELECT * FROM games WHERE code = 'match_predictions' LIMIT 1").get();
+  if (game) return game;
+  const gameId = randomUUID();
+  db.prepare(
+    `INSERT INTO games (id, code, name, type, active, config_json)
+     VALUES (?, 'match_predictions', 'Challenge pronostics foot', 'match_predictions', 1, ?)`,
+  ).run(gameId, JSON.stringify({ points_per_correct_prediction: DEFAULT_POINTS, cutoff_minutes: 15 }));
+  return getGameByCode("match_predictions") || db.prepare("SELECT * FROM games WHERE id = ?").get(gameId);
+}
+
 export function ensureMatchPredictionsGameForBusiness(businessId) {
-  const game = getGameByCode("match_predictions");
+  const game = resolveMatchPredictionsGameRow();
   if (!game) return null;
   const existing = db
     .prepare(
