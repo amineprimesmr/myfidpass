@@ -100,7 +100,18 @@ export default function SaasProPaymentPage() {
     const planParam = new URLSearchParams(window.location.search).get("plan");
     return String(planParam || "").toLowerCase() === "annual";
   })();
+  const initialCommerceSlots = (() => {
+    if (typeof window === "undefined") return 1;
+    const raw =
+      new URLSearchParams(window.location.search).get("commerce_slots") ||
+      new URLSearchParams(window.location.search).get("slots") ||
+      "1";
+    const n = parseInt(String(raw), 10);
+    if (!Number.isFinite(n)) return 1;
+    return Math.min(5, Math.max(1, n));
+  })();
   const [annual, setAnnual] = useState(initialPlanAnnual);
+  const commerceSlots = initialCommerceSlots;
   const [expanded, setExpanded] = useState(false);
   const [country, setCountry] = useState("FR");
   const [saveCard, setSaveCard] = useState(false);
@@ -195,7 +206,11 @@ export default function SaasProPaymentPage() {
               "Content-Type": "application/json",
               Authorization: `Bearer ${bearer}`,
             },
-            body: JSON.stringify({ plan: annual ? "annual" : "monthly", save_card: saveCard }),
+            body: JSON.stringify({
+              plan: annual ? "annual" : "monthly",
+              save_card: saveCard,
+              slots: commerceSlots,
+            }),
           });
 
         let fetchPromise = fetchEmbeddedSubscription(token);
