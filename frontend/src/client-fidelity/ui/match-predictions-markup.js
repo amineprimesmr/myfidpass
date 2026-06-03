@@ -18,10 +18,27 @@ function choiceLabel(match, choice) {
 }
 
 export function renderMatchPredictionsMarkup(esc, data = {}) {
-  if (!data?.enabled || !Array.isArray(data.matches) || data.matches.length === 0) return "";
+  if (!data?.enabled) return "";
   const points = Math.max(1, Math.floor(Number(data.points_per_correct_prediction) || 10));
-  const visible = data.matches.filter((m) => m.predictions_open !== false);
-  if (!visible.length) return "";
+  const allMatches = Array.isArray(data.matches) ? data.matches : [];
+  const visible = allMatches.filter((m) => m.predictions_open !== false);
+  if (!allMatches.length || !visible.length) {
+    const hint = !data?.enabled
+      ? ""
+      : !allMatches.length
+        ? "Le calendrier Coupe du monde se charge depuis le serveur. Rechargez la page dans un instant."
+        : "Les matchs à élimination directe s’afficheront quand les équipes seront connues.";
+    return `<section class="fidelity-match-predictions fidelity-v2-card" id="fidelity-match-predictions">
+    <div class="fidelity-match-predictions__header">
+      <div>
+        <p class="fidelity-match-predictions__eyebrow">Coupe du monde 2026</p>
+        <h2>Pronostics foot</h2>
+        <p>${esc(hint)}</p>
+      </div>
+      <span>+${points} pts</span>
+    </div>
+  </section>`;
+  }
   const cards = visible
     .map((match) => {
       const prediction = match.prediction || null;

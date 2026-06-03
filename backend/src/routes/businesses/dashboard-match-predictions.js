@@ -5,7 +5,11 @@ import {
   setMatchPredictionResult,
   updateMatchPredictionConfig,
 } from "../../db.js";
-import { syncWorldCup2026Matches, ensureWorldCupCatalogSeeded } from "../../lib/world-cup-match-sync.js";
+import {
+  syncWorldCup2026Matches,
+  ensureWorldCupCatalogSeeded,
+  countListableMatchPredictionMatches,
+} from "../../lib/world-cup-match-sync.js";
 import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
 import {
   blockStaffDashboardWrites,
@@ -23,7 +27,7 @@ router.use((req, res, next) => {
 router.get("/", async (req, res) => {
   ensureWorldCupCatalogSeeded();
   let payload = listMatchPredictionDashboard(req.business.id);
-  if (!payload.matches?.length) {
+  if (countListableMatchPredictionMatches() < 72 || !payload.matches?.length) {
     try {
       await syncWorldCup2026Matches();
       payload = listMatchPredictionDashboard(req.business.id);

@@ -277,14 +277,55 @@ export function countActiveMatchPredictionMatches(conn = db) {
   return Number(conn.prepare("SELECT COUNT(*) as n FROM match_prediction_matches WHERE active = 1").get()?.n) || 0;
 }
 
-/** Garantit au moins 72 matchs de phase de groupes en base. */
+/** Même filtre que listMatchPredictionDashboard / espace client. */
+export function countListableMatchPredictionMatches(conn = db) {
+  return (
+    Number(
+      conn
+        .prepare(
+          `SELECT COUNT(*) as n FROM match_prediction_matches
+           WHERE active = 1 AND (stage = 'group' OR predictions_open = 1)`,
+        )
+        .get()?.n,
+    ) || 0
+  );
+}
+
+/** Réactive les lignes legacy (migration v39) pour qu’elles passent le filtre liste. */
+function repairLegacyMatchRows(conn = db) {
+  conn.prepare(
+    `UPDATE match_prediction_matches
+     SET active = 1,
+         stage = COALESCE(NULLIF(TRIM(stage), ''), 'group'),
+         predictions_open = CASE
+           WHEN predictions_open = 0 THEN predictions_open
+           ELSE COALESCE(predictions_open, 1)
+         END
+     WHERE code LIKE 'mp-2026-%' OR external_id LIKE 'wc2026-%' OR code LIKE 'wc2026-%'`,
+  ).run();
+  const broken = conn
+    .prepare(
+      "SELECT id, starts_at FROM match_prediction_matches WHERE cutoff_at IS NULL OR TRIM(cutoff_at) = ''",
+    )
+    .all();
+  for (const row of broken) {
+    const cutoff = cutoffFromStartsAt(row.starts_at);
+    if (cutoff) conn.prepare("UPDATE match_prediction_matches SET cutoff_at = ? WHERE id = ?").run(cutoff, row.id);
+  }
+}
+
+/** Garantit au moins 72 matchs de phase de groupes visibles (critère aligné sur les listes API). */
 export function ensureWorldCupCatalogSeeded(conn = db) {
+  repairLegacyMatchRows(conn);
+  const listable = countListableMatchPredictionMatches(conn);
   const groupCount =
     Number(
       conn.prepare("SELECT COUNT(*) as n FROM match_prediction_matches WHERE active = 1 AND stage = 'group'").get()?.n,
     ) || 0;
-  if (groupCount >= 72) return { skipped: true, groupCount };
-  return { ...syncWorldCup2026CatalogSync(conn), skipped: false, groupCount };
+  if (listable >= 72 && groupCount >= 72) {
+    return { skipped: true, groupCount, listable };
+  }
+  return { ...syncWorldCup2026CatalogSync(conn), skipped: false, groupCount, listable };
 }
 
 /**
