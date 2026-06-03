@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
 import { ensureWorldCupCatalogSeeded } from "../lib/world-cup-match-sync.js";
+import { enrichNextMatchForApi, pickNextOpenMatchRow } from "../lib/match-predictions-next.js";
 import { addPoints, getMemberForBusiness } from "./members.js";
 import { createTransaction, getTransactionByIdempotencyKey } from "./transactions.js";
 import { getGameByCode } from "./games-helpers.js";
@@ -150,7 +151,7 @@ export function updateMatchPredictionConfig(businessId, updates = {}) {
 export function listMatchPredictionMatchesForMember(businessId, memberId) {
   ensureWorldCupCatalogSeeded();
   const config = getMatchPredictionConfig(businessId);
-  const matches = db
+  const rows = db
     .prepare(
       `SELECT * FROM match_prediction_matches
        WHERE active = 1 AND (stage = 'group' OR predictions_open = 1)
@@ -166,10 +167,15 @@ export function listMatchPredictionMatchesForMember(businessId, memberId) {
         .all(businessId, memberId)
     : [];
   const byMatchId = new Map(entries.map((entry) => [entry.match_id, entry]));
+  const publicRows = rows.map((match) => publicMatch(match, byMatchId.get(match.id)));
+  const nextRaw = pickNextOpenMatchRow(publicRows);
+  const nextMatch = nextRaw ? enrichNextMatchForApi(nextRaw) : null;
   return {
     enabled: Boolean(config?.enabled),
     points_per_correct_prediction: config?.points_per_correct_prediction ?? DEFAULT_POINTS,
-    matches: matches.map((match) => publicMatch(match, byMatchId.get(match.id))),
+    next_match: nextMatch,
+    /** @deprecated Liste complète — conservée pour compat ; le client n’affiche que `next_match`. */
+    matches: nextMatch ? [nextMatch] : [],
   };
 }
 
@@ -203,7 +209,7 @@ export function submitMatchPrediction({ businessId, memberId, matchId, choice })
 export function listMatchPredictionDashboard(businessId) {
   ensureWorldCupCatalogSeeded();
   const config = getMatchPredictionConfig(businessId);
-  const matches = db
+  const rows = db
     .prepare(
       `SELECT m.*,
               COUNT(e.id) as entries_count,
@@ -216,10 +222,43 @@ export function listMatchPredictionDashboard(businessId) {
        ORDER BY datetime(m.starts_at) ASC, m.sort_order ASC`,
     )
     .all(businessId);
+  const dashboardRows = rows.map(dashboardMatch);
+  const nextRaw = pickNextOpenMatchRow(dashboardRows);
+  let nextMatch = null;
+  if (nextRaw) {
+    nextMatch = enrichNextMatchForApi({
+      ...nextRaw,
+      entries_count: Number(nextRaw.entries_count) || 0,
+    });
+  }
+  const totalPredictions = Number(
+    db
+      .prepare("SELECT COUNT(*) as n FROM match_prediction_entries WHERE business_id = ?")
+      .get(businessId)?.n,
+  ) || 0;
   return {
     config,
-    matches: matches.map(dashboardMatch),
+    next_match: nextMatch,
+    stats: {
+      total_predictions: totalPredictions,
+      predictions_on_next_match: nextMatch?.entries_count ?? 0,
+    },
+    matches: [],
   };
+}
+
+/** Attribue les points pour tous les commerces ayant des pronostics sur un match terminé. */
+export function autoScoreFinishedMatchForAllBusinesses(matchId) {
+  const businessIds = db
+    .prepare("SELECT DISTINCT business_id FROM match_prediction_entries WHERE match_id = ?")
+    .all(matchId)
+    .map((r) => r.business_id);
+  let scored = 0;
+  for (const businessId of businessIds) {
+    const result = scoreMatchPredictions({ businessId, matchId });
+    if (result?.ok) scored += 1;
+  }
+  return { ok: true, businesses_scored: scored };
 }
 
 export function getMatchPredictionEntriesForMatch(businessId, matchId) {

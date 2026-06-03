@@ -232,6 +232,13 @@ function upsertApiRow(row, conn = db) {
       resultChoice,
       existing.id,
     );
+    if (status === "finished" && resultChoice) {
+      queueMicrotask(() => {
+        import("../db/match-predictions.js")
+          .then((m) => m.autoScoreFinishedMatchForAllBusinesses(existing.id))
+          .catch((err) => console.warn("[world-cup-sync] auto-score:", err?.message || err));
+      });
+    }
     return { action: "updated", id: existing.id };
   }
 

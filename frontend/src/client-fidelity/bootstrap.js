@@ -939,6 +939,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
             nextFb.classList.add("success");
             window.setTimeout(() => nextFb.classList.add("hidden"), 2600);
           }
+          triggerWinCelebrationConfetti();
         } catch (err) {
           btn.disabled = false;
           if (fb) {
