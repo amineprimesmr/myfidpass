@@ -1171,6 +1171,59 @@ async function handleCheckoutSessionCompleted(session, stripeEventId) {
  * POST /api/payment/apple/sync-transaction
  * Body: { signed_transaction_info?, transaction_id? } — StoreKit 2 (JWS + id transaction).
  */
+/**
+ * POST /api/payment/apple/introductory-offer-eligibility
+ * Body: { product_id, transaction_id } — JWS pour StoreKit `introductoryOfferEligibility(compactJWS:)`.
+ * Permet le 1 € 1er mois pour un commerçant MyFidpass sans abo payant, même si l’Apple ID a déjà consommé l’intro du groupe.
+ */
+router.post("/apple/introductory-offer-eligibility", requireAuth, async (req, res) => {
+  const productId = req.body?.product_id ?? req.body?.productId;
+  const transactionId = req.body?.transaction_id ?? req.body?.transactionId;
+  try {
+    const { createIntroductoryOfferEligibilityJWS, isAppleIapOfferSigningConfigured, merchantMayReceiveIntroductoryOffer } =
+      await import("../lib/apple-iap-offer-signing.js");
+    if (!isAppleIapOfferSigningConfigured()) {
+      return res.status(503).json({
+        error: "Signature offre App Store non configurée (clé IAP App Store Connect).",
+        code: "apple_iap_signing_not_configured",
+      });
+    }
+    const allow = merchantMayReceiveIntroductoryOffer(req.user.id);
+    if (!allow) {
+      return res.json({
+        ok: true,
+        allow_introductory_offer: false,
+        compact_jws: null,
+        message: "Abonnement payant déjà actif sur ce compte MyFidpass.",
+      });
+    }
+    const compactJws = createIntroductoryOfferEligibilityJWS({
+      productId,
+      transactionId,
+      userId: req.user.id,
+    });
+    return res.json({
+      ok: true,
+      allow_introductory_offer: true,
+      compact_jws: compactJws,
+      offer_code_hint: String(process.env.APPLE_IAP_CUSTOM_OFFER_CODE || "MYFID1EURO").trim() || null,
+    });
+  } catch (e) {
+    const msg = e?.message || "";
+    if (msg === "APPLE_IAP_SIGNING_NOT_CONFIGURED") {
+      return res.status(503).json({ error: "Signature IAP non configurée.", code: "apple_iap_signing_not_configured" });
+    }
+    if (msg === "INVALID_PRODUCT_ID") {
+      return res.status(400).json({ error: "product_id invalide.", code: "invalid_product_id" });
+    }
+    if (msg === "MISSING_TRANSACTION_ID") {
+      return res.status(400).json({ error: "transaction_id requis (AppTransaction).", code: "missing_transaction_id" });
+    }
+    console.error("[payment] apple introductory-offer-eligibility:", e);
+    return res.status(500).json({ error: "Impossible de préparer l’offre App Store." });
+  }
+});
+
 router.post("/apple/sync-transaction", requireAuth, async (req, res) => {
   const signed = req.body?.signed_transaction_info ?? req.body?.signedTransactionInfo;
   const transactionId = req.body?.transaction_id ?? req.body?.transactionId;
