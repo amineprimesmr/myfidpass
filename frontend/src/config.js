@@ -364,6 +364,11 @@ export async function ensureWebSessionFresh(opts = {}) {
   const { forceRefresh = false } = opts;
   if (typeof window === "undefined") return getAuthToken();
 
+  // WebView iOS : le natif gère POST /auth/refresh (Keychain). Un refresh web consommerait la rotation et casserait l’app.
+  if (isSaasPaymentEmbeddedInNativeApp()) {
+    return getAuthToken();
+  }
+
   const current = getAuthToken();
   const expMs = parseJwtExpMs(current);
   const leewayMs = 120_000;
@@ -552,6 +557,7 @@ export function clearPendingEstablishments() {
  * @returns {Promise<string|null>} Nouvel access token, ou null si impossible.
  */
 export async function tryRefreshAccessToken() {
+  if (isSaasPaymentEmbeddedInNativeApp()) return getAuthToken();
   const refreshToken = getRefreshToken();
   if (!refreshToken) return null;
   try {

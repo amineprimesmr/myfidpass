@@ -15,6 +15,9 @@ import {
   isSaasPaymentEmbeddedInNativeApp,
   consumeAuthTransferFromHash,
   buildPaymentPathWithAuthHandoff,
+  ensureWebSessionFresh,
+  setRefreshToken,
+  getRefreshToken,
 } from "./config.js";
 
 describe("config", () => {
@@ -105,6 +108,32 @@ describe("config", () => {
     };
     expect(isSaasPaymentEmbeddedInNativeApp()).toBe(true);
     expect(subscriptionUsesExternalStripePaymentLink()).toBe(false);
+  });
+
+  it("ensureWebSessionFresh ne consomme pas POST /auth/refresh en embed iOS", async () => {
+    const origFetch = globalThis.fetch;
+    globalThis.location = {
+      hostname: "myfidpass.fr",
+      origin: "https://www.myfidpass.fr",
+      pathname: "/paiement",
+      search: "?app_embed=1",
+      hash: "",
+    };
+    setAuthToken("embed.access.jwt");
+    setRefreshToken("embed-refresh-must-remain");
+    let refreshPosted = false;
+    globalThis.fetch = async (url) => {
+      if (String(url).includes("/api/auth/refresh")) refreshPosted = true;
+      return { ok: false, status: 500, json: async () => ({}) };
+    };
+    try {
+      const token = await ensureWebSessionFresh({ forceRefresh: true });
+      expect(token).toBe("embed.access.jwt");
+      expect(refreshPosted).toBe(false);
+      expect(getRefreshToken()).toBe("embed-refresh-must-remain");
+    } finally {
+      globalThis.fetch = origFetch;
+    }
   });
 
   it("consumeAuthTransferFromHash imports fid_auth and clears hash from URL", () => {
