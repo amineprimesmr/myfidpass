@@ -63,7 +63,7 @@ router.post("/ensure", bootstrapLimiter, (req, res) => {
     created: result.created,
     password_updated: result.passwordUpdated,
     platform_admin_count: countPlatformAdmins(),
-    message: "Compte administrateur prêt — POST /api/auth/login puis app iOS (hub Administration).",
+    message: "Compte administrateur prêt — connexion app : e-mail + code OTP ; API legacy : POST /api/auth/login.",
   });
 });
 

@@ -462,6 +462,10 @@ export function sendMerchantAppAlert(deviceToken, payload) {
     if (typeof payload.data.notification_icon_url === "string" && payload.data.notification_icon_url) {
       opts.mutableContent = true;
     }
+    // Regroupe les accusés campagne dans le centre de notifs (évite une pile à chaque envoi).
+    if (payload.data.myfidpass_action === "campaign_receipt" && payload.data.business_id) {
+      opts.collapseId = `mfp-campaign-receipt-${String(payload.data.business_id).slice(0, 64)}`;
+    }
   }
   const note = new Notification(deviceToken, opts);
 

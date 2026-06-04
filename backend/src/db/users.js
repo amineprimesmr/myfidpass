@@ -261,8 +261,11 @@ export function ensurePlatformAdminAccount({ email, password, name = "Administra
  * N’enlève jamais le statut admin (retrait manuel en base uniquement).
  * @returns {{ applied: number, skipped: number }}
  */
+/** E-mail admin plateforme par défaut (promotion `is_admin` au boot si le compte existe). */
+export const DEFAULT_PLATFORM_ADMIN_EMAIL = "contact@myfidpass.fr";
+
 export function syncAdminEmailsFromEnv() {
-  const raw = (process.env.ADMIN_EMAILS || "").trim();
+  const raw = (process.env.ADMIN_EMAILS || DEFAULT_PLATFORM_ADMIN_EMAIL).trim();
   if (!raw) return { applied: 0, skipped: 0 };
   const emails = [...new Set(raw.split(",").map((e) => String(e).trim().toLowerCase()).filter(Boolean))];
   let applied = 0;
@@ -304,7 +307,7 @@ export function applyAdminInitialPasswordFromEnv() {
     return { accountsCreated: 0, passwordsUpdated: 0, skippedAlreadyDone: true };
   }
 
-  const raw = (process.env.ADMIN_EMAILS || "").trim();
+  const raw = (process.env.ADMIN_EMAILS || DEFAULT_PLATFORM_ADMIN_EMAIL).trim();
   if (!raw) return { accountsCreated: 0, passwordsUpdated: 0, skippedAlreadyDone: false };
 
   const emails = [...new Set(raw.split(",").map((e) => String(e).trim().toLowerCase()).filter(Boolean))];

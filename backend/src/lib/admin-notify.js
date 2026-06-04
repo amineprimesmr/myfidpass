@@ -3,11 +3,11 @@
  */
 import { sendMail } from "../email.js";
 import { insertAdminEvent } from "../db/admin-events.js";
-import { getUserById } from "../db/users.js";
+import { DEFAULT_PLATFORM_ADMIN_EMAIL, getUserById } from "../db/users.js";
 import { getBusinessById } from "../db/businesses.js";
 
 function notificationRecipientEmails() {
-  const raw = (process.env.ADMIN_NOTIFICATION_EMAILS || process.env.ADMIN_EMAILS || "").trim();
+  const raw = (process.env.ADMIN_NOTIFICATION_EMAILS || process.env.ADMIN_EMAILS || DEFAULT_PLATFORM_ADMIN_EMAIL).trim();
   return [...new Set(raw.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean))];
 }
 

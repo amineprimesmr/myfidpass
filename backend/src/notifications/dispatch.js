@@ -408,7 +408,7 @@ export async function deliverCustomerBroadcast({
   if (sendMerchantReceipt && merchantUserId) {
     const tokens = getMerchantDeviceTokensForUser(merchantUserId);
     const receiptTitle = "Campagne envoyée";
-    const receiptBody = `Apple Wallet: ${sentPassKit} · Google Wallet: ${sentGoogleWallet} · Web: ${sentWebPush}${errors.length ? ` · ${errors.length} erreur(s)` : ""}`;
+    const receiptBody = "Notification envoyée";
     for (const tok of tokens) {
       // Toujours inclure l'URL avec ?v= pour cache-busting — l'endpoint sert logonotif si pas d'icône custom.
       const merchantIconUrl = slug && apiBase

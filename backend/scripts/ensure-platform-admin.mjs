@@ -7,10 +7,10 @@
  *   node scripts/ensure-platform-admin.mjs --email ops@myfidpass.fr --password 'MonMotDePasse8!'
  *
  * Génération auto (mot de passe aléatoire affiché une fois) :
- *   node scripts/ensure-platform-admin.mjs --generate --email console-admin@myfidpass.fr
+ *   node scripts/ensure-platform-admin.mjs --generate --email contact@myfidpass.fr
  *
  * Production Railway (base SQLite du service API) :
- *   railway run --service fidpass-api node backend/scripts/ensure-platform-admin.mjs --generate --email console-admin@myfidpass.fr
+ *   railway run --service fidpass-api node backend/scripts/ensure-platform-admin.mjs --generate --email contact@myfidpass.fr
  */
 import crypto from "crypto";
 import dotenv from "dotenv";
@@ -43,7 +43,7 @@ function randomPassword() {
 
 const args = parseArgs(process.argv.slice(2));
 const generate = args.generate === true;
-const email = String(args.email ?? "console-admin@myfidpass.fr")
+const email = String(args.email ?? "contact@myfidpass.fr")
   .trim()
   .toLowerCase();
 let password = String(args.password ?? "");
@@ -70,6 +70,7 @@ console.log("Mot de passe:", password);
 console.log("Créé      :", result.created ? "oui" : "non (compte existant, mot de passe mis à jour + is_admin=1)");
 console.log("Admins en base:", countPlatformAdmins());
 console.log("");
-console.log("Connexion : POST https://api.myfidpass.fr/api/auth/login");
-console.log('Body JSON : { "login": "' + result.email + '", "password": "…" }');
-console.log("App iOS   : écran connexion commerçant → même identifiants → hub Administration.");
+console.log("App iOS / Android : connexion par e-mail → code OTP (6 chiffres reçu par mail).");
+console.log("API (legacy)      : POST https://api.myfidpass.fr/api/auth/login");
+console.log('                    { "login": "' + result.email + '", "password": "…" }');
+console.log("Hub Administration après connexion si is_admin=1.");
