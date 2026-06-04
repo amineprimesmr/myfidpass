@@ -5,6 +5,7 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { createHash } from "crypto";
 import sharp from "sharp";
+import { hasMerchantScanBenchOperationalBypass } from "../../lib/merchant-scan-bench-access.js";
 import {
   getMemberForBusiness,
   addPoints,
@@ -126,6 +127,7 @@ function isUniqueConstraintErr(e) {
 }
 
 function subscriptionBlocksPublicClaim(req, business) {
+  if (hasMerchantScanBenchOperationalBypass(business)) return false;
   const uid = req.user?.id != null ? String(req.user.id).trim() : "";
   const bid = business.user_id != null ? String(business.user_id).trim() : "";
   if (uid && uid === bid && !devPaymentBypass(req) && !hasOperationalMerchantAccess(uid)) {

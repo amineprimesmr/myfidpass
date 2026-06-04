@@ -6,6 +6,7 @@ import { getBusinessBySlug, getBusinessByDashboardToken, hasOperationalMerchantA
 import { isUserAdmin } from "../../db/users.js";
 import { getTeamRoleForUserAndBusiness } from "../../db/business-team.js";
 import { devPaymentBypass } from "../../lib/dev-payment-bypass.js";
+import { hasMerchantScanBenchOperationalBypass } from "../../lib/merchant-scan-bench-access.js";
 
 export function getApiBase(req) {
   return (process.env.API_URL || "").replace(/\/$/, "") || (req.protocol + "://" + (req.get("host") || ""));
@@ -133,6 +134,7 @@ export function assertOperationalSubscription(req, res, business) {
     res.status(403).json(SUBSCRIPTION_REQUIRED_BODY);
     return false;
   }
+  if (hasMerchantScanBenchOperationalBypass(business)) return true;
   if (devPaymentBypass(req) || hasOperationalMerchantAccess(ownerId)) return true;
   res.status(403).json(SUBSCRIPTION_REQUIRED_BODY);
   return false;
