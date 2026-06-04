@@ -1,4 +1,5 @@
 import { rewardRedeemQrDataUrl } from "./lib/member-qr-dataurl.js";
+import { stampCycleDisplayBalance } from "./lib/tier-progress.js";
 
 const closeMap = new WeakMap();
 const openUnlockedMap = new WeakMap();
@@ -62,7 +63,15 @@ export function bindRewardRedeemUi({ rootEl, getState, signal }) {
 
   closeMap.set(rootEl, closeModal);
 
-  async function openUnlocked({ label, costLine, tierIndex, points, qrDataUrl, qrPrefetchPromise }) {
+  async function openUnlocked({
+    label,
+    costLine,
+    tierIndex,
+    points,
+    stampThreshold,
+    qrDataUrl,
+    qrPrefetchPromise,
+  }) {
     if (!unlockedEl || !lockedEl || !heading || !qrImg || !qrSkel) return;
     const state = getState();
     const memberId = state?.member?.id;
@@ -111,6 +120,7 @@ export function bindRewardRedeemUi({ rootEl, getState, signal }) {
               programType,
               tierIndex,
               points,
+              stampThreshold,
             });
         applyQrSrc(src);
       } catch {
@@ -164,8 +174,11 @@ export function bindRewardRedeemUi({ rootEl, getState, signal }) {
       costLine = String(btn.dataset.rewardCostline || "");
     }
     const state = getState();
-    const balance = Math.max(0, Math.floor(Number(state?.member?.points) || 0));
     const programType = String(state?.business?.program_type || "points").toLowerCase();
+    const balance =
+      programType === "stamps"
+        ? stampCycleDisplayBalance(state?.member?.points, state?.business)
+        : Math.max(0, Math.floor(Number(state?.member?.points) || 0));
     const need = Math.max(0, threshold - balance);
     const unitPhrase =
       programType === "stamps" ? (need === 1 ? "tampon" : "tampons") : need === 1 ? "point" : "points";
@@ -177,7 +190,15 @@ export function bindRewardRedeemUi({ rootEl, getState, signal }) {
     );
 
     if (unlocked) {
-      void openUnlocked({ label, costLine, tierIndex, points });
+      const stampThreshold =
+        programType === "stamps" ? Math.max(0, parseInt(String(threshold || "0"), 10) || 0) : 0;
+      void openUnlocked({
+        label,
+        costLine,
+        tierIndex,
+        points,
+        stampThreshold: stampThreshold > 0 ? stampThreshold : undefined,
+      });
     } else {
       openLocked({ label, need, unitPhrase });
     }

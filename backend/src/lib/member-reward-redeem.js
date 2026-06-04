@@ -2,7 +2,8 @@
  * Utilisation récompense (points ou tampons) — partagé routes membre + scan intégration.
  */
 import { deductPoints, resetMemberPoints, createTransaction } from "../db.js";
-import { resolvePointsRewardFromQr } from "./reward-redeem-qr.js";
+import { normalizeStampBalance } from "./stamps-cycle-math.js";
+import { resolvePointsRewardFromQr, resolveStampRewardFromQr, stampCycleSize } from "./reward-redeem-qr.js";
 
 /**
  * @param {object} business
@@ -15,40 +16,53 @@ export function executeMemberRewardRedeem(business, member, opts) {
   const actorUserId = opts.actorUserId ?? null;
 
   if (mode === "stamps") {
-    const requiredStamps =
-      business.required_stamps != null && Number(business.required_stamps) > 0
-        ? Math.floor(Number(business.required_stamps))
-        : 10;
-    const current = Number(member.points) || 0;
-    if (current < requiredStamps) {
+    const cycleN = stampCycleSize(business);
+    const resolved = resolveStampRewardFromQr(business, {
+      mode: "stamps",
+      stampThreshold: opts.stampThreshold ?? opts.points ?? null,
+    });
+    const balance = normalizeStampBalance(member.points, cycleN);
+    const cost = resolved.pointsRequired;
+    if (balance < cost) {
       return {
         ok: false,
         status: 400,
         code: "NOT_ENOUGH_STAMPS",
-        error: `Le client n'a pas assez de tampons (${current}/${requiredStamps}).`,
+        error: `Le client n'a pas assez de tampons (${balance}/${cost}).`,
+        points_required: cost,
+        points_balance: balance,
       };
     }
-    resetMemberPoints(member.id);
+    const previousPoints = balance;
+    let newPoints;
+    if (resolved.isFullCard) {
+      resetMemberPoints(member.id);
+      newPoints = 0;
+    } else {
+      const updated = deductPoints(member.id, cost);
+      newPoints = normalizeStampBalance(updated.points, cycleN);
+    }
     createTransaction({
       businessId: business.id,
       memberId: member.id,
       type: "reward_redeem",
-      points: -current,
+      points: -cost,
       metadata: {
         subtype: "stamps",
-        required_stamps: requiredStamps,
+        required_stamps: cycleN,
+        stamp_threshold: resolved.stampThreshold,
         source,
-        reward_label: business.stamp_reward_label || "Récompense tampons",
+        reward_label: resolved.label,
       },
       actorUserId,
     });
     return {
       ok: true,
       type: "stamps",
-      previous_points: current,
-      new_points: 0,
-      points_deducted: current,
-      reward_label: business.stamp_reward_label || "Récompense tampons",
+      previous_points: previousPoints,
+      new_points: newPoints,
+      points_deducted: cost,
+      reward_label: resolved.label,
       message: "Récompense tampons utilisée.",
     };
   }

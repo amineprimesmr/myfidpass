@@ -16,7 +16,13 @@ import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
 import { pushPassKitAfterMemberBalanceChange } from "../../lib/wallet-reward-tier-notify.js";
 import { syncGoogleWalletObjectForMember } from "../../google-wallet.js";
 import { ensureOperationalSubscription, getApiBase } from "./shared.js";
-import { parseMerchantScanCode, resolvePointsRewardFromQr } from "../../lib/reward-redeem-qr.js";
+import { normalizeStampBalance } from "../../lib/stamps-cycle-math.js";
+import {
+  parseMerchantScanCode,
+  resolvePointsRewardFromQr,
+  resolveStampRewardFromQr,
+  stampCycleSize,
+} from "../../lib/reward-redeem-qr.js";
 import { executeMemberRewardRedeem } from "../../lib/member-reward-redeem.js";
 import {
   computeRawPointsForCredit,
@@ -33,18 +39,15 @@ function resolveRewardRedeemPreview(business, member, rewardRedeem) {
   if (!rewardRedeem) return null;
   const programType = (business.program_type || "").toLowerCase();
   if (rewardRedeem.mode === "stamps" || programType === "stamps") {
-    const requiredStamps =
-      business.required_stamps != null && Number(business.required_stamps) > 0
-        ? Math.floor(Number(business.required_stamps))
-        : 10;
-    const balance = Number(member.points) || 0;
-    const label = (business.stamp_reward_label || "Récompense tampons").trim();
+    const cycleN = stampCycleSize(business);
+    const balance = normalizeStampBalance(member.points, cycleN);
+    const resolved = resolveStampRewardFromQr(business, rewardRedeem);
     return {
       mode: "stamps",
-      label,
-      points_required: requiredStamps,
+      label: resolved.label,
+      points_required: resolved.pointsRequired,
       points_balance: balance,
-      eligible: balance >= requiredStamps,
+      eligible: balance >= resolved.pointsRequired,
     };
   }
   const resolved = resolvePointsRewardFromQr(business, rewardRedeem);
@@ -146,6 +149,7 @@ router.post("/reward-redeem", async (req, res) => {
     mode: redeemIntent.mode === "stamps" ? "stamps" : "points",
     tierIndex: redeemIntent.tierIndex,
     points: redeemIntent.points,
+    stampThreshold: redeemIntent.stampThreshold,
     actorUserId: req.user?.id,
     source: "integration_reward_redeem",
   });

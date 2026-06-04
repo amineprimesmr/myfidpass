@@ -1,6 +1,23 @@
 /** Logique paliers points / tampons (partagée bannière + section récompenses). */
 
 export const STAMP_MID_DEFAULT = 5;
+
+/** Solde tampon affiché (cycle 0 … N-1), aligné backend `normalizeStampBalance`. */
+export function stampCycleDisplayBalance(memberPoints, business) {
+  const n = Math.max(1, Math.floor(Number(business?.required_stamps) || 10));
+  const p = Math.max(0, Math.floor(Number(memberPoints) || 0));
+  return p % n;
+}
+
+/** Palier tampon atteint pour l’UI (carte complète = N-1 tampons visibles sur N). */
+export function isStampTierUnlocked(threshold, balance, business, tiers) {
+  const cycleN = Math.max(1, Math.floor(Number(business?.required_stamps) || 10));
+  const last = tiers.length ? tiers[tiers.length - 1].threshold : cycleN;
+  if (threshold >= last && threshold >= cycleN - 1) {
+    return balance >= cycleN - 1;
+  }
+  return balance >= threshold;
+}
 /** Palier inscription / début du jeu (aligné SaaS commerçant). */
 export const SIGNUP_REWARD_POINTS = 10;
 

@@ -1,4 +1,9 @@
-import { buildStampTiers, parsePointTiers } from "../lib/tier-progress.js";
+import {
+  buildStampTiers,
+  isStampTierUnlocked,
+  parsePointTiers,
+  stampCycleDisplayBalance,
+} from "../lib/tier-progress.js";
 
 /** Images par défaut : `public/assets/gift/gift1.png` … `gift5.png` (rotation par palier). */
 const DEFAULT_GIFT_COUNT = 5;
@@ -69,7 +74,9 @@ function renderRewardCard(t, unlocked, costLine, esc, displayImageUrl, tierIndex
 export function renderRewardsStepMarkup(esc, ctx) {
   const { business, member, programType, balanceUnit } = ctx;
   const isStamps = programType === "stamps";
-  const balance = Math.max(0, Math.floor(Number(member?.points) || 0));
+  const balance = isStamps
+    ? stampCycleDisplayBalance(member?.points, business)
+    : Math.max(0, Math.floor(Number(member?.points) || 0));
   const tiers = isStamps ? buildStampTiers(business) : parsePointTiers(business);
   const unitEsc = esc(balanceUnit);
 
@@ -88,7 +95,9 @@ export function renderRewardsStepMarkup(esc, ctx) {
       : `<ul class="fid-rewards-grid" role="list" aria-label="Récompenses du programme">
 ${tiers
   .map((t, tierIndex) => {
-    const unlocked = balance >= t.threshold;
+    const unlocked = isStamps
+      ? isStampTierUnlocked(t.threshold, balance, business, tiers)
+      : balance >= t.threshold;
     const costNum = esc(String(t.threshold));
     const costLine = isStamps ? `${costNum} ${unitEsc}` : `${costNum} points`;
     const tier = /** @type {{ threshold: number; label: string; imageUrl?: string }} */ (t);

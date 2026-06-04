@@ -4,6 +4,7 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { randomUUID } from "crypto";
+import { executeMemberRewardRedeem } from "../../lib/member-reward-redeem.js";
 import {
   createMember,
   getMemberForBusiness,
@@ -498,33 +499,34 @@ router.post("/:memberId/redeem", async (req, res) => {
 
   const body = req.body || {};
   const type = (body.type || "").toLowerCase();
-  const requiredStamps = business.required_stamps != null ? Number(business.required_stamps) : 10;
-
   if (type === "stamps") {
-    const current = Number(member.points) || 0;
-    if (current < requiredStamps) {
-      return res.status(400).json({
-        error: `Le client n'a pas assez de tampons (${current}/${requiredStamps}). Récompense non utilisable.`,
-        code: "NOT_ENOUGH_STAMPS",
+    const result = executeMemberRewardRedeem(business, member, {
+      mode: "stamps",
+      stampThreshold: body.stamp_threshold ?? body.stampThreshold ?? null,
+      actorUserId: req.user?.id,
+      source: "member_redeem_stamps",
+    });
+    if (!result.ok) {
+      return res.status(result.status).json({
+        error: result.error,
+        code: result.code,
+        points_required: result.points_required,
+        points_balance: result.points_balance,
       });
     }
-    resetMemberPoints(member.id);
-    createTransaction({
-      businessId: business.id,
-      memberId: member.id,
-      type: "reward_redeem",
-      points: -current,
-      metadata: { subtype: "stamps", required_stamps: requiredStamps },
-      actorUserId: req.user?.id,
-    });
     await pushPassKitUpdateForMember(business.id, member.id, "redeem_stamps");
-    await syncGoogleWalletAfterMemberMutation({ ...member, points: 0 }, business, req, "redeem_stamps");
+    await syncGoogleWalletAfterMemberMutation(
+      { ...member, points: result.new_points },
+      business,
+      req,
+      "redeem_stamps",
+    );
     return res.json({
       ok: true,
       type: "stamps",
-      previous_points: current,
-      new_points: 0,
-      message: "Récompense tampons utilisée.",
+      previous_points: result.previous_points,
+      new_points: result.new_points,
+      message: result.message,
     });
   }
 

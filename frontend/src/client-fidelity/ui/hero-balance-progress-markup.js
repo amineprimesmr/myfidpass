@@ -4,6 +4,7 @@ import {
   tierProgressState,
   buildHeroLinearTickMarks,
   heroFillPercentLinear,
+  stampCycleDisplayBalance,
 } from "../lib/tier-progress.js";
 
 /**
@@ -14,8 +15,10 @@ import {
  * }} p
  */
 export function buildHeroBalanceProgressState(p) {
-  const pts = Math.max(0, Math.floor(Number(p.memberPoints) || 0));
   const isStamps = String(p.programType || "").toLowerCase() === "stamps";
+  const pts = isStamps
+    ? stampCycleDisplayBalance(p.memberPoints, p.business)
+    : Math.max(0, Math.floor(Number(p.memberPoints) || 0));
   const tiers = isStamps ? buildStampTiers(p.business) : parsePointTiers(p.business);
 
   let pct;

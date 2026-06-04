@@ -30,7 +30,7 @@ export async function memberIdToQrDataUrl(memberId) {
 
 /**
  * QR lié à une récompense : le scan commerçant débite le palier et affiche le libellé.
- * @param {{ memberId: string; programType?: string; tierIndex: number; points: number }} p
+ * @param {{ memberId: string; programType?: string; tierIndex: number; points: number; stampThreshold?: number }} p
  * @returns {Promise<string>} data URL PNG
  */
 export async function rewardRedeemQrDataUrl(p) {
