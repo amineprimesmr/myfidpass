@@ -89,21 +89,34 @@ export function getDashboardStats(businessId, period = "this_month") {
     ? { avg: 0 }
     : db.prepare("SELECT COALESCE(ROUND(AVG(points), 0), 0) as avg FROM members WHERE business_id = ?").get(businessId);
 
-  /** Somme des montants € réellement enregistrés sur les transactions (`metadata.amount_eur`) — jamais dérivée des points. */
+  /**
+   * Panier moyen = moyenne des `metadata.amount_eur` sur les crédits points **avec montant € saisi**.
+   * Ne pas diviser par toutes les transactions (passages sans €, redeem, etc.) — sinon panier artificiellement bas.
+   */
+  const amountEurSqlFilter = `type = 'points_add' AND metadata IS NOT NULL
+    AND json_extract(metadata, '$.amount_eur') IS NOT NULL
+    AND CAST(json_extract(metadata, '$.amount_eur') AS REAL) > 0`;
   let declaredAmountSumEur = 0;
+  let purchasesWithAmountEur = 0;
   try {
     if (bounds.month != null) {
       const row = db.prepare(
-        `SELECT COALESCE(SUM(CAST(json_extract(metadata, '$.amount_eur') AS REAL)), 0) as total
-         FROM transactions WHERE business_id = ? AND strftime('%Y-%m', created_at) = ? AND metadata IS NOT NULL`
+        `SELECT COALESCE(SUM(CAST(json_extract(metadata, '$.amount_eur') AS REAL)), 0) as total,
+                COUNT(*) as n
+         FROM transactions
+         WHERE business_id = ? AND strftime('%Y-%m', created_at) = ? AND ${amountEurSqlFilter}`
       ).get(businessId, bounds.month);
       declaredAmountSumEur = row?.total ?? 0;
+      purchasesWithAmountEur = row?.n ?? 0;
     } else {
       const row = db.prepare(
-        `SELECT COALESCE(SUM(CAST(json_extract(metadata, '$.amount_eur') AS REAL)), 0) as total
-         FROM transactions WHERE business_id = ? AND created_at >= ${bounds.since} AND metadata IS NOT NULL`
+        `SELECT COALESCE(SUM(CAST(json_extract(metadata, '$.amount_eur') AS REAL)), 0) as total,
+                COUNT(*) as n
+         FROM transactions
+         WHERE business_id = ? AND created_at >= ${bounds.since} AND ${amountEurSqlFilter}`
       ).get(businessId);
       declaredAmountSumEur = row?.total ?? 0;
+      purchasesWithAmountEur = row?.n ?? 0;
     }
   } catch (_e) {
     /* json_extract peut échouer sur anciennes bases */
@@ -179,7 +192,9 @@ export function getDashboardStats(businessId, period = "this_month") {
   const txCount = transactionsInPeriod?.n ?? 0;
   const declaredRounded = Math.round(declaredAmountSumEur * 100) / 100;
   const avgBasketEur =
-    declaredRounded > 0 && txCount > 0 ? Math.round((declaredRounded / txCount) * 100) / 100 : null;
+    declaredRounded > 0 && purchasesWithAmountEur > 0
+      ? Math.round((declaredRounded / purchasesWithAmountEur) * 100) / 100
+      : null;
   const activeN = activeInPeriod?.n ?? 0;
   const visitsN = visitsInPeriod?.n ?? 0;
   const avgVisitsPerActiveMember = activeN > 0 ? Math.round((visitsN / activeN) * 100) / 100 : null;
