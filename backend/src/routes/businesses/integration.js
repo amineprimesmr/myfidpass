@@ -16,7 +16,6 @@ import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
 import { pushPassKitAfterMemberBalanceChange } from "../../lib/wallet-reward-tier-notify.js";
 import { syncGoogleWalletObjectForMember } from "../../google-wallet.js";
 import { ensureOperationalSubscription, getApiBase } from "./shared.js";
-import { normalizeStampBalance } from "../../lib/stamps-cycle-math.js";
 import {
   parseMerchantScanCode,
   resolvePointsRewardFromQr,
