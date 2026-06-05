@@ -1,4 +1,4 @@
-/* Section tarification — 1er mois à 1 €, mensuel ou annuel */
+/* Section tarification — offre unique 1 € puis 49 €/mois */
 
 .fintap-pricing {
   position: relative;
@@ -9,13 +9,13 @@
 }
 
 .fintap-pricing__inner {
-  max-width: min(100%, 56rem);
+  max-width: min(100%, 36rem);
 }
 
 .fintap-pricing__header {
   text-align: center;
-  margin: 0 auto clamp(2rem, 5vw, 3rem);
-  max-width: min(100%, 40rem);
+  margin: 0 auto clamp(1.75rem, 4.5vw, 2.5rem);
+  max-width: min(100%, 34rem);
 }
 
 .fintap-pricing__eyebrow {
@@ -48,122 +48,117 @@
 
 .fintap-pricing__intro {
   margin: 0.9rem auto 0;
-  max-width: 38ch;
+  max-width: 40ch;
   font-size: clamp(0.92rem, 2.1vw, 1.02rem);
   line-height: 1.55;
   color: #5c5c5c;
 }
 
-.fintap-pricing__grid {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: clamp(1rem, 3vw, 1.35rem);
-  align-items: stretch;
+.fintap-pricing__intro strong {
+  color: #0f172a;
+  font-weight: 700;
 }
 
-@media (min-width: 768px) {
-  .fintap-pricing__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: clamp(1.15rem, 2.5vw, 1.5rem);
-  }
-}
-
-.fintap-pricing__card {
+.fintap-pricing__offer {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  margin: 0;
-  padding: clamp(1.5rem, 3.5vw, 1.85rem) clamp(1.25rem, 3vw, 1.65rem);
-  border-radius: clamp(1.25rem, 2.5vw, 1.65rem);
+  margin: 0 auto;
+  padding: clamp(1.65rem, 4vw, 2.1rem) clamp(1.35rem, 3.5vw, 1.85rem);
+  border-radius: clamp(1.35rem, 2.8vw, 1.85rem);
   background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(10, 152, 255, 0.18);
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.04),
-    0 10px 28px rgba(0, 0, 0, 0.06);
+    0 16px 40px rgba(10, 152, 255, 0.1);
+  text-align: center;
   transition:
     transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.28s ease,
-    border-color 0.28s ease;
-}
-
-.fintap-pricing__card--featured {
-  border-color: rgba(10, 152, 255, 0.22);
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 14px 36px rgba(10, 152, 255, 0.1);
+    box-shadow 0.28s ease;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .fintap-pricing__card:hover {
+  .fintap-pricing__offer:hover {
     transform: translateY(-4px);
     box-shadow:
       0 2px 6px rgba(0, 0, 0, 0.05),
-      0 18px 40px rgba(0, 0, 0, 0.1);
+      0 22px 48px rgba(10, 152, 255, 0.14);
   }
 }
 
 .fintap-pricing__badge {
-  position: absolute;
-  top: clamp(0.85rem, 2vw, 1.1rem);
-  right: clamp(0.85rem, 2vw, 1.1rem);
+  align-self: center;
   display: inline-flex;
   align-items: center;
-  padding: 0.28rem 0.6rem;
+  margin-bottom: 1.15rem;
+  padding: 0.32rem 0.75rem;
   border-radius: 999px;
   font-size: 0.68rem;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #065f46;
-  background: rgba(39, 243, 169, 0.42);
+  background: rgba(39, 243, 169, 0.38);
   border: 1px solid rgba(39, 243, 169, 0.55);
 }
 
-.fintap-pricing__plan-name {
-  margin: 0 0 0.35rem;
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: #64748b;
-}
-
-.fintap-pricing__price-row {
+.fintap-pricing__trial {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.35rem 0.5rem;
-  margin: 0 0 0.65rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  margin-bottom: 0.65rem;
 }
 
-.fintap-pricing__price {
-  font-size: clamp(2rem, 5vw, 2.45rem);
+.fintap-pricing__trial-price {
+  font-size: clamp(2.75rem, 8vw, 3.5rem);
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1;
+  background: linear-gradient(120deg, #0a98ff 0%, #27f3a9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.fintap-pricing__trial-label {
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: #64748b;
+}
+
+.fintap-pricing__then {
+  margin: 0 0 0.85rem;
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.fintap-pricing__price {
+  font-size: clamp(1.65rem, 4.5vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
   color: #0a0a0a;
 }
 
 .fintap-pricing__period {
-  font-size: 0.92rem;
-  font-weight: 600;
+  font-size: 0.88em;
+  font-weight: 650;
   color: #64748b;
 }
 
 .fintap-pricing__summary {
   margin: 0 0 0.35rem;
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   font-weight: 650;
   line-height: 1.4;
   color: #0f172a;
 }
 
 .fintap-pricing__detail {
-  margin: 0 0 1rem;
+  margin: 0 0 1.15rem;
   font-size: 0.86rem;
   line-height: 1.45;
   color: #64748b;
@@ -171,18 +166,19 @@
 
 .fintap-pricing__features {
   list-style: none;
-  margin: 0 0 1.35rem;
-  padding: 0;
-  flex: 1 1 auto;
+  margin: 0 0 1.45rem;
+  padding: 1rem 0 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.5rem;
+  text-align: left;
 }
 
 .fintap-pricing__features li {
   position: relative;
   padding-left: 1.25rem;
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   line-height: 1.45;
   color: #334155;
 }
@@ -203,31 +199,22 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 2.85rem;
-  padding: 0.7rem 1.25rem;
+  min-height: 3rem;
+  padding: 0.75rem 1.35rem;
   border-radius: 999px;
-  font-size: 0.92rem;
-  font-weight: 650;
+  font-size: 0.95rem;
+  font-weight: 700;
   letter-spacing: -0.01em;
   text-decoration: none;
   color: #fff;
-  background: #0a0a0a;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14);
-  transition: transform 0.16s ease, box-shadow 0.2s ease;
-}
-
-.fintap-pricing__card--featured .fintap-pricing__cta {
   background: linear-gradient(135deg, #0a98ff 0%, #0588e8 48%, #27f3a9 100%);
-  box-shadow: 0 10px 26px rgba(10, 152, 255, 0.28);
+  box-shadow: 0 10px 28px rgba(10, 152, 255, 0.3);
+  transition: transform 0.16s ease, box-shadow 0.2s ease;
 }
 
 .fintap-pricing__cta:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
-}
-
-.fintap-pricing__card--featured .fintap-pricing__cta:hover {
-  box-shadow: 0 12px 30px rgba(10, 152, 255, 0.34);
+  box-shadow: 0 12px 32px rgba(10, 152, 255, 0.36);
 }
 
 .fintap-pricing__cta:focus-visible {
@@ -236,12 +223,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fintap-pricing__card,
+  .fintap-pricing__offer,
   .fintap-pricing__cta {
     transition: none;
   }
 
-  .fintap-pricing__card:hover,
+  .fintap-pricing__offer:hover,
   .fintap-pricing__cta:hover {
     transform: none;
   }

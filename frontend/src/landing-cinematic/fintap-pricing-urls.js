@@ -1,18 +1,9 @@
-import {
-  buildStripeAnnualPaymentUrl,
-  buildStripeSaasPaymentUrl,
-} from "../config.js";
+import { buildStripeSaasPaymentUrl } from "../config.js";
 
-/** Page téléchargement app — destination des CTA landing (hors tarifs Stripe). */
+/** Page téléchargement app — destination des CTA landing (hors checkout Stripe). */
 export const LANDING_APP_DOWNLOAD_HREF = "/get";
 
-/**
- * URL Stripe Checkout (Payment Link) pour un plan tarifaire landing.
- * @param {"monthly"|"annual"} planId
- * @returns {string}
- */
-export function getLandingPricingCheckoutUrl(planId) {
-  if (planId === "monthly") return buildStripeSaasPaymentUrl();
-  if (planId === "annual") return buildStripeAnnualPaymentUrl();
-  return LANDING_APP_DOWNLOAD_HREF;
+/** URL Stripe Checkout — offre mensuelle (1er mois à 1 €, puis 49 €/mois). */
+export function getLandingPricingCheckoutUrl() {
+  return buildStripeSaasPaymentUrl();
 }

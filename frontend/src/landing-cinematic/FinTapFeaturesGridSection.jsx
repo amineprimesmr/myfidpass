@@ -2,7 +2,7 @@ import { FinTapVarCardsSection } from "./FinTapVarCardsSection.jsx";
 import { ScrollReveal } from "./ScrollReveal.jsx";
 import "./fintap-features-grid.css";
 
-/** Section fonctionnalités — carousel var1–3 (mobile et desktop). */
+/** Section fonctionnalités — carousel var1–3 pleine largeur (mobile et desktop). */
 export function FinTapFeaturesGridSection() {
   return (
     <section
@@ -23,9 +23,11 @@ export function FinTapFeaturesGridSection() {
             </p>
           </ScrollReveal>
         </header>
+      </div>
 
-        <FinTapVarCardsSection embedded />
+      <FinTapVarCardsSection embedded />
 
+      <div className="fintap-section-inner fintap-features-grid__inner">
         <div className="fintap-features-grid__cta-wrap">
           <ScrollReveal delay={0.08}>
             <a href="/get" className="fintap-features-grid__cta">

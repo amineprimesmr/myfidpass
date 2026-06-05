@@ -13,6 +13,8 @@
 
 .fintap-var-cards--embedded {
   background: transparent;
+  --fintap-var-slide-w: calc(100vw - 2.85rem);
+  --fintap-var-peek: calc(100vw - var(--fintap-var-slide-w) - var(--fintap-var-gap));
 }
 
 @media (min-width: 768px) {
@@ -21,22 +23,16 @@
   }
 
   .fintap-var-cards--embedded {
-    --fintap-var-slide-w: min(24.5rem, calc(100% - 5.5rem));
-    --fintap-var-gap: 1rem;
-    --fintap-var-peek: 4.75rem;
-    padding: clamp(1.25rem, 3vw, 2rem) 0 clamp(1.5rem, 3.5vw, 2.25rem);
-  }
-
-  .fintap-var-cards--embedded .fintap-var-cards__track {
-    scroll-padding-inline: 0;
+    --fintap-var-gap: clamp(0.65rem, 1.5vw, 0.85rem);
+    padding: clamp(1rem, 2.5vw, 1.75rem) 0 clamp(1.25rem, 3vw, 2rem);
   }
 
   .fintap-var-cards--embedded .fintap-var-cards__chevron--prev {
-    left: -0.15rem;
+    left: clamp(0.85rem, 2.5vw, 1.35rem);
   }
 
   .fintap-var-cards--embedded .fintap-var-cards__chevron--next {
-    right: -0.15rem;
+    right: clamp(0.85rem, 2.5vw, 1.35rem);
   }
 }
 
