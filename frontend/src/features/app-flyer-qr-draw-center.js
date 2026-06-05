@@ -1,8 +1,8 @@
-import flyergameDataUrl from "../assets/flyer-wheels/flyergame.png?inline";
+import {
+  FLYER_WHEEL_FLYERGAME_SRC,
+  flyerWheelAssetLoadCandidates,
+} from "./app-flyer-wheel-assets.js";
 import { drawImageWithFlyergameFit, loadImage } from "./app-flyer-qr-draw-utils.js";
-
-const FLYERGAME_HD_SRC = "/assets/flyergame-hd.png";
-const FLYERGAME_PUBLIC_SRC = "/assets/flyergame.png";
 
 /** @type {HTMLImageElement | null} */
 let flyergameCenterCache = null;
@@ -18,9 +18,7 @@ export async function getFlyergameCenterImage() {
         return flyergameCenterCache;
       }
     }
-    const candidates = [String(flyergameDataUrl || "").trim(), FLYERGAME_HD_SRC, FLYERGAME_PUBLIC_SRC]
-      .map((v) => String(v || "").trim())
-      .filter(Boolean);
+    const candidates = flyerWheelAssetLoadCandidates("flyergame.png");
     for (const src of candidates) {
       const looksOk =
         src.startsWith("data:image/") ||
@@ -33,7 +31,10 @@ export async function getFlyergameCenterImage() {
         if (flyergameCenterCache) return flyergameCenterCache;
       } catch (_) {}
     }
-    return null;
+    if (FLYER_WHEEL_FLYERGAME_SRC) {
+      flyergameCenterCache = await loadImage(FLYER_WHEEL_FLYERGAME_SRC, false);
+    }
+    return flyergameCenterCache;
   } catch {
     return null;
   }
@@ -58,10 +59,6 @@ export function drawFlyergameCenter(ctx, cx, cy, wheelR, img) {
   const y = cy - fitBox / 2;
   ctx.save();
   // Rendu normal pour conserver le fond/relief original de l'image.
-  ctx.globalCompositeOperation = "source-over";
-  ctx.globalAlpha = 1;
-  try {
-    drawImageWithFlyergameFit(ctx, img, x, y, fitBox, fitBox, "contain");
-  } catch (_) {}
+  drawImageWithFlyergameFit(ctx, img, x, y, fitBox, fitBox);
   ctx.restore();
 }

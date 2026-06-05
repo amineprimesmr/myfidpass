@@ -281,6 +281,23 @@
   border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
+.fintap-revenue-simulator__footer-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem 1.75rem;
+  min-width: 0;
+}
+
+.fintap-revenue-simulator__footer-metric {
+  min-width: 0;
+}
+
+.fintap-revenue-simulator__footer-metric--invest .fintap-revenue-simulator__footer-value {
+  font-size: clamp(1.15rem, 3.2vw, 1.55rem);
+  color: rgba(255, 255, 255, 0.92);
+}
+
 .fintap-revenue-simulator__footer-kicker {
   display: block;
   font-size: 0.68rem;
@@ -300,6 +317,12 @@
   color: #fff;
 }
 
+.fintap-revenue-simulator__footer-period {
+  font-size: 0.55em;
+  font-weight: 650;
+  color: rgba(255, 255, 255, 0.72);
+}
+
 .fintap-revenue-simulator__cta {
   display: inline-flex;
   align-items: center;
@@ -311,7 +334,7 @@
   font-size: 0.9rem;
   font-weight: 650;
   letter-spacing: 0.01em;
-  color: #0559b0;
+  color: #0559b0 !important;
   text-decoration: none;
   background: #fff;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
@@ -340,6 +363,12 @@
   .fintap-revenue-simulator__footer {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .fintap-revenue-simulator__footer-metrics {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.85rem;
   }
 
   .fintap-revenue-simulator__cta {

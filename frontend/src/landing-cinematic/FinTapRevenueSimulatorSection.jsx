@@ -120,13 +120,22 @@ export function FinTapRevenueSimulatorSection() {
             </div>
 
             <div className="fintap-revenue-simulator__footer">
-              <div className="fintap-revenue-simulator__footer-copy">
-                <span className="fintap-revenue-simulator__footer-kicker">
-                  Revenu mensuel additionnel potentiel :
-                </span>
-                <strong className="fintap-revenue-simulator__footer-value">
-                  {formatEuro(results.additionalMonthly)}
-                </strong>
+              <div className="fintap-revenue-simulator__footer-metrics">
+                <div className="fintap-revenue-simulator__footer-metric">
+                  <span className="fintap-revenue-simulator__footer-kicker">
+                    Revenu mensuel additionnel potentiel :
+                  </span>
+                  <strong className="fintap-revenue-simulator__footer-value">
+                    {formatEuro(results.additionalMonthly)}
+                  </strong>
+                </div>
+                <div className="fintap-revenue-simulator__footer-metric fintap-revenue-simulator__footer-metric--invest">
+                  <span className="fintap-revenue-simulator__footer-kicker">Investissement :</span>
+                  <strong className="fintap-revenue-simulator__footer-value fintap-revenue-simulator__footer-value--invest">
+                    {formatEuro(results.subscriptionMonthly, { maximumFractionDigits: 2 })}
+                    <span className="fintap-revenue-simulator__footer-period">/ mois</span>
+                  </strong>
+                </div>
               </div>
               <a href="/get" className="fintap-revenue-simulator__cta">
                 Télécharger l&apos;app

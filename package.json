@@ -23,7 +23,8 @@
     "build:frontend": "cd frontend && npm run build",
     "lint": "eslint backend/src frontend/src scripts",
     "lint:fix": "eslint backend/src frontend/src scripts --fix",
-    "deploy": "sh scripts/deploy.sh"
+    "deploy": "sh scripts/deploy.sh",
+    "sync-flyer-assets": "node scripts/sync-flyer-assets.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

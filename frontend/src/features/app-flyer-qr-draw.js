@@ -24,7 +24,10 @@ import {
   getWorldCupCtaBannerImage,
   isWorldCupFlyerCtaEnabled,
 } from "./app-flyer-world-cup-cta.js";
-import giftflyerDataUrl from "../assets/flyer-wheels/giftflyer.png?inline";
+import {
+  FLYER_WHEEL_GIFTFLYER_SRC,
+  flyerWheelAssetLoadCandidates,
+} from "./app-flyer-wheel-assets.js";
 
 export { FLYER_EXPORT };
 
@@ -33,23 +36,21 @@ let flyerWorkCanvasCache = null;
 /** @type {HTMLImageElement | null} */
 let flyerGiftflyerCache = null;
 
-const GIFTFLYER_HD_SRC = "/assets/flyer-wheels/giftflyer-hd.png";
-const GIFTFLYER_PUBLIC_SRC = "/assets/flyer-wheels/giftflyer.png";
-
 async function getFlyerGiftflyerImage() {
   if (flyerGiftflyerCache) return flyerGiftflyerCache;
-  const candidates = [
-    String(giftflyerDataUrl || "").trim(),
-    GIFTFLYER_HD_SRC,
-    GIFTFLYER_PUBLIC_SRC,
-  ].filter(Boolean);
+  const candidates = flyerWheelAssetLoadCandidates("giftflyer.png");
   for (const src of candidates) {
     try {
       flyerGiftflyerCache = await loadImage(src, false);
       if (flyerGiftflyerCache) return flyerGiftflyerCache;
     } catch (_) {}
   }
-  return null;
+  if (FLYER_WHEEL_GIFTFLYER_SRC) {
+    try {
+      flyerGiftflyerCache = await loadImage(FLYER_WHEEL_GIFTFLYER_SRC, false);
+    } catch (_) {}
+  }
+  return flyerGiftflyerCache;
 }
 
 function drawFlyerGiftflyerPromo(ctx, w, h, ds, img) {
