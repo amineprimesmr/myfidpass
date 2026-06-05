@@ -1,34 +1,17 @@
 import {
-  DEFAULT_REVENUE_SECTOR_ID,
-  getRevenueSectorConfig,
   MYFIDPASS_MONTHLY_COST,
+  REVENUE_SIMULATOR_ASSUMPTIONS,
+  REVENUE_SIMULATOR_DEFAULTS,
+  REVENUE_SIMULATOR_LIMITS,
 } from "./fintap-revenue-simulator-data.js";
 
-/** Jours ouvrés moyens par mois pour l'estimation. */
-export const REVENUE_WORKING_DAYS_PER_MONTH = 26;
-
-/**
- * Clients fidélisés / mois — indexé sur clients/jour (≈38 pour 60/j en restauration).
- * @param {number} clientsPerDay
- * @param {number} visitUplift
- */
-export function estimateLoyalClientsPerMonth(clientsPerDay, visitUplift) {
-  const ratio = 0.55 + visitUplift * 0.4;
-  return Math.max(1, Math.round(clientsPerDay * ratio));
-}
-
-/**
- * Avis Google en plus / mois — calibré sur clients/jour (≈36 pour 60/j).
- * @param {number} clientsPerDay
- * @param {number} visitUplift
- */
-export function estimateExtraGoogleReviewsPerMonth(clientsPerDay, visitUplift) {
-  const loyal = estimateLoyalClientsPerMonth(clientsPerDay, visitUplift);
-  return Math.max(1, Math.round(clientsPerDay * 0.42 + loyal * 0.28));
-}
+/** Jours affichés sur la courbe (premier mois). */
+export const REVENUE_CHART_DAYS = 30;
 
 /**
  * @param {number} value
+ * @param {number} min
+ * @param {number} max
  * @returns {number}
  */
 export function clampSimulatorNumber(value, min, max) {
@@ -38,63 +21,112 @@ export function clampSimulatorNumber(value, min, max) {
 }
 
 /**
- * Estime le revenu additionnel d'un programme fidélité.
+ * Courbe de montée en charge sur 30 jours (0 → 1).
+ * @param {number} day 1..30
+ */
+export function rampFactorForDay(day) {
+  const t = clampSimulatorNumber(day, 1, REVENUE_CHART_DAYS) / REVENUE_CHART_DAYS;
+  return 1 - Math.pow(1 - t, 1.55);
+}
+
+/**
+ * @param {number} monthlyAdditional
+ * @returns {{ day: number, cumulative: number, dailyRevenue: number, dailyCost: number }[]}
+ */
+export function build30DayChart(monthlyAdditional) {
+  const dailySubscription = MYFIDPASS_MONTHLY_COST / REVENUE_CHART_DAYS;
+  const points = [];
+  let prevCumulative = 0;
+
+  for (let day = 1; day <= REVENUE_CHART_DAYS; day += 1) {
+    const target = Math.round(monthlyAdditional * rampFactorForDay(day));
+    const dailyRevenue = Math.max(0, target - prevCumulative);
+    prevCumulative = target;
+    points.push({
+      day,
+      cumulative: target,
+      dailyRevenue,
+      dailyCost: Math.round(dailySubscription * 10) / 10,
+    });
+  }
+
+  return points;
+}
+
+/**
+ * Estime le revenu additionnel d'un programme fidélité (hypothèses fixes, sans secteur).
  *
- * @param {{ clientsPerDay: number, avgBasket: number | null, sectorId: string }} input
+ * @param {{ monthlyVisitors: number, avgBasket: number | null }} input
  */
 export function computeRevenueSimulation(input) {
-  const clientsPerDay = clampSimulatorNumber(input.clientsPerDay, 1, 2000);
-  const sector =
-    getRevenueSectorConfig(input.sectorId) ||
-    getRevenueSectorConfig(DEFAULT_REVENUE_SECTOR_ID);
+  const {
+    participationRate,
+    activeMemberRate,
+    extraVisitPerActiveMember,
+    basketLiftOnMembers,
+    reactivationShare,
+    maxIncrementalShareOfRevenue,
+  } = REVENUE_SIMULATOR_ASSUMPTIONS;
+
+  const visitors = clampSimulatorNumber(
+    input.monthlyVisitors,
+    REVENUE_SIMULATOR_LIMITS.monthlyVisitors.min,
+    REVENUE_SIMULATOR_LIMITS.monthlyVisitors.max
+  );
   const basketRaw = input.avgBasket;
   const basket =
     basketRaw != null && Number.isFinite(Number(basketRaw)) && Number(basketRaw) > 0
-      ? clampSimulatorNumber(basketRaw, 1, 500)
-      : sector.defaultBasket;
+      ? clampSimulatorNumber(
+          basketRaw,
+          REVENUE_SIMULATOR_LIMITS.avgBasket.min,
+          REVENUE_SIMULATOR_LIMITS.avgBasket.max
+        )
+      : REVENUE_SIMULATOR_DEFAULTS.avgBasket;
 
-  const visitsPerMonth = clientsPerDay * REVENUE_WORKING_DAYS_PER_MONTH;
-  const baseMonthlyRevenue = visitsPerMonth * basket;
+  const baseMonthlyRevenue = visitors * basket;
+  const enrolledMembers = visitors * participationRate;
+  const activeMembers = Math.max(1, Math.round(enrolledMembers * activeMemberRate));
 
-  const extraFromVisits = baseMonthlyRevenue * sector.visitUplift;
-  const extraFromBasket =
-    visitsPerMonth * (1 + sector.visitUplift) * basket * sector.basketUplift;
-  const additionalMonthly = Math.round(extraFromVisits + extraFromBasket);
-  const additionalAnnual = additionalMonthly * 12;
-  const subscriptionMonthly = MYFIDPASS_MONTHLY_COST;
-  const subscriptionAnnual = Math.round(subscriptionMonthly * 12);
-  const netMonthly = Math.round(additionalMonthly - subscriptionMonthly);
-  const netAnnual = additionalAnnual - subscriptionAnnual;
-  const roiMultiple =
-    subscriptionAnnual > 0
-      ? Math.round((additionalAnnual / subscriptionAnnual) * 10) / 10
-      : 0;
-  const visitUpliftPercent = Math.round(sector.visitUplift * 100);
-  const basketUpliftPercent = Math.round(sector.basketUplift * 100);
-  const loyalClientsPerMonth = estimateLoyalClientsPerMonth(clientsPerDay, sector.visitUplift);
-  const extraGoogleReviewsPerMonth = estimateExtraGoogleReviewsPerMonth(
-    clientsPerDay,
-    sector.visitUplift
+  const extraVisitsRevenue = activeMembers * extraVisitPerActiveMember * basket;
+  const basketLiftRevenue = activeMembers * basket * basketLiftOnMembers;
+  const reactivationRevenue = visitors * reactivationShare * basket;
+
+  let additionalMonthly = Math.round(
+    extraVisitsRevenue + basketLiftRevenue + reactivationRevenue
   );
 
+  const revenueCap = Math.round(baseMonthlyRevenue * maxIncrementalShareOfRevenue);
+  additionalMonthly = Math.min(additionalMonthly, revenueCap);
+
+  const subscriptionMonthly = MYFIDPASS_MONTHLY_COST;
+  const netMonthly = Math.max(0, Math.round(additionalMonthly - subscriptionMonthly));
+  const roiMultiple =
+    subscriptionMonthly > 0
+      ? Math.max(1, Math.round((additionalMonthly / subscriptionMonthly) * 10) / 10)
+      : 0;
+
+  const revenuePerActiveMember =
+    Math.round((additionalMonthly / activeMembers) * 100) / 100;
+  const costPerActiveMember =
+    Math.round((subscriptionMonthly / activeMembers) * 100) / 100;
+
+  const chartPoints = build30DayChart(additionalMonthly);
+  const first30DaysRevenue = chartPoints[chartPoints.length - 1]?.cumulative ?? 0;
+
   return {
-    sectorId: sector.id,
-    sectorLabel: sector.label,
-    visitUpliftPercent,
-    basketUpliftPercent,
-    clientsPerDay,
+    monthlyVisitors: visitors,
     avgBasket: basket,
-    visitsPerMonth,
     baseMonthlyRevenue: Math.round(baseMonthlyRevenue),
     additionalMonthly,
-    additionalAnnual,
-    subscriptionMonthly,
-    subscriptionAnnual,
     netMonthly,
-    netAnnual,
     roiMultiple,
-    loyalClientsPerMonth,
-    extraGoogleReviewsPerMonth,
+    activeMembers,
+    enrolledMembers: Math.round(enrolledMembers),
+    revenuePerActiveMember,
+    costPerActiveMember,
+    first30DaysRevenue,
+    chartPoints,
+    subscriptionMonthly,
   };
 }
 
@@ -104,8 +136,14 @@ export function computeRevenueSimulation(input) {
  */
 export function buildRevenueSimulatorDisclaimer(results) {
   return (
-    `* D'après nos clients en « ${results.sectorLabel} » : ` +
-    `+${results.visitUpliftPercent}% de visites et +${results.basketUpliftPercent}% de panier en moyenne.`
+    `* Estimation indicative : +${formatEuro(results.revenuePerActiveMember, {
+      maximumFractionDigits: 2,
+    })}/client actif vs ${formatEuro(results.costPerActiveMember, {
+      maximumFractionDigits: 2,
+    })}/client (abonnement réparti). ` +
+    `Basé sur ${results.activeMembers} clients actifs pour ${formatCompactNumber(
+      results.monthlyVisitors
+    )} visiteurs/mois.`
   );
 }
 
@@ -121,4 +159,11 @@ export function formatEuro(amount, opts = {}) {
     currency: "EUR",
     maximumFractionDigits: opts.maximumFractionDigits ?? 0,
   }).format(n);
+}
+
+/** @param {number} value */
+export function formatCompactNumber(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "—";
+  return new Intl.NumberFormat("fr-FR").format(Math.round(n));
 }

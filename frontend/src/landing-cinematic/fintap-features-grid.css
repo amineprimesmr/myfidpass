@@ -25,16 +25,9 @@
   padding: 0;
 }
 
-/* Espace titre → grille : un peu plus d’air qu’entre intro et rail chez les étapes */
 .fintap-features-grid__header .fintap-features-grid__intro {
-  margin-bottom: clamp(2rem, 5vw, 3rem);
+  margin-bottom: clamp(1.15rem, 4vw, 1.85rem);
   max-width: min(38ch, 100%);
-}
-
-@media (max-width: 767.98px) {
-  .fintap-features-grid__header .fintap-features-grid__intro {
-    margin-bottom: clamp(1.15rem, 4vw, 1.65rem);
-  }
 }
 
 .fintap-features-grid .fintap-var-cards--embedded {
@@ -44,6 +37,24 @@
   margin-inline: calc(-1 * clamp(1.25rem, 4vw, 2.5rem));
   width: calc(100% + 2 * clamp(1.25rem, 4vw, 2.5rem));
   max-width: 100vw;
+}
+
+@media (min-width: 768px) {
+  .fintap-features-grid .fintap-var-cards--embedded {
+    margin-inline: 0;
+    width: 100%;
+    max-width: 100%;
+    padding-bottom: clamp(0.75rem, 2.5vw, 1.5rem);
+  }
+
+  .fintap-features-grid .fintap-var-cards__inner {
+    max-width: min(100%, 40rem);
+    margin-inline: auto;
+  }
+
+  .fintap-features-grid .fintap-var-cards__track-wrap {
+    padding-inline: 0.25rem;
+  }
 }
 
 .fintap-features-grid__list {

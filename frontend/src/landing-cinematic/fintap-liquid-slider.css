@@ -127,6 +127,40 @@
     0 6px 18px rgba(15, 23, 42, 0.12);
 }
 
+/* Variante carte bleue (simulateur ROI) */
+.fintap-liquid-slider-ui--blue .fintap-liquid-slider-labels {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.fintap-liquid-slider-ui--blue .fintap-liquid-slider-grid {
+  opacity: 0.22;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.18) 1px, transparent 1px);
+}
+
+.fintap-liquid-slider-ui--blue .fintap-liquid-slider-track-bg {
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.fintap-liquid-slider-ui--blue .fintap-liquid-slider-fill {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.72) 100%);
+}
+
+.fintap-liquid-slider-ui--blue .fintap-liquid-slider-thumb-badge {
+  background: rgba(8, 20, 40, 0.92);
+  color: #fff;
+}
+
+.fintap-liquid-slider-ui--blue .fintap-liquid-slider-thumb-glass {
+  background-color: color-mix(in srgb, #fff 55%, transparent);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.85),
+    inset 0 3px 10px rgba(255, 255, 255, 0.9),
+    0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
 .fintap-liquid-slider-thumb-specular {
   position: absolute;
   inset: 0;

@@ -1,88 +1,28 @@
-/** Secteurs Myfidpass — libellés + hypothèses marketing pour le simulateur. */
-export const REVENUE_SECTOR_OPTIONS = [
-  {
-    id: "fastfood",
-    label: "Restauration / Fast-food",
-    defaultBasket: 14,
-    visitUplift: 0.22,
-    basketUplift: 0.08,
-  },
-  {
-    id: "cafe",
-    label: "Café / Bar",
-    defaultBasket: 6.5,
-    visitUplift: 0.18,
-    basketUplift: 0.07,
-  },
-  {
-    id: "boulangerie",
-    label: "Boulangerie / Pâtisserie",
-    defaultBasket: 8,
-    visitUplift: 0.2,
-    basketUplift: 0.06,
-  },
-  {
-    id: "boucherie",
-    label: "Boucherie / Traiteur",
-    defaultBasket: 18,
-    visitUplift: 0.16,
-    basketUplift: 0.05,
-  },
-  {
-    id: "coiffure",
-    label: "Coiffure",
-    defaultBasket: 32,
-    visitUplift: 0.24,
-    basketUplift: 0.04,
-  },
-  {
-    id: "beauty",
-    label: "Beauté / Spa",
-    defaultBasket: 45,
-    visitUplift: 0.26,
-    basketUplift: 0.05,
-  },
-  {
-    id: "retail",
-    label: "Commerce de proximité",
-    defaultBasket: 22,
-    visitUplift: 0.15,
-    basketUplift: 0.06,
-  },
-];
-
-export const DEFAULT_REVENUE_SECTOR_ID = "fastfood";
-
 /** Abonnement Pro mensuel (hors promo 1 €) — aligné sur la page paiement. */
 export const MYFIDPASS_MONTHLY_COST = 49.99;
 
+/** Hypothèses conservatrices — programmes fidélité commerce de proximité. */
+export const REVENUE_SIMULATOR_ASSUMPTIONS = {
+  /** Part des visiteurs qui s'inscrivent au programme. */
+  participationRate: 0.14,
+  /** Membres actifs (au moins 1 passage / mois). */
+  activeMemberRate: 0.58,
+  /** Visites additionnelles par membre actif et par mois. */
+  extraVisitPerActiveMember: 0.18,
+  /** Hausse de panier sur les achats membres. */
+  basketLiftOnMembers: 0.05,
+  /** Clients dormants réactivés (part des visiteurs / mois). */
+  reactivationShare: 0.008,
+  /** Plafond : le gain ne dépasse pas ce % du CA mensuel estimé. */
+  maxIncrementalShareOfRevenue: 0.06,
+};
+
 export const REVENUE_SIMULATOR_DEFAULTS = {
-  clientsPerDay: 60,
+  monthlyVisitors: 1200,
   avgBasket: 22,
 };
 
-/** Exemple client affiché sous le bloc comparatif. */
-export const REVENUE_SIMULATOR_CASE_STUDY = {
-  name: "BallM",
-  sectorLabel: "fast-food",
-  netMonthly: 4211,
-  googleReviewsPerMonth: 342,
+export const REVENUE_SIMULATOR_LIMITS = {
+  monthlyVisitors: { min: 300, max: 6000 },
+  avgBasket: { min: 5, max: 90 },
 };
-/**
- * @param {string | null | undefined} categoryId
- * @returns {typeof REVENUE_SECTOR_OPTIONS[number] | undefined}
- */
-export function getRevenueSectorConfig(categoryId) {
-  const id = String(categoryId || "").trim();
-  return REVENUE_SECTOR_OPTIONS.find((s) => s.id === id);
-}
-
-/**
- * @param {string | null | undefined} suggestedCategory
- * @returns {string}
- */
-export function mapSuggestedCategoryToSectorId(suggestedCategory) {
-  const id = String(suggestedCategory || "").trim();
-  if (getRevenueSectorConfig(id)) return id;
-  return DEFAULT_REVENUE_SECTOR_ID;
-}

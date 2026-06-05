@@ -10,6 +10,8 @@ import "./fintap-liquid-slider.css";
  *   ariaLabel: string;
  *   labelsMin?: string | number;
  *   labelsMax?: string | number;
+ *   step?: number;
+ *   theme?: "light" | "blue";
  * }} props
  */
 export function FinTapLiquidSlider({
@@ -20,12 +22,16 @@ export function FinTapLiquidSlider({
   ariaLabel,
   labelsMin,
   labelsMax,
+  step = 1,
+  theme = "light",
 }) {
   const span = max - min || 1;
   const pct = (value - min) / span;
+  const themeClass =
+    theme === "blue" ? " fintap-liquid-slider-ui--blue" : "";
 
   return (
-    <div className="fintap-liquid-slider-ui">
+    <div className={`fintap-liquid-slider-ui${themeClass}`}>
       <div className="fintap-liquid-slider-labels">
         <span>{labelsMin ?? min}</span>
         <span>{labelsMax ?? `${max}+`}</span>
@@ -40,6 +46,7 @@ export function FinTapLiquidSlider({
               type="range"
               min={min}
               max={max}
+              step={step}
               value={value}
               onChange={(e) => onChange(Number(e.target.value))}
               className="fintap-liquid-slider-input"

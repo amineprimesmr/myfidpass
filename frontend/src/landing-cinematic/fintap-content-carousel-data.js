@@ -1,7 +1,13 @@
-/** Images carousel — versions légères 520px (/assets/carousel/) */
-export const FINTAP_CONTENT_CAROUSEL_IMAGES = Array.from({ length: 10 }, (_, i) => {
-  return `/assets/carousel/content-${i + 1}.jpg`;
-});
+/**
+ * Galerie landing (FinTapContentCarouselSection).
+ * Fichiers : frontend/public/assets/image-caroussel/content-{1..10}.jpg (~520px).
+ */
+export const FINTAP_CONTENT_CAROUSEL_COUNT = 10;
+
+export const FINTAP_CONTENT_CAROUSEL_IMAGES = Array.from(
+  { length: FINTAP_CONTENT_CAROUSEL_COUNT },
+  (_, i) => `/assets/image-caroussel/content-${i + 1}.jpg`
+);
 
 /**
  * @param {string[]} images

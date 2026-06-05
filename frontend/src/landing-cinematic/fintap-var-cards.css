@@ -1,4 +1,4 @@
-/* Carousel cartes var1–3 — mobile only, style Tuyo (peek + bords pleine largeur) */
+/* Carousel cartes var1–3 — mobile + desktop (peek carte suivante) */
 
 .fintap-var-cards {
   --fintap-var-slide-w: calc(100vw - 2.85rem);
@@ -16,8 +16,27 @@
 }
 
 @media (min-width: 768px) {
-  .fintap-var-cards {
+  .fintap-var-cards:not(.fintap-var-cards--embedded) {
     display: none;
+  }
+
+  .fintap-var-cards--embedded {
+    --fintap-var-slide-w: min(24.5rem, calc(100% - 5.5rem));
+    --fintap-var-gap: 1rem;
+    --fintap-var-peek: 4.75rem;
+    padding: clamp(1.25rem, 3vw, 2rem) 0 clamp(1.5rem, 3.5vw, 2.25rem);
+  }
+
+  .fintap-var-cards--embedded .fintap-var-cards__track {
+    scroll-padding-inline: 0;
+  }
+
+  .fintap-var-cards--embedded .fintap-var-cards__chevron--prev {
+    left: -0.15rem;
+  }
+
+  .fintap-var-cards--embedded .fintap-var-cards__chevron--next {
+    right: -0.15rem;
   }
 }
 

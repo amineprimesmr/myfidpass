@@ -1,28 +1,9 @@
-import { useEffect, useState } from "react";
-import { fintapFeaturesGridItems } from "./fintap-features-data.js";
-import { FinTapEngagementMetricsVisual } from "./FinTapEngagementMetricsVisual.jsx";
 import { FinTapVarCardsSection } from "./FinTapVarCardsSection.jsx";
 import { ScrollReveal } from "./ScrollReveal.jsx";
 import "./fintap-features-grid.css";
 
-/**
- * Grille 2×2 type « feature cards » (fond gris clair, cartes blanches arrondies).
- */
+/** Section fonctionnalités — carousel var1–3 (mobile et desktop). */
 export function FinTapFeaturesGridSection() {
-  const [isDesktop, setIsDesktop] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(min-width: 768px)").matches
-  );
-
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 768px)");
-    const onChange = () => setIsDesktop(mq.matches);
-    onChange();
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-
   return (
     <section
       className="fintap-features-grid"
@@ -33,61 +14,17 @@ export function FinTapFeaturesGridSection() {
         <header className="fintap-features-grid__header">
           <ScrollReveal>
             <h2 id="fintap-features-grid-heading" className="fintap-steps-scroll__h2">
-              Tout ce qu'il faut pour fidéliser et vendre plus
+              Tout ce qu&apos;il faut pour fidéliser et vendre plus
             </h2>
           </ScrollReveal>
           <ScrollReveal delay={0.1}>
             <p className="fintap-steps-scroll__intro fintap-features-grid__intro">
-            100% automatisé, pensé pour vous faire gagner du temps et garder vos clients engagés.
+              100% automatisé, pensé pour vous faire gagner du temps et garder vos clients engagés.
             </p>
           </ScrollReveal>
         </header>
 
         <FinTapVarCardsSection embedded />
-
-        {isDesktop ? (
-        <ul className="fintap-features-grid__list">
-          {fintapFeaturesGridItems.map((item, idx) => (
-            <ScrollReveal
-              key={item.id}
-              tag="li"
-              className="fintap-features-grid__card"
-              variant="scale-up"
-              delay={0.07 * idx}
-            >
-              <div
-                className={
-                  "fintap-features-grid__visual" +
-                  (item.imageFadeBottom ? " fintap-features-grid__visual--fade-bottom" : "") +
-                  (item.visualKind === "engagement" ? " fintap-features-grid__visual--engagement" : "") +
-                  (item.id === "reputation" ? " fintap-features-grid__visual--flush-x" : "")
-                }
-                {...(item.visualKind !== "engagement" ? { "aria-hidden": true } : {})}
-              >
-                {item.visualKind === "engagement" ? (
-                  <FinTapEngagementMetricsVisual />
-                ) : (
-                  <img
-                    className={
-                      "fintap-features-grid__img" + (item.id === "reputation" ? " fintap-features-grid__img--flush-x" : "")
-                    }
-                    src={item.imageSrc}
-                    alt=""
-                    width={560}
-                    height={360}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                )}
-              </div>
-              <div className="fintap-features-grid__copy">
-                <h3 className="fintap-features-grid__card-title">{item.title}</h3>
-                <p className="fintap-features-grid__card-desc">{item.description}</p>
-              </div>
-            </ScrollReveal>
-          ))}
-        </ul>
-        ) : null}
 
         <div className="fintap-features-grid__cta-wrap">
           <ScrollReveal delay={0.08}>

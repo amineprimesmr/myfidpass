@@ -1,10 +1,9 @@
-/* Simulateur revenus — fond site unifié + carte blanche */
+/* Simulateur ROI — carte bleue type Kanal */
 
 .fintap-revenue-simulator {
-  --fintap-rev-ink: #0a0a0a;
-  --fintap-rev-muted: #5c5c5c;
-  --fintap-rev-line: rgba(0, 0, 0, 0.08);
-  --fintap-rev-mint: #27f3a9;
+  --fintap-rev-blue: #0a98ff;
+  --fintap-rev-blue-deep: #0670d4;
+  --fintap-rev-blue-card: linear-gradient(165deg, #0a98ff 0%, #0670d4 52%, #0559b0 100%);
   --fintap-steps-nav-clear: max(6.5rem, calc(env(safe-area-inset-top, 0px) + 5.35rem));
   position: relative;
   overflow: visible;
@@ -12,13 +11,11 @@
   scroll-margin-top: var(--fintap-steps-nav-clear);
   font-family: "Inter", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  color: var(--fintap-rev-ink);
+  color: #0a0a0a;
   background: var(--fidpass-surface, #f5f5f7);
 }
 
 .fintap-revenue-simulator__hero {
-  position: relative;
-  z-index: 1;
   text-align: center;
   padding: 0 clamp(1.25rem, 4vw, 2rem) clamp(1.5rem, 4vw, 2.5rem);
 }
@@ -43,290 +40,315 @@
   max-width: 28rem;
   font-size: clamp(0.92rem, 2.2vw, 1.02rem);
   line-height: 1.55;
-  color: var(--fintap-rev-muted);
+  color: #5c5c5c;
 }
 
-.fintap-revenue-simulator__sim-wrap {
-  position: relative;
-  z-index: 2;
-  max-width: min(100%, 52rem);
+.fintap-revenue-simulator__wrap {
+  max-width: min(100%, 58rem);
   margin: 0 auto;
   padding: 0 clamp(1rem, 4vw, 1.5rem);
 }
 
-.fintap-revenue-simulator__sim {
-  position: relative;
-  border-radius: clamp(1.25rem, 2.5vw, 1.75rem);
-  padding: 1.25rem 1.35rem 1.4rem;
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+.fintap-revenue-simulator__card {
+  border-radius: clamp(1.35rem, 2.8vw, 2rem);
+  padding: clamp(1.25rem, 3vw, 2rem);
+  background: var(--fintap-rev-blue-card);
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 8px 24px rgba(0, 0, 0, 0.06);
-  transition: box-shadow 0.35s ease;
+    0 20px 50px rgba(5, 89, 176, 0.28),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+  color: #fff;
 }
 
-@media (min-width: 640px) {
-  .fintap-revenue-simulator__sim {
-    padding: 1.5rem 1.75rem 1.65rem;
+.fintap-revenue-simulator__sliders {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 720px) {
+  .fintap-revenue-simulator__sliders {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
   }
 }
 
-.fintap-revenue-simulator__sim.is-active {
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.05),
-    0 12px 32px rgba(0, 0, 0, 0.08),
-    0 0 0 1px rgba(39, 243, 169, 0.22);
+.fintap-revenue-simulator__slider-col {
+  min-width: 0;
 }
 
-.fintap-revenue-simulator__form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
-}
-
-.fintap-revenue-simulator__label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  font-size: 0.82rem;
-  font-weight: 650;
-  letter-spacing: -0.01em;
-  color: #334155;
-}
-
-.fintap-revenue-simulator__field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.fintap-revenue-simulator__select,
-.fintap-revenue-simulator__input {
-  width: 100%;
-  min-height: 2.85rem;
-  padding: 0.55rem 0.85rem;
-  border-radius: 0.85rem;
-  border: 1px solid rgba(15, 23, 42, 0.1);
-  background: #fff;
-  font-size: 0.95rem;
-  font-family: inherit;
-  color: #0f172a;
-  outline: none;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-}
-
-.fintap-revenue-simulator__select:focus,
-.fintap-revenue-simulator__input:focus {
-  border-color: rgba(10, 152, 255, 0.45);
-  box-shadow: 0 0 0 3px rgba(10, 152, 255, 0.12);
-}
-
-.fintap-revenue-simulator__slider-block {
-  margin-top: 0.75rem;
-}
-
-.fintap-revenue-simulator__slider-label {
-  margin: 0 0 0.15rem;
-  font-size: 0.82rem;
-  font-weight: 650;
-  color: #334155;
-}
-
-.fintap-revenue-simulator__compare {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-  margin-top: 1.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--fintap-rev-line);
-}
-
-.fintap-revenue-simulator__compare-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.35rem 1rem;
-  padding: 0.7rem 0.85rem;
-  border-radius: 0.85rem;
-}
-
-.fintap-revenue-simulator__compare-row--cost {
-  background: #f5f5f7;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.fintap-revenue-simulator__compare-label {
-  font-size: 0.8125rem;
-  color: var(--fintap-rev-muted);
-}
-
-.fintap-revenue-simulator__compare-value {
-  font-size: clamp(1.05rem, 3.2vw, 1.25rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-  color: var(--fintap-rev-ink);
-}
-
-.fintap-revenue-simulator__compare-net {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem 1rem;
-  padding: 0.85rem 0.9rem;
-  border-radius: 0.95rem;
-  background: #0a0a0a;
-  color: #fff;
-}
-
-.fintap-revenue-simulator__compare-net .fintap-revenue-simulator__compare-label {
-  color: rgba(255, 255, 255, 0.72);
-}
-
-.fintap-revenue-simulator__compare-net-value {
-  display: block;
-  margin-top: 0.12rem;
-  font-size: clamp(1.35rem, 4vw, 1.65rem);
-  font-weight: 750;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-  color: #fff;
-}
-
-.fintap-revenue-simulator__compare-roi {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 650;
-  color: #065f46;
-  background: var(--fintap-rev-mint);
-}
-
-.fintap-revenue-simulator__sim-details {
-  margin-top: 1.25rem;
-  padding-top: 1.15rem;
-  border-top: 1px solid var(--fintap-rev-line);
-}
-
-.fintap-revenue-simulator__example {
-  margin: 0 0 1rem;
-  padding: 0.85rem 1rem;
-  border-radius: 0.85rem;
-  background: rgba(39, 243, 169, 0.1);
-  border: 1px solid rgba(39, 243, 169, 0.28);
-}
-
-.fintap-revenue-simulator__example-kicker {
+.fintap-revenue-simulator__slider-kicker {
   margin: 0 0 0.35rem;
   font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #047857;
+  color: rgba(255, 255, 255, 0.78);
 }
 
-.fintap-revenue-simulator__example-body {
-  margin: 0;
-  font-size: 0.88rem;
-  line-height: 1.45;
-  color: var(--fintap-rev-ink);
+.fintap-revenue-simulator__headline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  margin-top: clamp(1.5rem, 4vw, 2.25rem);
 }
 
-.fintap-revenue-simulator__example-body strong {
+.fintap-revenue-simulator__headline-kicker {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.fintap-revenue-simulator__headline-value {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.75rem, 5vw, 2.65rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.fintap-revenue-simulator__headline-value strong {
   font-weight: 750;
+  font-variant-numeric: tabular-nums;
 }
 
-.fintap-revenue-simulator__results-sub {
-  margin: 0 0 1rem;
-  font-size: 0.88rem;
-  line-height: 1.45;
-  color: var(--fintap-rev-muted);
+.fintap-revenue-simulator__roas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.5rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 
-.fintap-revenue-simulator__stats {
-  list-style: none;
-  margin: 0 0 1rem;
-  padding: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.65rem;
+.fintap-revenue-simulator__roas-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
 }
 
-.fintap-revenue-simulator__stats li {
+.fintap-revenue-simulator__roas-value {
+  font-size: clamp(1.35rem, 4vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Courbe */
+.fintap-revenue-roi-chart {
+  position: relative;
+  margin-top: 1.25rem;
+  height: clamp(9rem, 22vw, 12.5rem);
+}
+
+.fintap-revenue-roi-chart__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.fintap-revenue-roi-chart__baseline {
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 1;
+  stroke-dasharray: 4 6;
+}
+
+.fintap-revenue-roi-chart__line {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.95);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fintap-revenue-roi-chart__dot {
+  fill: #fff;
+  stroke: rgba(5, 89, 176, 0.5);
+  stroke-width: 2;
+  transition: r 0.15s ease;
+}
+
+.fintap-revenue-roi-chart__hit {
+  cursor: crosshair;
+  outline: none;
+}
+
+.fintap-revenue-roi-chart__tooltip {
+  position: absolute;
+  top: 0.25rem;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
-  padding: 0.65rem 0.75rem;
-  border-radius: 0.75rem;
-  background: #f5f5f7;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  min-width: 8.5rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.65rem;
+  background: rgba(8, 20, 40, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.88);
+  pointer-events: none;
+  z-index: 2;
 }
 
-.fintap-revenue-simulator__stat-label {
-  font-size: 0.68rem;
-  color: var(--fintap-rev-muted);
+.fintap-revenue-roi-chart__tooltip-day {
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.1rem;
 }
 
-.fintap-revenue-simulator__stats strong {
-  font-size: 0.95rem;
-  font-weight: 750;
-  font-variant-numeric: tabular-nums;
-  color: var(--fintap-rev-ink);
+.fintap-revenue-roi-chart__tooltip strong {
+  color: #fff;
+  font-weight: 700;
 }
 
-.fintap-revenue-simulator__disclaimer {
-  margin: 0 0 1rem;
-  font-size: 0.68rem;
-  line-height: 1.4;
-  color: #71717a;
-}
-
-.fintap-revenue-simulator__cta-wrap {
+/* Légende */
+.fintap-revenue-simulator__legend {
   display: flex;
-  justify-content: center;
-  margin-top: 0.25rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  margin-top: 0.85rem;
 }
 
-.fintap-revenue-simulator__start {
+.fintap-revenue-simulator__legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1.1rem;
+}
+
+.fintap-revenue-simulator__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.fintap-revenue-simulator__legend-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.fintap-revenue-simulator__legend-dot--revenue {
+  background: #fff;
+}
+
+.fintap-revenue-simulator__legend-dot--cost {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.fintap-revenue-simulator__legend-formula {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: right;
+}
+
+/* Pied de carte */
+.fintap-revenue-simulator__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 1.25rem;
+  margin-top: 1.35rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.fintap-revenue-simulator__footer-kicker {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.fintap-revenue-simulator__footer-value {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: clamp(1.5rem, 4.5vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
+
+.fintap-revenue-simulator__cta {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
   min-height: 2.85rem;
   padding: 0.65rem 1.35rem;
   border-radius: 999px;
   border: none;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 650;
   letter-spacing: 0.01em;
-  color: #fff;
+  color: #0559b0;
   text-decoration: none;
-  cursor: pointer;
-  background: #0a0a0a;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
   transition: transform 0.16s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
 }
 
-.fintap-revenue-simulator__start:hover {
+.fintap-revenue-simulator__cta:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
 }
 
-@media (max-width: 479px) {
-  .fintap-revenue-simulator__stats {
-    grid-template-columns: 1fr;
+.fintap-revenue-simulator__disclaimer {
+  margin: 1rem 0 0;
+  font-size: 0.68rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+@media (max-width: 639px) {
+  .fintap-revenue-simulator__legend-formula {
+    text-align: left;
+    width: 100%;
+  }
+
+  .fintap-revenue-simulator__footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .fintap-revenue-simulator__cta {
+    width: 100%;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fintap-revenue-simulator__start:hover {
+  .fintap-revenue-simulator__cta:hover {
     transform: none;
   }
 }
