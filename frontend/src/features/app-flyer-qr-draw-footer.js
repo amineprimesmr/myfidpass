@@ -96,6 +96,33 @@ function wrapCenter(ctx, text, cx, cy, maxW, lineH) {
   });
 }
 
+/**
+ * Texte blanc + contour noir net (export 4K / aperçu HD).
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {string} text
+ * @param {number} x
+ * @param {number} y
+ * @param {string} font
+ * @param {number} strokeW
+ */
+function drawFlyerPoweredByOutlinedText(ctx, text, x, y, font, strokeW) {
+  const px = Math.round(x);
+  const py = Math.round(y);
+  ctx.font = font;
+  ctx.lineJoin = "round";
+  ctx.miterLimit = 2;
+  const wOuter = Math.max(2, strokeW * 1.85);
+  const wInner = Math.max(1.5, strokeW);
+  ctx.strokeStyle = "rgba(0,0,0,0.55)";
+  ctx.lineWidth = wOuter;
+  ctx.strokeText(text, px, py);
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = wInner;
+  ctx.strokeText(text, px, py);
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillText(text, px, py);
+}
+
 function drawFooterBanner(ctx, w, canvasH, bottomY, img) {
   const iw = img.naturalWidth || img.width;
   const ih = img.naturalHeight || img.height;
@@ -188,51 +215,63 @@ export async function drawFlyerFooter(ctx, w, h, s) {
 }
 
 /**
- * Mention discrète Myfidpass en bas du flyer (export PNG / aperçu).
+ * Mention Myfidpass en bas du flyer (export PNG 4096×6144 / aperçu HD).
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} w
  * @param {number} h
+ * @param {number} [bottomY]
  */
 export async function drawFlyerPoweredByBadge(ctx, w, h, bottomY = h) {
   const img = await getMyfidpassFlyerLogo();
   const ds = flyerDesignScale(w);
-  /** Plus gros + ancré vers le bas du bandeau (lisible à l’impression). */
   const fontPx = Math.max(44, Math.round(72 * ds));
   const gap = Math.max(14 * ds, w * 0.014);
   const iconH = Math.max(52, Math.round(90 * ds));
-  const bottomLift = Math.max(8 * ds, h * 0.004);
-  const yMid = h - bottomLift - fontPx * 0.48;
+  const bannerMaxH = h * FLYER_LAYOUT.footerBannerMaxHeightFrac;
+  const liftFrac = FLYER_LAYOUT.poweredByBadgeCenterFromBannerBottomFrac ?? 0.34;
+  const yMid = Math.round(bottomY - bannerMaxH * Math.max(0.18, Math.min(0.52, liftFrac)));
 
   ctx.save();
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
-  ctx.font = `600 ${fontPx}px Inter, system-ui, sans-serif`;
+  ctx.imageSmoothingEnabled = true;
+  if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
+
   const label = "Propulsé par ";
   const brand = "Myfidpass";
+  const labelFont = `600 ${fontPx}px Inter, system-ui, sans-serif`;
+  const brandFont = `800 ${fontPx}px Inter, system-ui, sans-serif`;
+  ctx.font = labelFont;
   const labelW = ctx.measureText(label).width;
-  ctx.font = `800 ${fontPx}px Inter, system-ui, sans-serif`;
+  ctx.font = brandFont;
   const brandW = ctx.measureText(brand).width;
   const imgW = img ? (iconH * ((img.naturalWidth || img.width) / (img.naturalHeight || img.height || 1))) : 0;
   const totalW = (img ? imgW + gap : 0) + labelW + brandW;
-  let x = (w - totalW) / 2;
+  let x = Math.round((w - totalW) / 2);
+  const strokeW = Math.max(2.5, Math.round(5.5 * ds));
 
   if (img && imgW > 0) {
+    const ix = Math.round(x);
+    const iy = Math.round(yMid - iconH / 2);
+    const iw = Math.round(imgW);
+    const ih = Math.round(iconH);
     try {
-      ctx.globalAlpha = 0.95;
-      ctx.drawImage(img, x, yMid - iconH / 2, imgW, iconH);
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,0.72)";
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = Math.max(1, Math.round(2.2 * ds));
+      ctx.shadowOffsetY = Math.max(1, Math.round(2.2 * ds));
+      ctx.globalAlpha = 1;
+      ctx.drawImage(img, ix, iy, iw, ih);
+      ctx.restore();
+      ctx.globalAlpha = 1;
+      ctx.drawImage(img, ix, iy, iw, ih);
     } catch (_) {}
-    x += imgW + gap;
+    x += iw + gap;
   }
 
-  ctx.globalAlpha = 0.92;
-  ctx.font = `600 ${fontPx}px Inter, system-ui, sans-serif`;
-  ctx.fillStyle = "#1e293b";
-  ctx.textAlign = "left";
-  ctx.fillText(label, x, yMid);
+  drawFlyerPoweredByOutlinedText(ctx, label, x, yMid, labelFont, strokeW);
   x += labelW;
-  ctx.globalAlpha = 1;
-  ctx.font = `800 ${fontPx}px Inter, system-ui, sans-serif`;
-  ctx.fillStyle = "#0f172a";
-  ctx.fillText(brand, x, yMid);
+  drawFlyerPoweredByOutlinedText(ctx, brand, x, yMid, brandFont, strokeW);
   ctx.restore();
 }
