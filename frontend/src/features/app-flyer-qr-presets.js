@@ -17,6 +17,9 @@ export function scopedFlyerStorageKey(scope) {
 /** Dimensions export PNG ultra (2:3, ~300 DPI A2 / affiche pro). Aligné backend `flyer-export-dimensions.js`. */
 export const FLYER_EXPORT = { w: 4096, h: 6144 };
 
+/** Aperçu embed WKWebView (iOS / Android) — même ratio, ~16× moins de pixels → redraw quasi instantané. */
+export const FLYER_PREVIEW_EXPORT = { w: 1024, h: 1536 };
+
 /** Gabarit visuel d’origine — les constantes px du canvas sont calées dessus (CTA, roue, etc.). */
 export const FLYER_DESIGN_BASE = { w: 2400, h: 3600 };
 

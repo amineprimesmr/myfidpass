@@ -1,17 +1,26 @@
 /**
  * Aperçu flyer (même moteur canvas que le SaaS) — chargé par flyer-embed.html.
- * Les données viennent de window.__FIDPASS_FLYER_B64__ (injection WKWebView) ou #fidpass-flyer-b64.
+ * Mode preview : canvas 1024×1536 + cache logo/assets + patch d’état léger (WKWebView iOS).
  */
 import { API_BASE } from "./config.js";
-import { FLYER_EXPORT, mergeFlyerState } from "./features/app-flyer-qr-presets.js";
+import { FLYER_EXPORT, FLYER_PREVIEW_EXPORT, mergeFlyerState } from "./features/app-flyer-qr-presets.js";
 import { renderFlyerCanvas } from "./features/app-flyer-qr-draw.js";
+
+/** @type {true} */
+window.__FIDPASS_PREVIEW_MODE = true;
+
+/**
+ * @returns {{ w: number, h: number }}
+ */
+function embedCanvasDimensions() {
+  if (typeof window !== "undefined" && window.__FIDPASS_PREVIEW_MODE === true) {
+    return FLYER_PREVIEW_EXPORT;
+  }
+  return FLYER_EXPORT;
+}
 
 /**
  * Chargement d’images depuis `data:image/...;base64,...` pour le canvas flyer.
- * Important WKWebView : `fetch(dataUrl)` échoue ou tronque souvent sur les data URLs volumineuses
- * (fond IA JPEG/PNG) → fond absent (dégradé par défaut) alors que l’aperçu « brut » fonctionne ailleurs.
- * `new Image()` + `src = dataUrl` est le chemin fiable pour les data URLs.
- *
  * @param {string} dataUrl
  * @returns {Promise<HTMLImageElement | ImageBitmap | string | null>}
  */
@@ -29,7 +38,6 @@ async function loadImageInputFromDataUrl(dataUrl) {
   } catch (_) {
     /* repli blob / fetch ci-dessous */
   }
-  /** Certains WKWebView rejettent les très longues data URLs sur `img.src` ; blob: fonctionne encore. */
   try {
     const comma = dataUrl.indexOf(",");
     if (comma > 0) {
@@ -88,7 +96,7 @@ async function loadImageInputFromHttp(url) {
     }
     return URL.createObjectURL(blob);
   } catch (_) {
-    /* Repli : certains WKWebView rejettent fetch+blob mais acceptent <img crossorigin>. */
+    /* repli img */
   }
   try {
     const im = await new Promise((resolve, reject) => {
@@ -123,97 +131,245 @@ function parseBootstrap() {
   }
 }
 
-/** Incrémenté à chaque `__FIDPASS_FLYER_APPLY__` : le dernier rendu async gagne, les blits obsolètes sont ignorés. */
+/** Incrémenté à chaque rendu : le dernier async gagne. */
 let __flyerEmbedApplyGen = 0;
 
-/**
- * Rendu complet depuis `window.__FIDPASS_FLYER_B64__` (WKWebView / injection live).
- * Exposé sur `window` pour mises à jour sans recharger la page (évite flash noir).
- */
-async function renderFromCurrentBootstrap() {
-  const gen = ++__flyerEmbedApplyGen;
-  const { flyer_prefs, share_url, match_predictions_enabled } = parseBootstrap();
-  const canvas = document.getElementById("fidpass-flyer-canvas");
-  if (!canvas || !(canvas instanceof HTMLCanvasElement)) return;
+/** @type {{
+ *   state: import("./features/app-flyer-qr-presets.js").FlyerState,
+ *   share_url: string,
+ *   match_predictions_enabled: boolean,
+ *   cardSlug: string,
+ *   logoIn: import("./features/app-flyer-qr-draw-utils.js").CanvasImageInput | null,
+ *   bgIn: import("./features/app-flyer-qr-draw-utils.js").CanvasImageInput | null,
+ *   logoKey: string,
+ *   skipPublicLogoFallback: boolean,
+ * } | null} */
+let __flyerEmbedCache = null;
 
-  const state = mergeFlyerState(
-    flyer_prefs?.state && typeof flyer_prefs.state === "object" && !Array.isArray(flyer_prefs.state)
-      ? /** @type {import("./features/app-flyer-qr-presets.js").FlyerState} */ (flyer_prefs.state)
+/**
+ * @param {import("./features/app-flyer-qr-presets.js").FlyerState | null | undefined} raw
+ */
+function mergedStateFromRaw(raw) {
+  return mergeFlyerState(
+    raw && typeof raw === "object" && !Array.isArray(raw)
+      ? /** @type {import("./features/app-flyer-qr-presets.js").FlyerState} */ (raw)
       : null,
   );
+}
 
-  let logoIn = null;
-  let bgIn = null;
-  const prefsRaw = flyer_prefs;
+/**
+ * @param {string} shareUrl
+ * @param {string} slugFromPrefs
+ */
+function resolveCardSlug(shareUrl, slugFromPrefs) {
+  if (slugFromPrefs) return slugFromPrefs;
+  const slugMatch = shareUrl.match(/\/fidelity\/([^/?#]+)/);
+  return slugMatch ? decodeURIComponent(slugMatch[1]) : "";
+}
+
+function resolveApiBase() {
+  const rawBase = typeof API_BASE === "string" ? API_BASE.trim().replace(/\/$/, "") : "";
+  const host = typeof window !== "undefined" && window.location?.hostname ? String(window.location.hostname) : "";
+  return (
+    rawBase ||
+    (/myfidpass\.fr$/i.test(host) ? "https://api.myfidpass.fr" : "") ||
+    "https://api.myfidpass.fr"
+  );
+}
+
+/**
+ * @param {ReturnType<typeof parseBootstrap>} parsed
+ */
+async function resolveLogoFromBootstrap(parsed) {
+  const prefsRaw = parsed.flyer_prefs;
   const hasLogoKey =
     prefsRaw != null &&
     typeof prefsRaw === "object" &&
     Object.prototype.hasOwnProperty.call(prefsRaw, "custom_logo_data_url");
   const rawLogo = hasLogoKey ? /** @type {{ custom_logo_data_url?: unknown }} */ (prefsRaw).custom_logo_data_url : undefined;
+  let logoKey = "unset";
   if (typeof rawLogo === "string" && rawLogo.startsWith("data:image/")) {
-    logoIn = await loadImageInputFromDataUrl(rawLogo);
-  } else if (hasLogoKey && rawLogo === "") {
-    // Chaîne vide "" = logo explicitement supprimé par l'utilisateur → pas de fallback API.
-    logoIn = null;
+    logoKey = `data:${rawLogo.length}:${rawLogo.slice(0, 48)}`;
+    return {
+      logoIn: await loadImageInputFromDataUrl(rawLogo),
+      logoKey,
+      skipPublicLogoFallback: false,
+    };
   }
-  // null ou absent = logo pas encore chargé/inconnu → on laisse le fallback API se charger.
-  // Seul "" (suppression explicite) bloque le fallback.
-  const skipPublicLogoFallback = hasLogoKey && rawLogo === "";
-  if (flyer_prefs?.custom_bg_data_url) {
-    bgIn = await loadImageInputFromDataUrl(flyer_prefs.custom_bg_data_url);
+  if (hasLogoKey && rawLogo === "") {
+    return { logoIn: null, logoKey: "cleared", skipPublicLogoFallback: true };
   }
+  return { logoIn: null, logoKey: "fallback", skipPublicLogoFallback: false };
+}
 
-  const slugFromPrefs =
-    flyer_prefs &&
-    typeof flyer_prefs.business_slug === "string" &&
-    flyer_prefs.business_slug.trim().length > 0
-      ? flyer_prefs.business_slug.trim()
-      : "";
-  const slugMatch = share_url.match(/\/fidelity\/([^/?#]+)/);
-  const cardSlug = slugFromPrefs || (slugMatch ? decodeURIComponent(slugMatch[1]) : "");
-  /** Vite dev : API_BASE peut être "" → URL relative cassée dans WKWebView. Toujours viser l’API prod sur le domaine MyFidpass. */
-  const rawBase = typeof API_BASE === "string" ? API_BASE.trim().replace(/\/$/, "") : "";
-  const host = typeof window !== "undefined" && window.location?.hostname ? String(window.location.hostname) : "";
-  const apiBase =
-    rawBase ||
-    (/myfidpass\.fr$/i.test(host) ? "https://api.myfidpass.fr" : "") ||
-    "https://api.myfidpass.fr";
-  if (!logoIn && cardSlug && !skipPublicLogoFallback) {
-    const logoApi = `${apiBase}/api/businesses/${encodeURIComponent(cardSlug)}/public/flyer-qr-logo`;
-    logoIn = await loadImageInputFromHttp(logoApi);
+/**
+ * @param {typeof __flyerEmbedCache} cache
+ */
+async function ensureLogoInCache(cache) {
+  if (!cache) return;
+  if (cache.logoIn != null || cache.skipPublicLogoFallback) return;
+  if (!cache.cardSlug) return;
+  const logoApi = `${resolveApiBase()}/api/businesses/${encodeURIComponent(cache.cardSlug)}/public/flyer-qr-logo`;
+  cache.logoIn = await loadImageInputFromHttp(logoApi);
+  if (cache.logoIn) cache.logoKey = `api:${cache.cardSlug}`;
+}
+
+/**
+ * Rendu depuis le cache (patch couleur / texte — pas de re-parse bootstrap).
+ */
+async function renderFromEmbedCache() {
+  const cache = __flyerEmbedCache;
+  if (!cache) {
+    await renderFromCurrentBootstrap();
+    return;
+  }
+  const gen = ++__flyerEmbedApplyGen;
+  const canvas = document.getElementById("fidpass-flyer-canvas");
+  if (!canvas || !(canvas instanceof HTMLCanvasElement)) return;
+
+  await ensureLogoInCache(cache);
+
+  const dim = embedCanvasDimensions();
+  if (canvas.width !== dim.w || canvas.height !== dim.h) {
+    canvas.width = dim.w;
+    canvas.height = dim.h;
   }
 
   const targetUrl =
-    share_url.trim() ||
+    cache.share_url.trim() ||
+    (cache.cardSlug
+      ? `${typeof window !== "undefined" ? window.location.origin : ""}/fidelity/${cache.cardSlug}`
+      : "");
+
+  try {
+    await renderFlyerCanvas(
+      canvas,
+      cache.state,
+      targetUrl || "https://myfidpass.fr",
+      cache.logoIn,
+      cache.bgIn,
+      {
+        shouldBlit: () => gen === __flyerEmbedApplyGen,
+        matchPredictionsEnabled: cache.match_predictions_enabled,
+      },
+    );
+  } catch (e) {
+    if (typeof console !== "undefined" && console.warn) console.warn("[flyer-embed]", e);
+  }
+}
+
+/**
+ * Rendu complet depuis `window.__FIDPASS_FLYER_B64__` (WKWebView / injection live).
+ */
+async function renderFromCurrentBootstrap() {
+  const gen = ++__flyerEmbedApplyGen;
+  const parsed = parseBootstrap();
+  const canvas = document.getElementById("fidpass-flyer-canvas");
+  if (!canvas || !(canvas instanceof HTMLCanvasElement)) return;
+
+  const prefsRaw = parsed.flyer_prefs;
+  const state = mergedStateFromRaw(
+    prefsRaw?.state && typeof prefsRaw.state === "object" && !Array.isArray(prefsRaw.state)
+      ? prefsRaw.state
+      : null,
+  );
+
+  const slugFromPrefs =
+    prefsRaw &&
+    typeof prefsRaw.business_slug === "string" &&
+    prefsRaw.business_slug.trim().length > 0
+      ? prefsRaw.business_slug.trim()
+      : "";
+  const cardSlug = resolveCardSlug(parsed.share_url, slugFromPrefs);
+
+  const logoResolved = await resolveLogoFromBootstrap(parsed);
+  let logoIn = logoResolved.logoIn;
+  const skipPublicLogoFallback = logoResolved.skipPublicLogoFallback;
+
+  let bgIn = null;
+  if (prefsRaw?.custom_bg_data_url) {
+    bgIn = await loadImageInputFromDataUrl(prefsRaw.custom_bg_data_url);
+  }
+
+  if (!logoIn && cardSlug && !skipPublicLogoFallback) {
+    const logoApi = `${resolveApiBase()}/api/businesses/${encodeURIComponent(cardSlug)}/public/flyer-qr-logo`;
+    logoIn = await loadImageInputFromHttp(logoApi);
+  }
+
+  __flyerEmbedCache = {
+    state,
+    share_url: parsed.share_url,
+    match_predictions_enabled: parsed.match_predictions_enabled,
+    cardSlug,
+    logoIn,
+    bgIn,
+    logoKey: logoResolved.logoKey,
+    skipPublicLogoFallback,
+  };
+
+  const dim = embedCanvasDimensions();
+  if (canvas.width !== dim.w || canvas.height !== dim.h) {
+    canvas.width = dim.w;
+    canvas.height = dim.h;
+  }
+
+  const targetUrl =
+    parsed.share_url.trim() ||
     (cardSlug ? `${typeof window !== "undefined" ? window.location.origin : ""}/fidelity/${cardSlug}` : "");
 
-  const wNeed = FLYER_EXPORT.w;
-  const hNeed = FLYER_EXPORT.h;
-  if (canvas.width !== wNeed || canvas.height !== hNeed) {
-    canvas.width = wNeed;
-    canvas.height = hNeed;
-  }
   try {
     await renderFlyerCanvas(canvas, state, targetUrl || "https://myfidpass.fr", logoIn, bgIn, {
       shouldBlit: () => gen === __flyerEmbedApplyGen,
-      matchPredictionsEnabled: match_predictions_enabled,
+      matchPredictionsEnabled: parsed.match_predictions_enabled,
     });
   } catch (e) {
     if (typeof console !== "undefined" && console.warn) console.warn("[flyer-embed]", e);
   }
 }
 
+/**
+ * Patch léger (couleurs, textes, roue) — sans re-parse du bootstrap ni re-fetch logo.
+ * @param {string} jsonStr
+ */
+function patchFlyerStateFromJSON(jsonStr) {
+  if (!jsonStr || typeof jsonStr !== "string") return;
+  let patch;
+  try {
+    patch = JSON.parse(jsonStr);
+  } catch (_) {
+    return;
+  }
+  if (!__flyerEmbedCache) {
+    void renderFromCurrentBootstrap();
+    return;
+  }
+  if (patch.state && typeof patch.state === "object" && !Array.isArray(patch.state)) {
+    __flyerEmbedCache.state = mergedStateFromRaw({
+      ...__flyerEmbedCache.state,
+      ...patch.state,
+    });
+  }
+  if (typeof patch.share_url === "string") {
+    __flyerEmbedCache.share_url = patch.share_url;
+    __flyerEmbedCache.cardSlug = resolveCardSlug(patch.share_url, __flyerEmbedCache.cardSlug);
+  }
+  const mp = patch.match_predictions_enabled ?? patch.matchPredictionsEnabled;
+  if (mp === true || mp === false || mp === 1 || mp === 0) {
+    __flyerEmbedCache.match_predictions_enabled =
+      mp === true || mp === 1 || mp === "1" || mp === "true";
+  }
+  void renderFromEmbedCache();
+}
+
 if (typeof window !== "undefined") {
   window.__FIDPASS_FLYER_APPLY__ = () => {
     void renderFromCurrentBootstrap();
   };
+  window.__FIDPASS_FLYER_PATCH_STATE__ = (jsonStr) => {
+    patchFlyerStateFromJSON(jsonStr);
+  };
 }
 
-/**
- * Ne pas dessiner au chargement du module si le bootstrap n’est pas encore injecté
- * (WKWebView : gros JSON uniquement via `evaluateJavaScript` après `didFinish` — voir FlyerPreviewWebView).
- * Sinon premier rendu sans `custom_bg_data_url` → dégradé par défaut (bleu nuit) jusqu’au 2ᵉ passage.
- */
 function shouldAutoRenderFlyerEmbedOnLoad() {
   try {
     const b64 =
