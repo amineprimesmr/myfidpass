@@ -5,6 +5,7 @@
 import { getDb } from "./connection.js";
 import { addPoints, addStampsWithCycleRollover } from "./members.js";
 import { createTransaction } from "./transactions.js";
+import { computeWelcomeStampGrantAmount } from "../lib/program-type-switch.js";
 
 const db = getDb();
 
@@ -32,14 +33,15 @@ export function grantWelcomeBonusIfEligible(business, memberId, opts = {}) {
 
   const programType = (business.program_type || "").toLowerCase();
   const rawAmount = Number(business.welcome_bonus_amount);
-  const configuredAmount = Number.isInteger(rawAmount) && rawAmount > 0 ? rawAmount : 10;
+  const defaultAmount = programType === "stamps" ? 1 : 10;
+  const configuredAmount = Number.isInteger(rawAmount) && rawAmount > 0 ? rawAmount : defaultAmount;
 
   if (programType === "stamps") {
     const cycleSize =
       business.required_stamps != null && Number(business.required_stamps) > 0
         ? Math.floor(Number(business.required_stamps))
         : 10;
-    const stampAmount = Math.min(configuredAmount, Math.max(1, Math.floor(cycleSize / 2)));
+    const stampAmount = computeWelcomeStampGrantAmount(configuredAmount, cycleSize);
     const r = addStampsWithCycleRollover(memberId, stampAmount, cycleSize);
     if (!r.member) return null;
     createTransaction({

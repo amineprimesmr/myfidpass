@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import { GoogleAuth } from "google-auth-library";
 import { getMembersForBusiness } from "./db/members.js";
 import { stampNextRewardFaceLabelAndValue } from "./pass/stamp-next-reward-face.js";
+import { normalizeStampBalance } from "./lib/stamps-cycle-math.js";
 
 const GOOGLE_SAVE_BASE = "https://pay.google.com/gp/v/save";
 const DEFAULT_CLASS_SUFFIX = "myfidpass_loyalty";
@@ -294,7 +295,12 @@ function buildLoyaltyObject(objectId, classId, member, business, apiBase = null)
   const programType = String(business?.program_type || "").toLowerCase() === "stamps" ? "stamps" : "points";
   const accountName = (member.name || member.email || "Client").slice(0, 20);
   const accountId = (member.email || member.id).slice(0, 20);
-  const heroUrl = publicHeroImageUrlForBusiness(apiBase, business, Math.min(Math.max(0, Math.floor(Number(member.points) || 0)), Math.max(1, Math.floor(Number(business?.required_stamps) || 10))));
+  const stampMax = Math.max(1, Math.floor(Number(business?.required_stamps) || 10));
+  const stampBalanceForHero =
+    programType === "stamps"
+      ? normalizeStampBalance(member.points, stampMax)
+      : Math.max(0, Math.floor(Number(member.points) || 0));
+  const heroUrl = publicHeroImageUrlForBusiness(apiBase, business, stampBalanceForHero);
   const rewardsBody = fullRewardsListForBusiness(business, programType);
   const backTerms = String(business?.back_terms || "").trim();
   const backContact = String(business?.back_contact || "").trim();

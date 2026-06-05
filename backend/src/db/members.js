@@ -105,6 +105,18 @@ export function resetMemberPoints(id) {
   return getMember(id);
 }
 
+/** Remise à zéro de tous les soldes après bascule points ↔ tampons. */
+export function resetAllMemberBalancesForBusiness(businessId, meta = {}) {
+  if (!businessId) return { resetCount: 0 };
+  const countRow = db
+    .prepare("SELECT COUNT(*) AS n FROM members WHERE business_id = ? AND COALESCE(points, 0) != 0")
+    .get(businessId);
+  const resetCount = Number(countRow?.n) || 0;
+  if (resetCount <= 0) return { resetCount: 0 };
+  db.prepare("UPDATE members SET points = 0, last_visit_at = ? WHERE business_id = ?").run(nowUtcSqlWithMs(), businessId);
+  return { resetCount, ...meta };
+}
+
 export function touchMemberLastVisit(memberId) {
   if (!memberId) return;
   db.prepare("UPDATE members SET last_visit_at = ? WHERE id = ?").run(nowUtcSqlWithMs(), memberId);

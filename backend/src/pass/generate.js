@@ -31,6 +31,7 @@ import {
   ICON_SIZE_3X,
 } from "./constants.js";
 import { radiusMetersForPass } from "../locationRadiusLimits.js";
+import { normalizeStampBalance } from "../lib/stamps-cycle-math.js";
 import { normalizeChangeMessage, buildLastBroadcastFieldValue } from "./broadcast-field.js";
 import { stampNextRewardFaceLabelAndValue } from "./stamp-next-reward-face.js";
 import { readFileSync, existsSync } from "node:fs";
@@ -253,7 +254,7 @@ export async function generatePass(member, business = null, options = {}) {
   const explicitFormat = normProgram === "points" ? "points" : normProgram === "stamps" ? "tampons" : null;
   /** Source de vérité : `program_type` en base ; sans valeur explicite → points (tampons uniquement si program_type = stamps). */
   const format = options.format || explicitFormat || "points";
-  const stamps = format === "tampons" ? Math.min(Math.max(0, Math.floor(Number(member.points) || 0)), stampMax) : null;
+  const stamps = format === "tampons" ? normalizeStampBalance(member.points, stampMax) : null;
 
   const stripStampEmoji = (options.stamp_emoji ?? business?.stamp_emoji)?.trim() || "☕";
 

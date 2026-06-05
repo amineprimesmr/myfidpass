@@ -249,8 +249,9 @@ export function pickWeightedReward(rewards) {
  */
 export function selectRouletteReward(spinRewards, priorSpinCount) {
   const safe = Array.isArray(spinRewards) ? spinRewards : [];
+  const isWinningKind = (kind) => kind === "points" || kind === "stamps" || kind === "gift";
   if (priorSpinCount === 0) {
-    const winningOnly = safe.filter((r) => r && (r.kind === "points" || r.kind === "stamps"));
+    const winningOnly = safe.filter((r) => r && isWinningKind(r.kind));
     return pickWeightedReward(winningOnly.length > 0 ? winningOnly : safe);
   }
   return pickWeightedReward(safe);

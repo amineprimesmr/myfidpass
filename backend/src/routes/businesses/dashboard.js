@@ -34,6 +34,8 @@ import { deleteMemberForBusiness, deleteAllMembersForBusiness } from "../../db/m
 import { getRoulettePublicSegments } from "../../db/games.js";
 import { getMatchPredictionConfig } from "../../db/match-predictions.js";
 import { resolveBusinessProgramType } from "../../db/businesses.js";
+import { applyProgramTypeSwitchSideEffects } from "../../lib/program-type-switch.js";
+import { resetAllMemberBalancesForBusiness } from "../../db/members.js";
 import { sendPassKitUpdateIfCustomerAlertsAllowed } from "../../lib/passkit-member-push.js";
 import {
   ensureDashboardAccess,
@@ -816,37 +818,9 @@ router.patch("/settings", async (req, res) => {
     return res.status(204).send();
   }
 
-  // Changement Points ↔ Tampons : nettoyer les champs du mode opposé si le client ne les envoie pas.
+  let programTypeSwitch = { switched: false };
   if (updates.program_type !== undefined) {
-    const prevType = resolveBusinessProgramType(business);
-    const nextRaw = updates.program_type;
-    const nextType =
-      nextRaw === "stamps" || nextRaw === "points"
-        ? nextRaw
-        : resolveBusinessProgramType({ ...business, program_type: nextRaw });
-    if (prevType !== nextType) {
-      if (nextType === "stamps") {
-        if (updates.points_reward_tiers === undefined) {
-          updates.points_reward_tiers = null;
-        }
-        updates.loyalty_mode = "points_cash";
-        if (updates.required_stamps === undefined) {
-          const rs = Number(business.required_stamps);
-          updates.required_stamps = Number.isInteger(rs) && rs > 0 ? rs : 10;
-        }
-        // Conserver card_background en base : le commerçant peut repasser en mode points sans re-téléverser.
-      } else {
-        updates.loyalty_mode = "points_cash";
-        if (updates.points_per_euro === undefined) {
-          const pe = Number(business.points_per_euro);
-          updates.points_per_euro = Number.isFinite(pe) && pe >= 0 ? String(pe) : "1";
-        }
-        if (updates.points_per_visit === undefined) {
-          const pv = Number(business.points_per_visit);
-          updates.points_per_visit = Number.isFinite(pv) && pv >= 0 ? String(pv) : "0";
-        }
-      }
-    }
+    programTypeSwitch = applyProgramTypeSwitchSideEffects(business, updates, body);
   }
 
   if (updates.points_reward_tiers !== undefined && updates.points_reward_tiers !== null) {
@@ -904,6 +878,26 @@ router.patch("/settings", async (req, res) => {
     updates.stamp_emoji !== undefined ||
     updates.stamp_icon_base64 !== undefined;
   updateBusiness(business.id, updates);
+  if (programTypeSwitch.switched) {
+    resetAllMemberBalancesForBusiness(business.id, {
+      fromType: programTypeSwitch.prevType,
+      toType: programTypeSwitch.nextType,
+    });
+    bumpBusinessPassRefreshTimestamp(business.id);
+    const bAfterModeSwitch = getBusinessById(business.id);
+    if (bAfterModeSwitch && businessAllowsWalletCustomerAlerts(bAfterModeSwitch)) {
+      const modeSwitchTokens = getPassKitPushTokensForBusiness(business.id);
+      if (modeSwitchTokens.length > 0) {
+        const passMs = Number(bAfterModeSwitch.pass_last_modified_ms) || Date.now();
+        const modeCollapseId = `mode-${passMs}`;
+        for (const row of modeSwitchTokens.slice(0, 300)) {
+          sendPassKitUpdateIfCustomerAlertsAllowed(bAfterModeSwitch, row.push_token, {
+            collapseId: modeCollapseId,
+          }).catch(() => {});
+        }
+      }
+    }
+  }
   if (passNotifTextsUpdated || passVisualMediaUpdated) {
     bumpBusinessPassRefreshTimestamp(business.id);
   }

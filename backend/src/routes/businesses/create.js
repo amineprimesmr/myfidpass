@@ -22,6 +22,10 @@ import { businessAllowsWalletCustomerAlerts } from "../../lib/notification-icon-
 import { getApiBase, ensureDashboardAccess, normalizeHex } from "./shared.js";
 import { isOnlyTeamUser } from "../../db/business-team.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
+import {
+  applyProgramTypeSwitchSideEffects,
+} from "../../lib/program-type-switch.js";
+import { resetAllMemberBalancesForBusiness } from "../../db/members.js";
 import { fetchGooglePlaceBusinessEnrichment } from "../../lib/google-place-business-enrichment.js";
 import { refreshGooglePlacesSnapshotFromPlaceId } from "../../services/social-metrics-service.js";
 
@@ -582,6 +586,11 @@ export async function updateHandler(req, res) {
     if (Number.isFinite(n) && n >= 1 && n <= 200) updates.delivery_receipt_max_per_member_per_month = n;
   }
 
+  let programTypeSwitch = { switched: false };
+  if (updates.program_type !== undefined) {
+    programTypeSwitch = applyProgramTypeSwitchSideEffects(business, updates, body);
+  }
+
   /** Détecter les médias visuels du pass AVANT updateBusiness (les clés sont supprimées de `updates` par updateBusiness). */
   const passVisualMediaUpdated =
     updates.notification_icon_base64 !== undefined ||
@@ -592,6 +601,13 @@ export async function updateHandler(req, res) {
 
   const updated = updateBusiness(business.id, updates);
   if (!updated) return res.status(500).json({ error: "Erreur mise à jour" });
+  if (programTypeSwitch.switched) {
+    resetAllMemberBalancesForBusiness(business.id, {
+      fromType: programTypeSwitch.prevType,
+      toType: programTypeSwitch.nextType,
+    });
+    bumpBusinessPassRefreshTimestamp(business.id);
+  }
 
   /**
    * Propager l'icône de notification aux passes existants sur les iPhones.
