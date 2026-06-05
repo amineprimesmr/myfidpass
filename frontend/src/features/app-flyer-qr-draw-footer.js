@@ -228,9 +228,10 @@ export async function drawFlyerPoweredByBadge(ctx, w, h, bottomY = h) {
   const gap = Math.max(14 * ds, w * 0.014);
   const iconH = Math.max(52, Math.round(90 * ds));
   const bannerMaxH = h * FLYER_LAYOUT.footerBannerMaxHeightFrac;
-  const liftFrac = FLYER_LAYOUT.poweredByBadgeCenterFromBannerBottomFrac ?? 0.14;
-  const bottomPad = Math.max(10 * ds, h * 0.005);
-  const yMid = Math.round(bottomY - bottomPad - Math.max(fontPx * 0.46, bannerMaxH * Math.max(0.08, Math.min(0.28, liftFrac))));
+  const liftFrac = FLYER_LAYOUT.poweredByBadgeCenterFromBannerBottomFrac ?? 0.06;
+  const bottomPad = Math.max(6 * ds, h * 0.003);
+  const liftFromBottom = Math.max(bottomPad + fontPx * 0.44, bannerMaxH * liftFrac);
+  const yMid = Math.round(bottomY - liftFromBottom);
 
   ctx.save();
   ctx.textAlign = "left";

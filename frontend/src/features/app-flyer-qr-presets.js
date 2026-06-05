@@ -98,7 +98,7 @@ export const FLYER_LAYOUT = Object.freeze({
   /** Bandeau pied remonté depuis le bord bas (marge coupe imprimante). */
   printSafeBottomInsetFrac: 0.034,
   /** Centre vertical badge « Propulsé par » — fraction hauteur bandeau depuis le bas safe (0 = bas, 1 = haut bandeau). */
-  poweredByBadgeCenterFromBannerBottomFrac: 0.14,
+  poweredByBadgeCenterFromBannerBottomFrac: 0.06,
 });
 
 /**
