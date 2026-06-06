@@ -764,11 +764,82 @@ body.page-saas-pro-payment .saas-pay-checkout.saas-pay-checkout--app-embed .saas
   margin: 0.65rem 0 0;
   width: 100%;
   text-align: center;
-  font-size: clamp(0.78rem, 2.8vw, 0.88rem);
-  font-weight: 500;
+  font-size: clamp(1rem, 3.8vw, 1.18rem);
+  font-weight: 700;
   line-height: 1.35;
-  color: rgba(209, 217, 232, 0.82);
+  color: rgba(232, 237, 248, 0.95);
   letter-spacing: 0.01em;
+}
+
+.saas-pay-commerce-stepper {
+  margin-top: 1rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.saas-pay-commerce-stepper__label {
+  margin: 0 0 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(209, 217, 232, 0.72);
+}
+
+.saas-pay-commerce-stepper__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.saas-pay-commerce-stepper__btn {
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 14px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  color: #1d7cf2;
+  background: rgba(29, 124, 242, 0.14);
+}
+
+.saas-pay-commerce-stepper__btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.saas-pay-commerce-stepper__count {
+  min-width: 88px;
+  text-align: center;
+}
+
+.saas-pay-commerce-stepper__count strong {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.saas-pay-commerce-stepper__count span {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(209, 217, 232, 0.72);
+}
+
+.saas-pay-commerce-stepper__price {
+  margin: 0.7rem 0 0;
+  text-align: center;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: rgba(209, 217, 232, 0.88);
 }
 
 .saas-pay-checkout-trust-badge {

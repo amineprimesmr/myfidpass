@@ -177,15 +177,15 @@ export default function SaasProPaymentPage() {
     wireLiquidGlassTrackPrevious(liquidGlassSwitcherRef.current);
   }, [isPaymentRoute]);
 
-  const minSelectableSlots = Math.min(
-    5,
-    Math.max(
-      1,
-      isUpgradeFlow
-        ? Math.max(currentAllowedSlots + 1, usedBusinesses + 1)
-        : commerceSlots
-    )
-  );
+  const minSelectableSlots = (() => {
+    if (isUpgradeFlow) {
+      return Math.min(5, Math.max(currentAllowedSlots + 1, usedBusinesses + 1));
+    }
+    if (currentAllowedSlots > 1 && usedBusinesses < currentAllowedSlots) {
+      return currentAllowedSlots;
+    }
+    return 1;
+  })();
 
   useEffect(() => {
     if (!isPaymentRoute) return;
@@ -228,9 +228,15 @@ export default function SaasProPaymentPage() {
   }, [isPaymentRoute, authHandoffTick]);
 
   useEffect(() => {
+    if (commerceSlots < minSelectableSlots) {
+      setCommerceSlots(minSelectableSlots);
+    }
+  }, [commerceSlots, minSelectableSlots]);
+
+  useEffect(() => {
     if (!isPaymentRoute) return;
     let cancelled = false;
-    const from = isUpgradeFlow ? currentAllowedSlots : Math.max(1, commerceSlots - 1);
+    const from = isUpgradeFlow ? currentAllowedSlots : 1;
     const to = commerceSlots;
     const loadQuote = async () => {
       const token = await ensureWebSessionFresh();
@@ -632,67 +638,63 @@ export default function SaasProPaymentPage() {
           <p className="saas-pay-checkout-trust-lead">
             {isUpgradeFlow && pricingQuote?.is_upgrade ? (
               <>
-                Vous payez <strong>{pricingQuote.from_monthly_label}</strong> / mois →{" "}
+                Le premier mois à <strong>1&nbsp;€</strong>, puis{" "}
                 <strong>{pricingQuote.to_monthly_label}</strong> / mois (
                 <strong>+{pricingQuote.incremental_monthly_label}</strong> / mois)
               </>
             ) : annual ? (
               <>
-                Commencez pour <strong>1&nbsp;€</strong>, puis{" "}
+                Le premier mois à <strong>1&nbsp;€</strong>, puis{" "}
                 <strong>{pricingQuote?.to_annual_label || "399 €"}&nbsp;/&nbsp;an</strong>
               </>
             ) : (
               <>
-                Commencez à fidéliser dès aujourd&apos;hui pour 1&nbsp;€, puis{" "}
+                Le premier mois à <strong>1&nbsp;€</strong>, puis{" "}
                 <strong>{pricingQuote?.to_monthly_label || "49,99 €"}</strong> / mois
               </>
             )}
           </p>
-          {merchantBusinesses.length > 0 || isUpgradeFlow ? (
-            <div className="saas-pay-commerce-quota" style={{ marginTop: 14, textAlign: "left", width: "100%" }}>
-              <p style={{ fontSize: 12, fontWeight: 700, opacity: 0.55, margin: "0 0 8px", textTransform: "uppercase" }}>
-                Vos commerces ({usedBusinesses} / {currentAllowedSlots})
-              </p>
-              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 10px" }}>
+          <div className="saas-pay-commerce-stepper">
+            <p className="saas-pay-commerce-stepper__label">Nombre de commerces</p>
+            {merchantBusinesses.length > 0 ? (
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 0.75rem", textAlign: "left" }}>
                 {merchantBusinesses.map((b) => (
                   <li key={b.id || b.slug} style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>
                     {b.organization_name || b.name || b.slug}
                   </li>
                 ))}
-                {isUpgradeFlow
-                  ? Array.from({
-                      length: Math.max(0, commerceSlots - Math.max(usedBusinesses, merchantBusinesses.length)),
-                    }).map((_, i) => (
-                      <li key={`pending-${i}`} style={{ fontSize: 13, opacity: 0.65, marginBottom: 4 }}>
-                        + Nouveau commerce (après paiement)
-                      </li>
-                    ))
-                  : null}
               </ul>
-              {isUpgradeFlow ? (
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {Array.from({ length: 5 - minSelectableSlots + 1 }, (_, i) => minSelectableSlots + i).map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => setCommerceSlots(n)}
-                      style={{
-                        border: "none",
-                        borderRadius: 10,
-                        padding: "8px 14px",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        background: commerceSlots === n ? "#1d7cf2" : "rgba(255,255,255,0.12)",
-                        color: commerceSlots === n ? "#fff" : "inherit",
-                      }}
-                    >
-                      {n} commerces
-                    </button>
-                  ))}
-                </div>
-              ) : null}
+            ) : null}
+            <div className="saas-pay-commerce-stepper__controls">
+              <button
+                type="button"
+                className="saas-pay-commerce-stepper__btn"
+                disabled={commerceSlots <= minSelectableSlots}
+                onClick={() => setCommerceSlots((n) => Math.max(minSelectableSlots, n - 1))}
+                aria-label="Retirer un commerce"
+              >
+                −
+              </button>
+              <div className="saas-pay-commerce-stepper__count">
+                <strong>{commerceSlots}</strong>
+                <span>commerce{commerceSlots > 1 ? "s" : ""}</span>
+              </div>
+              <button
+                type="button"
+                className="saas-pay-commerce-stepper__btn"
+                disabled={commerceSlots >= 5}
+                onClick={() => setCommerceSlots((n) => Math.min(5, n + 1))}
+                aria-label="Ajouter un commerce"
+              >
+                +
+              </button>
             </div>
-          ) : null}
+            <p className="saas-pay-commerce-stepper__price">
+              {pricingQuote?.is_upgrade
+                ? `Vous payez ${pricingQuote.from_monthly_label} / mois → ${pricingQuote.to_monthly_label} / mois (+${pricingQuote.incremental_monthly_label} / mois)`
+                : `Forfait ${pricingQuote?.to_monthly_label || "49,99 €"} / mois pour ${commerceSlots} commerce${commerceSlots > 1 ? "s" : ""}`}
+            </p>
+          </div>
           <div className="saas-pay-checkout-trust-badge" role="status">
             <div className="saas-pay-checkout-trust-badge__stack" aria-hidden="true">
               {AVA.map((src, idx) => (
