@@ -6,6 +6,7 @@ import Stripe from "stripe";
 import {
   getSubscriptionByUserId,
   getBusinessSubscriptionsByUserId,
+  getBusinessSubscriptionForUserBusiness,
 } from "../db/subscriptions.js";
 
 const stripe =
@@ -56,4 +57,23 @@ export async function cancelPaidSubscriptionsBeforeAccountDeletion(userId) {
   }
 
   return { stripeCanceled, hadAppleIap };
+}
+
+/**
+ * Annule l’abonnement Stripe lié à un commerce avant suppression admin du programme.
+ * @param {string} userId
+ * @param {string} businessId
+ */
+export async function cancelBusinessSubscriptionBeforeDeletion(userId, businessId) {
+  if (!userId || !businessId) return { stripeCanceled: 0, hadAppleIap: false };
+  const row = getBusinessSubscriptionForUserBusiness(userId, businessId);
+  if (!row) return { stripeCanceled: 0, hadAppleIap: false };
+  const sid = String(row.stripe_subscription_id || "").trim();
+  if (sid.startsWith("apple_iap:")) {
+    return { stripeCanceled: 0, hadAppleIap: true };
+  }
+  if (await cancelStripeSubscriptionId(sid)) {
+    return { stripeCanceled: 1, hadAppleIap: false };
+  }
+  return { stripeCanceled: 0, hadAppleIap: false };
 }

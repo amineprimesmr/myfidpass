@@ -66,6 +66,9 @@ export function listAllBusinessesForAdmin(p = {}) {
     .replace(/%/g, "");
   const adminBizSelect = `
     SELECT b.id, b.slug, b.name, b.organization_name, b.user_id, b.created_at, b.dashboard_token,
+      b.asset_logo_present, b.logo_updated_at,
+      b.asset_logo_icon_present, b.logo_icon_updated_at,
+      b.asset_notification_icon_present, b.notification_icon_updated_at,
       u.email AS owner_email,
       (SELECT COUNT(*) FROM members m WHERE m.business_id = b.id) AS member_count,
       s.status AS owner_subscription_status,

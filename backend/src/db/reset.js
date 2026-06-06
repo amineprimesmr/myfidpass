@@ -38,6 +38,98 @@ function wipeBusinessAssetDirectories() {
   }
 }
 
+const tableExists = (name) =>
+  !!db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name = ?").get(String(name));
+
+const safeDeleteByBusinessId = (table, businessId, column = "business_id") => {
+  if (!businessId || !tableExists(table)) return;
+  db.prepare(`DELETE FROM ${table} WHERE ${column} = ?`).run(businessId);
+};
+
+/** Supprime toutes les lignes SQLite (+ dépendances membres) pour un commerce, sans effacer la fiche `businesses`. */
+function purgeBusinessDataInTx(businessId) {
+  if (!businessId) return;
+  safeDeleteByBusinessId("campaign_event_jobs", businessId);
+  safeDeleteByBusinessId("business_assets", businessId);
+  safeDeleteByBusinessId("notification_batches", businessId);
+  safeDeleteByBusinessId("notification_log", businessId);
+  safeDeleteByBusinessId("web_push_subscriptions", businessId);
+  safeDeleteByBusinessId("transactions", businessId);
+  safeDeleteByBusinessId("business_team_members", businessId);
+  safeDeleteByBusinessId("social_metric_snapshots", businessId);
+  safeDeleteByBusinessId("social_oauth_connections", businessId);
+  safeDeleteByBusinessId("google_business_reviews", businessId);
+  safeDeleteByBusinessId("google_business_posts", businessId);
+  safeDeleteByBusinessId("google_business_questions", businessId);
+  safeDeleteByBusinessId("google_business_insights_cache", businessId);
+  safeDeleteByBusinessId("google_business_location_cache", businessId);
+  safeDeleteByBusinessId("google_business_media", businessId);
+  safeDeleteByBusinessId("receipt_delivery_claims", businessId);
+
+  const memberIds = db
+    .prepare("SELECT id FROM members WHERE business_id = ?")
+    .all(businessId)
+    .map((r) => r.id);
+  if (memberIds.length > 0) {
+    const mPlaceholders = memberIds.map(() => "?").join(",");
+    if (tableExists("reward_grants")) {
+      db.prepare(`DELETE FROM reward_grants WHERE member_id IN (${mPlaceholders})`).run(...memberIds);
+    }
+    if (tableExists("game_spins")) {
+      db.prepare(`DELETE FROM game_spins WHERE member_id IN (${mPlaceholders})`).run(...memberIds);
+    }
+    if (tableExists("ticket_ledger")) {
+      db.prepare(`DELETE FROM ticket_ledger WHERE member_id IN (${mPlaceholders})`).run(...memberIds);
+    }
+    if (tableExists("member_ticket_wallets")) {
+      db.prepare(`DELETE FROM member_ticket_wallets WHERE member_id IN (${mPlaceholders})`).run(...memberIds);
+    }
+    if (tableExists("member_category_assignments")) {
+      db.prepare(`DELETE FROM member_category_assignments WHERE member_id IN (${mPlaceholders})`).run(...memberIds);
+    }
+    if (tableExists("pass_registrations")) {
+      db.prepare(`DELETE FROM pass_registrations WHERE serial_number IN (${mPlaceholders})`).run(...memberIds);
+    }
+  }
+  safeDeleteByBusinessId("reward_grants", businessId);
+  safeDeleteByBusinessId("game_spins", businessId);
+  safeDeleteByBusinessId("game_rewards", businessId);
+  safeDeleteByBusinessId("ticket_ledger", businessId);
+  safeDeleteByBusinessId("member_ticket_wallets", businessId);
+  safeDeleteByBusinessId("business_games", businessId);
+  safeDeleteByBusinessId("engagement_proofs", businessId);
+  safeDeleteByBusinessId("engagement_completions", businessId);
+
+  const categoryIds = db
+    .prepare("SELECT id FROM member_categories WHERE business_id = ?")
+    .all(businessId)
+    .map((r) => r.id);
+  if (categoryIds.length > 0 && tableExists("member_category_assignments")) {
+    const cPlaceholders = categoryIds.map(() => "?").join(",");
+    db.prepare(`DELETE FROM member_category_assignments WHERE category_id IN (${cPlaceholders})`).run(...categoryIds);
+  }
+  safeDeleteByBusinessId("member_categories", businessId);
+  safeDeleteByBusinessId("members", businessId);
+  if (tableExists("merchant_business_subscriptions")) {
+    db.prepare("DELETE FROM merchant_business_subscriptions WHERE business_id = ?").run(businessId);
+  }
+}
+
+/**
+ * Supprime définitivement un commerce (données, membres, assets disque). Le compte propriétaire est conservé.
+ */
+export function deleteBusinessCompletely(businessId) {
+  if (!businessId) return false;
+  wipeBusinessDiskAssets(businessId);
+  const tx = db.transaction(() => {
+    purgeBusinessDataInTx(businessId);
+    if (!tableExists("businesses")) return false;
+    const info = db.prepare("DELETE FROM businesses WHERE id = ?").run(businessId);
+    return info.changes > 0;
+  });
+  return tx();
+}
+
 /**
  * Supprime définitivement le compte d'un utilisateur et toutes ses données (RGPD, exigence App Store).
  * Ordre de suppression respectant les clés étrangères.
@@ -50,72 +142,16 @@ export function deleteUserAccount(userId) {
     wipeBusinessDiskAssets(bid);
   }
 
-  const tableExists = (name) =>
-    !!db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name = ?").get(String(name));
   const safeDeleteByUser = (table, column = "user_id") => {
     if (!tableExists(table)) return;
     db.prepare(`DELETE FROM ${table} WHERE ${column} = ?`).run(userId);
   };
-  const safeDeleteByBusinessIds = (table, column = "business_id") => {
-    if (!businessIds.length || !tableExists(table)) return;
-    const placeholders = businessIds.map(() => "?").join(",");
-    db.prepare(`DELETE FROM ${table} WHERE ${column} IN (${placeholders})`).run(...businessIds);
-  };
 
   const tx = db.transaction(() => {
-    const placeholders = businessIds.map(() => "?").join(",");
-    if (placeholders) {
-      safeDeleteByBusinessIds("campaign_event_jobs");
-      safeDeleteByBusinessIds("business_assets");
-      safeDeleteByBusinessIds("notification_batches");
-      safeDeleteByBusinessIds("notification_log");
-      safeDeleteByBusinessIds("web_push_subscriptions");
-      safeDeleteByBusinessIds("transactions");
-      safeDeleteByBusinessIds("business_team_members");
-      safeDeleteByBusinessIds("social_metric_snapshots");
-      safeDeleteByBusinessIds("social_oauth_connections");
-      safeDeleteByBusinessIds("google_business_reviews");
-      safeDeleteByBusinessIds("google_business_posts");
-      safeDeleteByBusinessIds("google_business_questions");
-      safeDeleteByBusinessIds("google_business_insights_cache");
-      safeDeleteByBusinessIds("google_business_location_cache");
-      safeDeleteByBusinessIds("google_business_media");
-      safeDeleteByBusinessIds("receipt_delivery_claims");
-
-      const memberIds = db
-        .prepare(`SELECT id FROM members WHERE business_id IN (${placeholders})`)
-        .all(...businessIds)
-        .map((r) => r.id);
-      if (memberIds.length > 0) {
-        const mPlaceholders = memberIds.map(() => "?").join(",");
-        if (tableExists("reward_grants")) db.prepare(`DELETE FROM reward_grants WHERE member_id IN (${mPlaceholders})`).run(...memberIds);
-        if (tableExists("game_spins")) db.prepare(`DELETE FROM game_spins WHERE member_id IN (${mPlaceholders})`).run(...memberIds);
-        if (tableExists("ticket_ledger")) db.prepare(`DELETE FROM ticket_ledger WHERE member_id IN (${mPlaceholders})`).run(...memberIds);
-        if (tableExists("member_ticket_wallets")) db.prepare(`DELETE FROM member_ticket_wallets WHERE member_id IN (${mPlaceholders})`).run(...memberIds);
-        if (tableExists("member_category_assignments")) db.prepare(`DELETE FROM member_category_assignments WHERE member_id IN (${mPlaceholders})`).run(...memberIds);
-        if (tableExists("pass_registrations")) db.prepare(`DELETE FROM pass_registrations WHERE serial_number IN (${mPlaceholders})`).run(...memberIds);
-      }
-      safeDeleteByBusinessIds("reward_grants");
-      safeDeleteByBusinessIds("game_spins");
-      safeDeleteByBusinessIds("game_rewards");
-      safeDeleteByBusinessIds("ticket_ledger");
-      safeDeleteByBusinessIds("member_ticket_wallets");
-      safeDeleteByBusinessIds("business_games");
-      safeDeleteByBusinessIds("engagement_proofs");
-      safeDeleteByBusinessIds("engagement_completions");
-
-      const categoryIds = db
-        .prepare(`SELECT id FROM member_categories WHERE business_id IN (${placeholders})`)
-        .all(...businessIds)
-        .map((r) => r.id);
-      if (categoryIds.length > 0 && tableExists("member_category_assignments")) {
-        const cPlaceholders = categoryIds.map(() => "?").join(",");
-        db.prepare(`DELETE FROM member_category_assignments WHERE category_id IN (${cPlaceholders})`).run(...categoryIds);
-      }
-      safeDeleteByBusinessIds("member_categories");
-      safeDeleteByBusinessIds("members");
+    for (const bid of businessIds) {
+      purgeBusinessDataInTx(bid);
       if (tableExists("businesses")) {
-        db.prepare(`DELETE FROM businesses WHERE id IN (${placeholders})`).run(...businessIds);
+        db.prepare("DELETE FROM businesses WHERE id = ?").run(bid);
       }
     }
 

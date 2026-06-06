@@ -6,8 +6,20 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { requireAuth } from "../middleware/auth.js";
 import { requirePlatformAdmin } from "../middleware/admin.js";
-import { countPlatformAdmins, ensurePlatformAdminAccount, listUsersForAdmin } from "../db/users.js";
-import { listAllBusinessesForAdmin } from "../db/businesses.js";
+import {
+  countPlatformAdmins,
+  ensurePlatformAdminAccount,
+  getUserById,
+  listUsersForAdmin,
+  isUserAdmin,
+} from "../db/users.js";
+import { getBusinessById, listAllBusinessesForAdmin } from "../db/businesses.js";
+import { deleteBusinessCompletely, deleteUserAccount } from "../db/reset.js";
+import {
+  cancelBusinessSubscriptionBeforeDeletion,
+  cancelPaidSubscriptionsBeforeAccountDeletion,
+} from "../lib/account-deletion-billing.js";
+import { invalidateAuthUserCache } from "../middleware/auth.js";
 import { listAdminEvents } from "../db/admin-events.js";
 import { getDb } from "../db/connection.js";
 import { sendMail, isEmailConfigured } from "../email.js";
@@ -15,6 +27,46 @@ import { getQueueStats, requeueDeadJob } from "../lib/notification-job-queue.js"
 import { getFlyerQueueStats } from "../lib/flyer-generation-jobs.js";
 
 const db = getDb();
+
+function adminApiBase() {
+  return (process.env.PUBLIC_API_URL || process.env.API_URL || "https://api.myfidpass.fr").replace(/\/$/, "");
+}
+
+/** URLs médias commerçant pour la console admin (icône notif > logo carré > logo bandeau). */
+function enrichAdminBusinessRow(row) {
+  if (!row || typeof row !== "object") return row;
+  const base = adminApiBase();
+  const slug = encodeURIComponent(String(row.slug || ""));
+  const logoUrl =
+    Number(row.asset_logo_present) === 1 ? `${base}/api/businesses/${slug}/logo` : null;
+  const logoIconUrl =
+    Number(row.asset_logo_icon_present) === 1 ? `${base}/api/businesses/${slug}/logo-icon` : null;
+  const notificationIconUrl =
+    Number(row.asset_notification_icon_present) === 1
+      ? `${base}/api/businesses/${slug}/notification-icon`
+      : null;
+  const displayLogoUrl = notificationIconUrl || logoIconUrl || logoUrl;
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    organization_name: row.organization_name,
+    user_id: row.user_id,
+    created_at: row.created_at,
+    dashboard_token: row.dashboard_token,
+    owner_email: row.owner_email,
+    member_count: row.member_count,
+    owner_subscription_status: row.owner_subscription_status,
+    owner_plan_id: row.owner_plan_id,
+    logo_url: logoUrl,
+    logo_updated_at: row.logo_updated_at ?? null,
+    logo_icon_url: logoIconUrl,
+    logo_icon_updated_at: row.logo_icon_updated_at ?? null,
+    notification_icon_url: notificationIconUrl,
+    notification_icon_updated_at: row.notification_icon_updated_at ?? null,
+    display_logo_url: displayLogoUrl,
+  };
+}
 
 const router = Router();
 
@@ -143,7 +195,7 @@ router.get("/businesses", (req, res) => {
       limit: req.query.limit,
       offset: req.query.offset,
       q: req.query.q,
-    });
+    }).map(enrichAdminBusinessRow);
     res.json({ businesses });
   } catch (e) {
     console.error("[admin] businesses:", e);
@@ -231,6 +283,111 @@ router.get("/queues", (_req, res) => {
  * POST /api/admin/notifications/jobs/:id/requeue — relance un job campagne mort (DLQ).
  * Body vide. Utilisé par le support pour relancer une campagne échouée 4×.
  */
+const ADMIN_DELETE_CONFIRM = "SUPPRIMER";
+
+/**
+ * DELETE /api/admin/businesses/:businessId
+ * Body: { "confirm": "SUPPRIMER", "slug": "slug-du-commerce" }
+ */
+router.delete("/businesses/:businessId", async (req, res) => {
+  const confirm = String(req.body?.confirm ?? "").trim();
+  if (confirm !== ADMIN_DELETE_CONFIRM) {
+    return res.status(400).json({
+      error: 'Confirmation requise : body { "confirm": "SUPPRIMER", "slug": "…" }.',
+      code: "confirm_required",
+    });
+  }
+  const businessId = String(req.params.businessId ?? "").trim();
+  const slugConfirm = String(req.body?.slug ?? "").trim().toLowerCase();
+  if (!businessId) return res.status(400).json({ error: "Commerce introuvable." });
+  const business = getBusinessById(businessId);
+  if (!business) return res.status(404).json({ error: "Commerce introuvable.", code: "business_not_found" });
+  if (!slugConfirm || slugConfirm !== String(business.slug || "").trim().toLowerCase()) {
+    return res.status(400).json({
+      error: "Le slug saisi ne correspond pas à ce commerce.",
+      code: "slug_mismatch",
+    });
+  }
+  try {
+    const billing = await cancelBusinessSubscriptionBeforeDeletion(business.user_id, business.id);
+    const deleted = deleteBusinessCompletely(business.id);
+    if (!deleted) {
+      return res.status(404).json({ error: "Commerce déjà supprimé.", code: "business_already_deleted" });
+    }
+    console.info("[admin] delete-business", {
+      businessId: business.id,
+      slug: business.slug,
+      byAdminId: req.user?.id,
+    });
+    return res.json({
+      ok: true,
+      deleted_business_id: business.id,
+      slug: business.slug,
+      stripe_subscriptions_canceled: billing.stripeCanceled,
+      apple_subscription_remains_on_apple_id: billing.hadAppleIap,
+    });
+  } catch (e) {
+    console.error("[admin] delete-business:", e);
+    return res.status(500).json({ error: "Erreur lors de la suppression du commerce." });
+  }
+});
+
+/**
+ * DELETE /api/admin/users/:userId
+ * Body: { "confirm": "SUPPRIMER", "email": "email@du-compte" }
+ */
+router.delete("/users/:userId", async (req, res) => {
+  const confirm = String(req.body?.confirm ?? "").trim();
+  if (confirm !== ADMIN_DELETE_CONFIRM) {
+    return res.status(400).json({
+      error: 'Confirmation requise : body { "confirm": "SUPPRIMER", "email": "…" }.',
+      code: "confirm_required",
+    });
+  }
+  const userId = String(req.params.userId ?? "").trim();
+  const emailConfirm = String(req.body?.email ?? "").trim().toLowerCase();
+  if (!userId) return res.status(400).json({ error: "Compte introuvable." });
+  if (userId === String(req.user?.id || "")) {
+    return res.status(400).json({
+      error: "Utilisez la déconnexion pour quitter votre propre session admin.",
+      code: "cannot_delete_self",
+    });
+  }
+  const user = getUserById(userId);
+  if (!user) return res.status(404).json({ error: "Compte introuvable.", code: "user_not_found" });
+  if (isUserAdmin(user)) {
+    return res.status(403).json({
+      error: "Impossible de supprimer un compte administrateur plateforme.",
+      code: "cannot_delete_platform_admin",
+    });
+  }
+  const expectedEmail = String(user.email || "").trim().toLowerCase();
+  if (!emailConfirm || emailConfirm !== expectedEmail) {
+    return res.status(400).json({
+      error: "L’e-mail saisi ne correspond pas à ce compte.",
+      code: "email_mismatch",
+    });
+  }
+  try {
+    const billing = await cancelPaidSubscriptionsBeforeAccountDeletion(userId);
+    const deleted = deleteUserAccount(userId);
+    invalidateAuthUserCache(userId);
+    if (!deleted) {
+      return res.status(404).json({ error: "Compte déjà supprimé.", code: "user_already_deleted" });
+    }
+    console.info("[admin] delete-user", { userId, email: user.email, byAdminId: req.user?.id });
+    return res.json({
+      ok: true,
+      deleted_user_id: userId,
+      stripe_subscriptions_canceled: billing.stripeCanceled,
+      apple_subscription_remains_on_apple_id: billing.hadAppleIap,
+    });
+  } catch (e) {
+    console.error("[admin] delete-user:", e);
+    return res.status(500).json({ error: "Erreur lors de la suppression du compte." });
+  }
+});
+
 router.post("/notifications/jobs/:id/requeue", (req, res) => {
   const jobId = String(req.params.id || "").trim();
   if (!jobId) return res.status(400).json({ error: "id manquant" });
