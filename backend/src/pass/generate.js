@@ -17,6 +17,7 @@ import {
 } from "./images-logo.js";
 import { getBusinessAssetData } from "../db/business-assets.js";
 import { businessAllowsWalletCustomerAlerts } from "../lib/notification-icon-gate.js";
+import { memberHasDeliveredCampaignNotification } from "../db/webpush.js";
 import { WALLET_TIER_UNLOCK_CHANGE_MESSAGE } from "../lib/points-reward-tiers.js";
 import { createStripBuffer, buildPassLocations, createDefaultIconBuffer } from "./images-strip.js";
 import { drawStampsOnStrip } from "./images-stamps.js";
@@ -462,7 +463,11 @@ export async function generatePass(member, business = null, options = {}) {
   };
 
   const lastMessageBackField = { key: "lastMessage", label: "Message", value: lastBroadcast };
-  if (rawBroadcast && walletAlerts) {
+  const memberGotCampaign =
+    business?.id && member?.id
+      ? memberHasDeliveredCampaignNotification(business.id, member.id)
+      : false;
+  if (rawBroadcast && walletAlerts && memberGotCampaign) {
     lastMessageBackField.changeMessage = normalizeChangeMessage(changeMsg, rawBroadcast);
   }
 

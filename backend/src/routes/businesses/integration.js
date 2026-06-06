@@ -14,6 +14,7 @@ import {
 } from "../../db.js";
 import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
 import { pushPassKitAfterMemberBalanceChange } from "../../lib/wallet-reward-tier-notify.js";
+import { scheduleMemberCampaignEvents } from "../../lib/campaign-event-jobs.js";
 import { syncGoogleWalletObjectForMember } from "../../google-wallet.js";
 import { ensureOperationalSubscription, getApiBase } from "./shared.js";
 import {
@@ -97,6 +98,13 @@ function scheduleWalletSyncAfterIntegrationScan({
 }) {
   void (async () => {
     try {
+      scheduleMemberCampaignEvents({
+        business,
+        memberId,
+        triggers: ["first_scan", "reward_unlocked"],
+        previousBalance,
+        newBalance: updated?.points,
+      });
       await pushPassKitAfterMemberBalanceChange({
         business,
         memberId,

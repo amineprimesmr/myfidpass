@@ -116,28 +116,33 @@ export async function notifyHandler(req, res) {
     return res.status(200).json({ ok: true, sent: 0, sentWebPush: 0, sentPassKit: 0, sentGoogleWallet: 0, sentMerchantApp: 0, batch_id: null });
   }
 
-  const result = await deliverCustomerBroadcast({
-    business,
+  syncNotificationTextsForCampaign(business.id, null, message);
+
+  const jobId = enqueueNotificationJob({
+    businessId: business.id,
     slug,
     apiBase,
     memberIds,
     title: null,
-    bodyMessage: message,
+    body: message,
     triggerName: "notify_clients",
-    logTypePasskit: "passkit",
     merchantUserId: req.user?.id ?? null,
+    touchMemberLastVisit: false,
   });
 
-  res.status(200).json({
+  res.status(202).json({
     ok: true,
-    sent: result.sent,
-    sentWebPush: result.sentWebPush,
-    sentPassKit: result.sentPassKit,
-    sentGoogleWallet: result.sentGoogleWallet ?? 0,
-    sentMerchantApp: result.sentMerchantApp ?? 0,
-    batch_id: result.batchId,
-    failed: result.failed ?? 0,
-    errors: result.errors,
+    accepted: true,
+    async_delivery: true,
+    sent: null,
+    sentWebPush: null,
+    sentPassKit: null,
+    sentGoogleWallet: null,
+    sentMerchantApp: null,
+    job_id: jobId,
+    batch_id: null,
+    total: totalDevices,
+    message: `Envoi lancé vers ${totalDevices} appareil(s). La campagne continue sur le serveur (job_id: ${jobId}).`,
   });
   } catch (err) {
     logger.error({ err, businessId: req.business?.id }, "[notifications] notifyHandler error");

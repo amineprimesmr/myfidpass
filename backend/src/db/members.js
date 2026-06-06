@@ -3,6 +3,10 @@
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
+import { sqlInactiveMembersSinceDays } from "./member-segment-sql.js";
+import { resolveMemberIdsForCampaignSegment } from "../lib/member-campaign-segments.js";
+
+export { sqlInactiveMembersSinceDays } from "./member-segment-sql.js";
 import { nowUtcSqlWithMs } from "./datetime-sql.js";
 import { computeStampRolloverState, normalizeStampBalance } from "../lib/stamps-cycle-math.js";
 
@@ -145,13 +149,13 @@ export function getMembersForBusiness(businessId, { search = "", limit = 50, off
     params.push(q, q);
   }
   if (filter === "inactive14") {
-    where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-14 days'))";
+    where += ` AND ${sqlInactiveMembersSinceDays(14)}`;
   } else if (filter === "inactive30") {
-    where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-30 days'))";
+    where += ` AND ${sqlInactiveMembersSinceDays(30)}`;
   } else if (filter === "inactive60") {
-    where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-60 days'))";
+    where += ` AND ${sqlInactiveMembersSinceDays(60)}`;
   } else if (filter === "inactive90") {
-    where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-90 days'))";
+    where += ` AND ${sqlInactiveMembersSinceDays(90)}`;
   } else if (filter === "points50") {
     where += " AND points >= 50";
   } else if (filter === "pointsNear50") {
@@ -174,16 +178,16 @@ export function getMemberIdsBySegment(businessId, segment) {
   const params = [businessId];
   switch (segment) {
     case "inactive14":
-      where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-14 days'))";
+      where += ` AND ${sqlInactiveMembersSinceDays(14)}`;
       break;
     case "inactive30":
-      where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-30 days'))";
+      where += ` AND ${sqlInactiveMembersSinceDays(30)}`;
       break;
     case "inactive60":
-      where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-60 days'))";
+      where += ` AND ${sqlInactiveMembersSinceDays(60)}`;
       break;
     case "inactive90":
-      where += " AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-90 days'))";
+      where += ` AND ${sqlInactiveMembersSinceDays(90)}`;
       break;
     case "new7":
       where += " AND created_at >= datetime('now', '-7 days')";
@@ -196,11 +200,11 @@ export function getMemberIdsBySegment(businessId, segment) {
       where += " AND created_at >= datetime('now', '-14 days') AND last_visit_at IS NULL";
       break;
     case "pointsNear50":
-      where += " AND points >= 40 AND points < 50";
-      break;
     case "points50":
-      where += " AND points >= 50";
-      break;
+    case "birthdayToday": {
+      const ids = resolveMemberIdsForCampaignSegment(businessId, segment);
+      return ids ?? [];
+    }
     case "recurrent":
       // Fidèles : ≥ 10 passages (transactions) sur le **mois civil en cours** (aligné produit « +10 visites / mois »).
       where += ` AND id IN (
@@ -209,14 +213,6 @@ export function getMemberIdsBySegment(businessId, segment) {
         GROUP BY member_id HAVING COUNT(*) >= 10
       )`;
       params.push(businessId);
-      break;
-    /** Profil complété + date de naissance : même critère que la validation profil (tél., ville, birth_date). */
-    case "birthdayToday":
-      where +=
-        " AND birth_date IS NOT NULL AND TRIM(birth_date) != ''" +
-        " AND phone IS NOT NULL AND TRIM(phone) != ''" +
-        " AND city IS NOT NULL AND TRIM(city) != ''" +
-        " AND strftime('%m-%d', birth_date) = strftime('%m-%d', 'now')";
       break;
     default:
       return [];

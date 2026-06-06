@@ -10,6 +10,11 @@ import {
 } from "../db.js";
 import { deliverDashboardBroadcast, CAMPAIGN_SEGMENT_KEYS } from "../routes/businesses/notifications.js";
 import { normalizeEventTypeToken } from "../services/campaign-automation-ai.js";
+import {
+  getMemberIdsBirthdayToday,
+  getMemberIdsPointsNear,
+  getMemberIdsRewardReady,
+} from "./member-campaign-segments.js";
 
 /** Hub « bienvenue » + événements `member_created` — retirés du produit. */
 export function purgeRetiredWelcomeAutomationRules(rules) {
@@ -54,7 +59,9 @@ const HUB_AUTOMATION_RULE_IDS = [
 ];
 
 function defaultHubRuleRow(id) {
-  return { enabled: true, message: DEFAULT_MESSAGES[id] || "" };
+  /** Relance inactifs : désactivée par défaut (évite envois aux nouveaux inscrits). */
+  const enabled = id !== "inactive_14";
+  return { enabled, message: DEFAULT_MESSAGES[id] || "" };
 }
 
 function defaultAutomationConfig() {
@@ -79,7 +86,7 @@ function upgradeFactoryDisabledHubRules(rules) {
   const out = { ...rules };
   for (const id of HUB_AUTOMATION_RULE_IDS) {
     out[id] = {
-      enabled: true,
+      enabled: id !== "inactive_14",
       message: String((out[id]?.message ?? DEFAULT_MESSAGES[id]) || "").slice(0, 200),
     };
   }
@@ -187,7 +194,16 @@ export async function runCampaignAutomationCron() {
         (RULE_TO_SEGMENT[ruleId] ? DEFAULT_MESSAGES[ruleId] : "") ||
         "";
       if (!message) continue;
-      let memberIds = getMemberIdsBySegment(business.id, segment);
+      let memberIds;
+      if (ruleId === "reward_ready") {
+        memberIds = getMemberIdsRewardReady(business.id, business);
+      } else if (ruleId === "points_near") {
+        memberIds = getMemberIdsPointsNear(business.id, business);
+      } else if (ruleId === "birthday_today") {
+        memberIds = getMemberIdsBirthdayToday(business.id);
+      } else {
+        memberIds = getMemberIdsBySegment(business.id, segment);
+      }
       const birthdayTrigger = "campaign_auto_birthday_today";
       if (ruleId === "birthday_today") {
         memberIds = filterMemberIdsExcludingTriggerThisCalendarYear(business.id, memberIds, birthdayTrigger);

@@ -3,6 +3,13 @@
  */
 import { getDb } from "./connection.js";
 import { getNotificationCampaignInsightsForBusiness } from "./webpush.js";
+import { getBusinessById } from "./businesses.js";
+import {
+  getMemberIdsBirthdayToday,
+  getMemberIdsPointsNear,
+  getMemberIdsRewardReady,
+} from "../lib/member-campaign-segments.js";
+import { sqlInactiveMembersSinceDays } from "./member-segment-sql.js";
 
 const db = getDb();
 
@@ -78,10 +85,10 @@ export function getDashboardStats(businessId, period = "this_month") {
     : db.prepare("SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= datetime('now', '-30 days')").get(businessId);
   const inactive30d = isHistoricalMonth
     ? { n: 0 }
-    : db.prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-30 days'))`).get(businessId);
+    : db.prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND last_visit_at IS NOT NULL AND last_visit_at < datetime('now', '-30 days')`).get(businessId);
   const inactive90d = isHistoricalMonth
     ? { n: 0 }
-    : db.prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-90 days'))`).get(businessId);
+    : db.prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND last_visit_at IS NOT NULL AND last_visit_at < datetime('now', '-90 days')`).get(businessId);
   const points50Count = isHistoricalMonth
     ? { n: 0 }
     : db.prepare("SELECT COUNT(*) as n FROM members WHERE business_id = ? AND points >= 50").get(businessId);
@@ -556,11 +563,12 @@ export function getDashboardEvolutionForMonth(businessId, yyyymm) {
 
 /** Compteurs pour l’écran campagnes (segments étendus). */
 export function getCampaignSegmentCounts(businessId) {
+  const business = getBusinessById(businessId);
   const inactive14 = db.prepare(
-    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-14 days'))`
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${sqlInactiveMembersSinceDays(14)}`
   ).get(businessId);
   const inactive60 = db.prepare(
-    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-60 days'))`
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND last_visit_at IS NOT NULL AND last_visit_at < datetime('now', '-60 days')`
   ).get(businessId);
   const new7 = db.prepare(
     "SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= datetime('now', '-7 days')"
@@ -568,21 +576,17 @@ export function getCampaignSegmentCounts(businessId) {
   const welcomeNew = db.prepare(
     `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= datetime('now', '-14 days') AND last_visit_at IS NULL`
   ).get(businessId);
-  const pointsNear50 = db.prepare(
-    "SELECT COUNT(*) as n FROM members WHERE business_id = ? AND points >= 40 AND points < 50"
-  ).get(businessId);
+  const pointsNear50Count = business ? getMemberIdsPointsNear(businessId, business).length : 0;
   const inactive30d = db.prepare(
-    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-30 days'))`
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND last_visit_at IS NOT NULL AND last_visit_at < datetime('now', '-30 days')`
   ).get(businessId);
   const inactive90d = db.prepare(
-    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND (last_visit_at IS NULL OR last_visit_at < datetime('now', '-90 days'))`
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND last_visit_at IS NOT NULL AND last_visit_at < datetime('now', '-90 days')`
   ).get(businessId);
   const new30d = db.prepare(
     "SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= datetime('now', '-30 days')"
   ).get(businessId);
-  const points50Count = db.prepare(
-    "SELECT COUNT(*) as n FROM members WHERE business_id = ? AND points >= 50"
-  ).get(businessId);
+  const points50CountN = business ? getMemberIdsRewardReady(businessId, business).length : 0;
   let recurrentInPeriod = { n: 0 };
   try {
     recurrentInPeriod = db.prepare(
@@ -595,13 +599,7 @@ export function getCampaignSegmentCounts(businessId) {
   } catch (_e) {
     /* */
   }
-  const birthdayToday = db.prepare(
-    `SELECT COUNT(*) as n FROM members WHERE business_id = ?
-     AND birth_date IS NOT NULL AND TRIM(birth_date) != ''
-     AND phone IS NOT NULL AND TRIM(phone) != ''
-     AND city IS NOT NULL AND TRIM(city) != ''
-     AND strftime('%m-%d', birth_date) = strftime('%m-%d', 'now')`
-  ).get(businessId);
+  const birthdayTodayCount = getMemberIdsBirthdayToday(businessId).length;
   return {
     inactive14: inactive14?.n ?? 0,
     inactive30: inactive30d?.n ?? 0,
@@ -610,9 +608,9 @@ export function getCampaignSegmentCounts(businessId) {
     new7: new7?.n ?? 0,
     new30: new30d?.n ?? 0,
     welcomeNew: welcomeNew?.n ?? 0,
-    pointsNear50: pointsNear50?.n ?? 0,
-    points50: points50Count?.n ?? 0,
+    pointsNear50: pointsNear50Count,
+    points50: points50CountN,
     recurrent: recurrentInPeriod?.n ?? 0,
-    birthdayToday: birthdayToday?.n ?? 0,
+    birthdayToday: birthdayTodayCount,
   };
 }

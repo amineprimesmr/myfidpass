@@ -32,6 +32,7 @@ import { grantWelcomeBonusIfEligible } from "../../db/welcome-bonus.js";
 import { devPaymentBypass } from "../../lib/dev-payment-bypass.js";
 import { pushPassKitUpdateForMember } from "../../lib/passkit-member-push.js";
 import { pushPassKitAfterMemberBalanceChange } from "../../lib/wallet-reward-tier-notify.js";
+import { scheduleMemberCampaignEvents } from "../../lib/campaign-event-jobs.js";
 import { generatePass } from "../../pass.js";
 import {
   ensureGoogleWalletClassForBusiness,
@@ -470,6 +471,13 @@ router.post("/:memberId/points", async (req, res) => {
     metadata: metaMerged,
     idempotencyKey: idempotencyKey || null,
     actorUserId: req.user?.id,
+  });
+  scheduleMemberCampaignEvents({
+    business,
+    memberId: member.id,
+    triggers: ["first_scan", "reward_unlocked"],
+    previousBalance: previousPoints,
+    newBalance: updated.points,
   });
   if (programType === "stamps") {
     await pushPassKitAfterMemberBalanceChange({

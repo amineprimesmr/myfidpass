@@ -6,6 +6,21 @@ import { getDb } from "./connection.js";
 
 const db = getDb();
 
+let notificationLogExtendedCache = null;
+
+function notificationLogHasExtendedColumns() {
+  if (notificationLogExtendedCache !== null) return notificationLogExtendedCache;
+  try {
+    notificationLogExtendedCache = db
+      .prepare("PRAGMA table_info(notification_log)")
+      .all()
+      .some((c) => c.name === "batch_id");
+  } catch {
+    notificationLogExtendedCache = false;
+  }
+  return notificationLogExtendedCache;
+}
+
 /** Aligné sur `passes.js` — exclure les enregistrements de test du dédoublonnage. */
 const PASSKIT_TEST_DEVICE_ID = "test-device-123";
 
@@ -93,7 +108,7 @@ export function logNotification({
 }) {
   const id = randomUUID();
   const now = new Date().toISOString();
-  const hasExtended = db.prepare("PRAGMA table_info(notification_log)").all().some((c) => c.name === "batch_id");
+  const hasExtended = notificationLogHasExtendedColumns();
   if (!hasExtended) {
     db.prepare(
       `INSERT INTO notification_log (id, business_id, member_id, title, body, type, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`
@@ -201,6 +216,26 @@ export function getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(
 /**
  * Exclut les membres ayant déjà reçu une notification **marketing** (cooldown) dans les N derniers jours.
  */
+/** Le membre a déjà reçu au moins une notification campagne (évite le verso Wallet « Message » sur nouvelle carte). */
+export function memberHasDeliveredCampaignNotification(businessId, memberId) {
+  if (!businessId || !memberId) return false;
+  const cols = db.prepare("PRAGMA table_info(notification_log)").all().map((c) => c.name);
+  if (!cols.includes("status")) {
+    const row = db
+      .prepare(
+        `SELECT 1 FROM notification_log WHERE business_id = ? AND member_id = ? LIMIT 1`,
+      )
+      .get(businessId, memberId);
+    return !!row;
+  }
+  const row = db
+    .prepare(
+      `SELECT 1 FROM notification_log WHERE business_id = ? AND member_id = ? AND status = 'sent' LIMIT 1`,
+    )
+    .get(businessId, memberId);
+  return !!row;
+}
+
 export function filterMemberIdsExcludingRecentNotifications(businessId, memberIds, cooldownDays) {
   if (!memberIds?.length) return [];
   const safe = Math.min(90, Math.max(1, Math.floor(Number(cooldownDays) || 7)));
