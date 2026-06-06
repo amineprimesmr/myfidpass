@@ -251,6 +251,7 @@ export function renderClientPage(root, state, options = {}) {
                   programType,
                   business: state.business,
                 }),
+                { businessSlug: slugForAssets, apiBase },
               )}
               ${
                 showWalletPassHero

@@ -109,6 +109,36 @@ async function createStampIconOnlyPng(iconBuf, opacity = 1, opts = {}) {
     .toBuffer();
 }
 
+/** Cercle « liquid glass » sous l’icône tampon (style Wallet premium). */
+async function createGlassStampSlotPng(filled, highlight = false) {
+  const sharp = await getSharp();
+  const size = STAMP_SIZE;
+  const r = STAMP_R - 1;
+  const cx = size / 2;
+  const fillOpacity = filled ? 0.52 : highlight ? 0.38 : 0.22;
+  const strokeOpacity = filled || highlight ? 0.92 : 0.58;
+  const svg = `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glass" cx="32%" cy="28%" r="68%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="${Math.min(1, fillOpacity + 0.22)}"/>
+      <stop offset="55%" stop-color="#ffffff" stop-opacity="${fillOpacity}"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="${Math.max(0.08, fillOpacity * 0.35)}"/>
+    </radialGradient>
+  </defs>
+  <circle cx="${cx}" cy="${cx}" r="${r}" fill="url(#glass)" stroke="#ffffff" stroke-opacity="${strokeOpacity}" stroke-width="2"/>
+  </svg>`;
+  return sharp(Buffer.from(svg)).png().toBuffer();
+}
+
+async function compositeStampOnGlass(glassBuf, iconBuf) {
+  const sharp = await getSharp();
+  const padding = 2;
+  return sharp(glassBuf)
+    .composite([{ input: iconBuf, left: padding, top: padding }])
+    .png()
+    .toBuffer();
+}
+
 /** Prochain palier cadeau : en couleur même si la case n’est pas encore remplie. */
 function isNextGiftMilestone(slotIndex, stampMax, filledCount) {
   if (stampMax >= 5 && slotIndex === 4 && filledCount < 5) return true;
@@ -187,13 +217,18 @@ export async function drawStampsOnStrip(
     try {
       const forcedRewardIcon = rewardIconByIndex.get(i) || null;
       const effectiveIcon = forcedRewardIcon || iconBuf;
+      const highlight = isNextGiftMilestone(i, totalStamps, filledCount);
+      let iconOnly;
       if (filled) {
-        stampBuf = await createStampIconOnlyPng(effectiveIcon, 1);
-      } else if (isNextGiftMilestone(i, totalStamps, filledCount)) {
-        stampBuf = await createStampIconOnlyPng(effectiveIcon, 1);
+        iconOnly = await createStampIconOnlyPng(effectiveIcon, 1);
+      } else if (highlight) {
+        iconOnly = await createStampIconOnlyPng(effectiveIcon, 1);
       } else {
-        // Passage non validé = désaturé + atténué (effet « non débloqué »).
-        stampBuf = await createStampIconOnlyPng(effectiveIcon, 0.52, { grayscale: true });
+        iconOnly = await createStampIconOnlyPng(effectiveIcon, 0.52, { grayscale: true });
+      }
+      if (iconOnly) {
+        const glass = await createGlassStampSlotPng(filled, highlight);
+        stampBuf = await compositeStampOnGlass(glass, iconOnly);
       }
       if (stampBuf) composites.push({ input: stampBuf, left, top });
     } catch (e) {

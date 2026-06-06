@@ -3998,7 +3998,6 @@ function initAppDashboard(slug) {
         const midTrim = stampMidRewardLabelEl?.value?.trim() || "";
         body.stampMidRewardLabel = midTrim || null;
       }
-      body.cardBackgroundBase64 = "";
     }
     if (personnaliserStampIconRemoveRequested) body.stampIconBase64 = "";
     else if (personnaliserStampIconDataUrl && typeof personnaliserStampIconDataUrl === "string" && personnaliserStampIconDataUrl.startsWith("data:")) {
@@ -4166,9 +4165,7 @@ function initAppDashboard(slug) {
       } else if (personnaliserLogoDataUrl && typeof personnaliserLogoDataUrl === "string" && personnaliserLogoDataUrl.startsWith("data:")) {
         body.logoBase64 = personnaliserLogoDataUrl;
       }
-      if (programTypeStamps && programTypeStamps.checked) {
-        body.cardBackgroundBase64 = "";
-      } else if (personnaliserCardBgRemoveRequested) body.cardBackgroundBase64 = "";
+      if (personnaliserCardBgRemoveRequested) body.cardBackgroundBase64 = "";
       else if (personnaliserCardBgDataUrl && typeof personnaliserCardBgDataUrl === "string" && personnaliserCardBgDataUrl.startsWith("data:")) body.cardBackgroundBase64 = personnaliserCardBgDataUrl;
       const addressEl = document.getElementById("app-personnaliser-address");
       if (addressEl) {

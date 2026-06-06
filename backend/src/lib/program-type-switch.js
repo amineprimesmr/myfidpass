@@ -37,14 +37,8 @@ export function applyProgramTypeSwitchSideEffects(business, updates, body = {}) 
   }
 
   if (nextType === "stamps") {
-    if (updates.points_reward_tiers === undefined) {
-      updates.points_reward_tiers = null;
-    }
     updates.loyalty_mode = "points_cash";
-    /** Fond image mode points : incompatible avec la grille tampons Wallet / client. */
-    if (updates.card_background_base64 === undefined) {
-      updates.card_background_base64 = null;
-    }
+    /** Conserver points_reward_tiers et card_background en base : masqués en UI tampons, restaurés au retour points. */
     if (updates.required_stamps === undefined) {
       const rs = Number(business.required_stamps);
       updates.required_stamps = Number.isInteger(rs) && rs > 0 ? rs : 10;

@@ -6,6 +6,7 @@ import {
   heroFillPercentLinear,
   stampCycleDisplayBalance,
 } from "../lib/tier-progress.js";
+import { resolveStampCellVisual } from "../lib/stamp-visual.js";
 
 /**
  * @param {{
@@ -84,14 +85,36 @@ export function buildHeroBalanceProgressState(p) {
 }
 
 /**
- * Grille visuelle tampons (sans chiffre en texte).
  * @param {(s: string) => string} esc
- * @param {{ filled: number; total: number; stampEmoji: string }} p
+ * @param {{ type: string; src?: string; text?: string }} visual
+ */
+function renderStampCellInner(esc, visual) {
+  if (visual.type === "catalog" || visual.type === "custom") {
+    return `<img class="fidelity-hero-stamp-icon" src="${esc(String(visual.src || ""))}" alt="" decoding="async" loading="lazy" />`;
+  }
+  return `<span class="fidelity-hero-stamp-emoji">${esc(String(visual.text || "✅"))}</span>`;
+}
+
+/**
+ * Grille visuelle tampons (pastilles liquid glass, sans chiffre en texte).
+ * @param {(s: string) => string} esc
+ * @param {{
+ *   filled: number;
+ *   total: number;
+ *   stampEmoji: string;
+ *   businessSlug?: string;
+ *   apiBase?: string;
+ * }} p
  */
 export function buildHeroStampGridMarkup(esc, p) {
   const total = Math.max(1, Math.floor(Number(p.total) || 10));
   const filled = Math.min(Math.max(0, Math.floor(Number(p.filled) || 0)), total);
-  const emoji = esc(p.stampEmoji || "✅");
+  const visual = resolveStampCellVisual({
+    stampEmoji: p.stampEmoji,
+    businessSlug: p.businessSlug,
+    apiBase: p.apiBase,
+  });
+  const cellInner = renderStampCellInner(esc, visual);
   const cols = 5;
   const rows = Math.max(1, Math.ceil(total / cols));
   const rowHtml = [];
@@ -101,7 +124,7 @@ export function buildHeroStampGridMarkup(esc, p) {
       const index = row * cols + col;
       if (index >= total) break;
       const filledClass = index < filled ? " fidelity-hero-stamp--filled" : "";
-      cells.push(`<span class="fidelity-hero-stamp${filledClass}">${emoji}</span>`);
+      cells.push(`<span class="fidelity-hero-stamp${filledClass}">${cellInner}</span>`);
     }
     rowHtml.push(`<div class="fidelity-hero-stamps-row">${cells.join("")}</div>`);
   }
@@ -111,8 +134,9 @@ export function buildHeroStampGridMarkup(esc, p) {
 /**
  * @param {(s: string) => string} esc
  * @param {ReturnType<typeof buildHeroBalanceProgressState>} st
+ * @param {{ businessSlug?: string; apiBase?: string }} [opts]
  */
-export function renderHeroBalanceProgressMarkup(esc, st) {
+export function renderHeroBalanceProgressMarkup(esc, st, opts = {}) {
   const {
     points,
     unitWord,
@@ -136,13 +160,28 @@ export function renderHeroBalanceProgressMarkup(esc, st) {
         ? `Solde ${points} ${unitWord}, échelle jusqu'à ${maxScale}`
         : `Solde ${points} ${unitWord}`;
 
-  const labelBlock = isStamps
-    ? buildHeroStampGridMarkup(esc, {
-        filled: points,
-        total: requiredStamps,
-        stampEmoji,
-      })
-    : `
+  if (isStamps) {
+    const grid = buildHeroStampGridMarkup(esc, {
+      filled: points,
+      total: requiredStamps,
+      stampEmoji,
+      businessSlug: opts.businessSlug,
+      apiBase: opts.apiBase,
+    });
+    const nextHint =
+      nextGoal && !tiersComplete
+        ? `<p class="fidelity-hero-stamps-next">${esc(`Prochaine récompense : ${nextGoal.label} · ${nextGoal.threshold} tampons`)}</p>`
+        : tiersComplete
+          ? `<p class="fidelity-hero-stamps-next fidelity-hero-stamps-next--complete">${esc("Tous les paliers atteints")}</p>`
+          : "";
+    return `
+          <div class="fidelity-hero-progress fidelity-hero-progress--stamps" role="region" aria-label="${esc(ariaText)}">
+            ${grid}
+            ${nextHint}
+          </div>`;
+  }
+
+  const labelBlock = `
             <p class="fidelity-hero-progress-label">
               <span class="fidelity-hero-progress-gradient-text">
                 <span class="fidelity-hero-progress-amount">${esc(String(points))}</span>
@@ -152,24 +191,22 @@ export function renderHeroBalanceProgressMarkup(esc, st) {
 
   if (!hasProgressScale) {
     return `
-          <div class="fidelity-hero-progress fidelity-hero-progress--no-scale${isStamps ? " fidelity-hero-progress--stamps" : ""}" role="region" aria-label="${esc(ariaText)}">
+          <div class="fidelity-hero-progress fidelity-hero-progress--no-scale" role="region" aria-label="${esc(ariaText)}">
             ${labelBlock}
           </div>`;
   }
 
-  const tickSpans = isStamps
-    ? ""
-    : tickMarks
-        .map(
-          (m) =>
-            `<span class="fidelity-hero-progress-tick" style="left:${m.leftPct}%">${esc(String(m.value))}</span>`,
-        )
-        .join("");
+  const tickSpans = tickMarks
+    .map(
+      (m) =>
+        `<span class="fidelity-hero-progress-tick" style="left:${m.leftPct}%">${esc(String(m.value))}</span>`,
+    )
+    .join("");
 
   const barNow = Math.min(Math.max(points, progressMin), progressMax);
 
   return `
-          <div class="fidelity-hero-progress${isStamps ? " fidelity-hero-progress--stamps" : ""}" role="region" aria-label="${esc(ariaText)}">
+          <div class="fidelity-hero-progress" role="region" aria-label="${esc(ariaText)}">
             ${labelBlock}
             <div
               class="fidelity-hero-progress-track-outer"

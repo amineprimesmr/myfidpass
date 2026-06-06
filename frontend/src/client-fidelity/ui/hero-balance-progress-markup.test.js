@@ -74,8 +74,22 @@ describe("buildHeroBalanceProgressState", () => {
     });
     const html = renderHeroBalanceProgressMarkup((s) => s, st);
     expect(html).toContain("fidelity-hero-stamps-grid");
-    expect(html).toContain("☕");
+    expect(html).toContain('/assets/icons/cafe.png');
     expect(html).not.toContain("fidelity-hero-progress-amount");
     expect(html).not.toContain("fidelity-hero-progress-unit");
+    expect(html).not.toContain("fidelity-hero-progress-track");
+  });
+
+  it("tampons catalogue burger : image PNG, pas le mot burger répété", () => {
+    const st = buildHeroBalanceProgressState({
+      memberPoints: 0,
+      programType: "stamps",
+      business: { required_stamps: 10, stamp_emoji: "burger" },
+    });
+    const html = renderHeroBalanceProgressMarkup((s) => s, st);
+    expect(html).toContain('src="/assets/icons/burger.png"');
+    expect(html).toContain("fidelity-hero-stamp-icon");
+    expect(html).not.toMatch(/>burger</);
+    expect(html).not.toContain("fidelity-hero-progress-track");
   });
 });

@@ -15,14 +15,15 @@ describe("applyProgramTypeSwitchSideEffects", () => {
     welcome_bonus_enabled: 1,
   };
 
-  it("points → tampons : bonus bienvenue = 1 et tiers points effacés", () => {
+  it("points → tampons : bonus bienvenue = 1, tiers et fond points conservés en base", () => {
     const updates = { program_type: "stamps" };
     const r = applyProgramTypeSwitchSideEffects(baseBusiness, updates, {});
     expect(r.switched).toBe(true);
     expect(r.prevType).toBe("points");
     expect(r.nextType).toBe("stamps");
     expect(updates.welcome_bonus_amount).toBe(1);
-    expect(updates.points_reward_tiers).toBeNull();
+    expect(updates.points_reward_tiers).toBeUndefined();
+    expect(updates.card_background_base64).toBeUndefined();
     expect(updates.loyalty_mode).toBe("points_cash");
   });
 

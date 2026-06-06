@@ -119,9 +119,13 @@ function publicCardBackgroundUrlForBusiness(apiBase, business) {
 }
 
 function publicHeroImageUrlForBusiness(apiBase, business, filledStamps = 0) {
+  const programType = String(business?.program_type || "").toLowerCase();
+  if (programType === "stamps") {
+    return publicStampHeroUrlForBusiness(apiBase, business, filledStamps);
+  }
   const bg = publicCardBackgroundUrlForBusiness(apiBase, business);
   if (bg) return bg;
-  return publicStampHeroUrlForBusiness(apiBase, business, filledStamps);
+  return null;
 }
 
 function publicStampIconUrlForBusiness(apiBase, business) {
