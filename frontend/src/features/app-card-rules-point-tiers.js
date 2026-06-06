@@ -1,6 +1,8 @@
 /** Paliers points : exemples fixes + lecture / écriture des champs du formulaire. */
 
-export const POINT_TIER_COUNT = 5;
+export const POINT_TIER_COUNT = 8;
+/** Index du dernier palier toujours visible (0-based) : 0…4 = 5 lignes de base. */
+export const POINT_TIER_ALWAYS_VISIBLE_THROUGH = 4;
 
 const KNOWN_SECTORS = ["fastfood", "beauty", "coiffure", "boulangerie", "boucherie", "cafe"];
 
@@ -164,4 +166,54 @@ export function arePointTierInputsEmpty(doc = document) {
     if (doc.getElementById(`app-points-tier-${i}-label`)?.value?.trim()) return false;
   }
   return true;
+}
+
+/**
+ * Affiche les lignes paliers optionnelles (index ≥ 4) selon le contenu ou le bouton « Ajouter ».
+ * @param {Document} doc
+ */
+export function syncPointTierOptionalRowVisibility(doc = document) {
+  const addBtn = doc.getElementById("app-points-tier-add");
+  let lastFilled = 0;
+  for (let i = 0; i < POINT_TIER_COUNT; i++) {
+    const pts = doc.getElementById(`app-points-tier-${i}-points`)?.value?.trim() ?? "";
+    const lab = doc.getElementById(`app-points-tier-${i}-label`)?.value?.trim() ?? "";
+    if (pts || lab) lastFilled = i;
+  }
+  const forced = parseInt(addBtn?.dataset.visibleThrough ?? "", 10);
+  const visibleThrough = Math.min(
+    POINT_TIER_COUNT - 1,
+    Math.max(POINT_TIER_ALWAYS_VISIBLE_THROUGH, lastFilled, Number.isNaN(forced) ? -1 : forced)
+  );
+  for (let i = POINT_TIER_ALWAYS_VISIBLE_THROUGH; i < POINT_TIER_COUNT; i++) {
+    const row = doc.getElementById(`app-points-tier-row-${i}`);
+    if (row) row.classList.toggle("hidden", i > visibleThrough);
+  }
+  if (addBtn) {
+    const hideAdd = visibleThrough >= POINT_TIER_COUNT - 1;
+    addBtn.classList.toggle("hidden", hideAdd);
+    addBtn.setAttribute("aria-hidden", hideAdd ? "true" : "false");
+  }
+}
+
+/**
+ * Supprime un palier (index > 0) et remonte les champs suivants.
+ * @param {Document} doc
+ * @param {number} index
+ */
+export function removePointTierInput(doc, index) {
+  if (index <= 0 || index >= POINT_TIER_COUNT) return;
+  for (let i = index; i < POINT_TIER_COUNT - 1; i++) {
+    const nextPts = doc.getElementById(`app-points-tier-${i + 1}-points`);
+    const nextLab = doc.getElementById(`app-points-tier-${i + 1}-label`);
+    const pi = doc.getElementById(`app-points-tier-${i}-points`);
+    const li = doc.getElementById(`app-points-tier-${i}-label`);
+    if (pi) pi.value = nextPts?.value ?? "";
+    if (li) li.value = nextLab?.value ?? "";
+  }
+  const lastPts = doc.getElementById(`app-points-tier-${POINT_TIER_COUNT - 1}-points`);
+  const lastLab = doc.getElementById(`app-points-tier-${POINT_TIER_COUNT - 1}-label`);
+  if (lastPts) lastPts.value = "";
+  if (lastLab) lastLab.value = "";
+  syncPointTierOptionalRowVisibility(doc);
 }

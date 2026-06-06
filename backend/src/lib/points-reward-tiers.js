@@ -1,6 +1,7 @@
 /** Paliers points publics : le palier à 10 pts (récompense inscription) est toujours présent côté client. */
 
 export const SIGNUP_REWARD_POINTS = 10;
+export const MAX_POINTS_REWARD_TIERS = 8;
 
 /**
  * @param {unknown} raw
@@ -90,7 +91,8 @@ export function mergePointsRewardTiersForStorage(rawTiers, signupLabel = "") {
     signupFromTiers?.label ||
     "Boisson offerte";
   const editable = parsed.filter((t) => t.points !== SIGNUP_REWARD_POINTS);
-  return [{ points: SIGNUP_REWARD_POINTS, label }, ...editable].sort((a, b) => a.points - b.points);
+  const capped = editable.slice(0, MAX_POINTS_REWARD_TIERS - 1);
+  return [{ points: SIGNUP_REWARD_POINTS, label }, ...capped].sort((a, b) => a.points - b.points);
 }
 
 /** Message écran verrouillé Wallet quand un palier points est franchi (%@ = libellé récompense). */

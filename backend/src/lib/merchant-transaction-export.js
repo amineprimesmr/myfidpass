@@ -7,6 +7,7 @@ const TYPE_LABELS_FR = {
   reward_redeem: "Récompense utilisée",
   points_correction: "Correction caisse",
   points_redeem_game_tickets: "Échange jeu / tickets",
+  welcome_bonus: "Nouveau membre",
 };
 
 function safeParseMetadata(raw) {

@@ -6,21 +6,30 @@ import {
   tiersFromApiPayload,
   readPointTierInputs,
   writePointTierInputs,
+  removePointTierInput,
+  syncPointTierOptionalRowVisibility,
   normalizeBusinessSector,
   DEFAULT_REWARD_EXAMPLE_TIERS,
+  POINT_TIER_COUNT,
 } from "./app-card-rules-point-tiers.js";
 
 function mountTierInputs() {
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < POINT_TIER_COUNT; i++) {
+    const row = document.createElement("div");
+    row.id = `app-points-tier-row-${i}`;
+    document.body.appendChild(row);
     const p = document.createElement("input");
     p.id = `app-points-tier-${i}-points`;
-    p.value = i === 0 ? "20" : "";
+    p.value = i === 0 ? "10" : "";
     document.body.appendChild(p);
     const l = document.createElement("input");
     l.id = `app-points-tier-${i}-label`;
     l.value = i === 0 ? "Café" : "";
     document.body.appendChild(l);
   }
+  const addBtn = document.createElement("button");
+  addBtn.id = "app-points-tier-add";
+  document.body.appendChild(addBtn);
 }
 
 describe("app-card-rules-point-tiers", () => {
@@ -32,13 +41,12 @@ describe("app-card-rules-point-tiers", () => {
     expect(normalizeBusinessSector("inconnu")).toBe("");
   });
 
-  it("getDefaultPointTiersBySector renvoie les exemples fixes (5 paliers)", () => {
+  it("getDefaultPointTiersBySector renvoie les exemples fixes", () => {
     const t = getDefaultPointTiersBySector("fastfood");
     expect(t).toHaveLength(5);
     expect(t).toEqual(DEFAULT_REWARD_EXAMPLE_TIERS);
-    expect(t[0].points).toBe(0);
-    expect(t[0].label).toBe("Début du jeu");
-    expect(t[1].label).toMatch(/boisson/i);
+    expect(t[0].points).toBe(10);
+    expect(t[0].label).toMatch(/boisson/i);
     expect(getDefaultPointTiersBySector("inconnu")).toEqual(DEFAULT_REWARD_EXAMPLE_TIERS);
   });
 
@@ -64,11 +72,36 @@ describe("app-card-rules-point-tiers", () => {
     it("lit et écrit les champs", () => {
       expect(readPointTierInputs(document).length).toBe(1);
       writePointTierInputs(document, [
-        { points: 1, label: "x" },
-        { points: 2, label: "y" },
+        { points: 10, label: "x" },
+        { points: 250, label: "y" },
       ]);
-      expect(document.getElementById("app-points-tier-0-points").value).toBe("1");
+      expect(document.getElementById("app-points-tier-0-points").value).toBe("10");
+      expect(document.getElementById("app-points-tier-1-points").value).toBe("250");
       expect(document.getElementById("app-points-tier-1-label").value).toBe("y");
+    });
+
+    it("removePointTierInput remonte les paliers suivants", () => {
+      writePointTierInputs(document, [
+        { points: 10, label: "a" },
+        { points: 50, label: "b" },
+        { points: 250, label: "c" },
+      ]);
+      removePointTierInput(document, 1);
+      expect(document.getElementById("app-points-tier-1-points").value).toBe("250");
+      expect(document.getElementById("app-points-tier-1-label").value).toBe("c");
+    });
+
+    it("syncPointTierOptionalRowVisibility affiche les lignes remplies", () => {
+      writePointTierInputs(document, [
+        { points: 10, label: "a" },
+        { points: 50, label: "b" },
+        { points: 100, label: "c" },
+        { points: 150, label: "d" },
+        { points: 200, label: "e" },
+        { points: 250, label: "f" },
+      ]);
+      syncPointTierOptionalRowVisibility(document);
+      expect(document.getElementById("app-points-tier-row-5").classList.contains("hidden")).toBe(false);
     });
   });
 });

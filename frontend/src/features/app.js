@@ -54,6 +54,8 @@ import {
   readPointTierInputs,
   arePointTierInputsEmpty,
   POINT_TIER_COUNT,
+  syncPointTierOptionalRowVisibility,
+  removePointTierInput,
   getDefaultStampMidLabelBySector,
   getDefaultStampFinalLabelBySector,
   applyDefaultStampRewardFields,
@@ -2758,15 +2760,31 @@ function initAppDashboard(slug) {
   }
   document.getElementById("app-points-tier-add")?.addEventListener("click", () => {
     const addBtn = document.getElementById("app-points-tier-add");
-    if (addBtn) addBtn.dataset.forceVisible = "1";
+    if (!addBtn) return;
+    let lastVisible = 4;
+    for (let i = 4; i < POINT_TIER_COUNT; i++) {
+      const row = document.getElementById(`app-points-tier-row-${i}`);
+      if (row && !row.classList.contains("hidden")) lastVisible = i;
+    }
+    addBtn.dataset.visibleThrough = String(Math.min(POINT_TIER_COUNT - 1, lastVisible + 1));
     syncPointsTierExtraRowVisibility();
   });
   syncPointsTierExtraRowVisibility();
   updatePointsTiersSectorLine();
+  document.querySelectorAll(".app-points-tier-remove").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const idx = parseInt(btn.getAttribute("data-tier-index") || "", 10);
+      if (Number.isNaN(idx) || idx <= 0) return;
+      removePointTierInput(document, idx);
+      markAppSectionDirty("personnaliser");
+      updatePersonnaliserPreview();
+      refreshCardRulesChecklist();
+    });
+  });
   document.getElementById("app-points-tiers-reset-sector")?.addEventListener("click", () => {
     writePointTierInputs(document, getDefaultPointTiersBySector(getLastKnownBusinessSector()));
     const addBtn = document.getElementById("app-points-tier-add");
-    if (addBtn) delete addBtn.dataset.forceVisible;
+    if (addBtn) delete addBtn.dataset.visibleThrough;
     syncPointsTierExtraRowVisibility();
     markAppSectionDirty("personnaliser");
     updatePersonnaliserPreview();
@@ -2939,16 +2957,7 @@ function initAppDashboard(slug) {
   }
 
   function syncPointsTierExtraRowVisibility() {
-    const addBtn = document.getElementById("app-points-tier-add");
-    const extraRow = document.getElementById("app-points-tier-row-4");
-    const extraPoints = document.getElementById("app-points-tier-4-points");
-    const extraLabel = document.getElementById("app-points-tier-4-label");
-    if (!addBtn || !extraRow) return;
-    const hasExtraValue = !!(String(extraPoints?.value || "").trim() || String(extraLabel?.value || "").trim());
-    const shouldShowExtra = hasExtraValue || addBtn.dataset.forceVisible === "1";
-    extraRow.classList.toggle("hidden", !shouldShowExtra);
-    addBtn.classList.toggle("hidden", shouldShowExtra);
-    addBtn.setAttribute("aria-hidden", shouldShowExtra ? "true" : "false");
+    syncPointTierOptionalRowVisibility(document);
   }
 
   async function refreshDeliveryClaimsPending() {
@@ -3056,7 +3065,7 @@ function initAppDashboard(slug) {
           writePointTierInputs(document, getDefaultPointTiersBySector(getLastKnownBusinessSector()));
         }
         const addBtn = document.getElementById("app-points-tier-add");
-        if (addBtn) delete addBtn.dataset.forceVisible;
+        if (addBtn) delete addBtn.dataset.visibleThrough;
         syncPointsTierExtraRowVisibility();
       }
       // En mode tampons : toujours 10 (champ supprimé). En mode points on ne modifie pas requiredStamps.
