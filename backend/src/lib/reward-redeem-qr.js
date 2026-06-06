@@ -40,6 +40,7 @@ export function resolveStampRewardFromQr(business, rewardRedeem) {
       cycleN,
       isFullCard: false,
       isStartGame: true,
+      tierIndex: 0,
     };
   }
 
@@ -52,6 +53,7 @@ export function resolveStampRewardFromQr(business, rewardRedeem) {
   const label =
     !isFullCard && midLabel && threshold > 0 && threshold <= midDefault + 1 ? midLabel : finalLabel;
   const pointsRequired = isFullCard ? Math.max(1, cycleN - 1) : threshold;
+  const tierIndex = isFullCard ? 2 : threshold <= midDefault ? 1 : 2;
   return {
     label,
     pointsRequired,
@@ -59,6 +61,7 @@ export function resolveStampRewardFromQr(business, rewardRedeem) {
     cycleN,
     isFullCard,
     isStartGame: false,
+    tierIndex,
   };
 }
 
@@ -150,6 +153,12 @@ export function parseBusinessPointTiers(raw) {
   return Array.isArray(tiers) ? tiers : [];
 }
 
+/** @param {unknown} t */
+function tierImageUrlFromRow(t) {
+  const img = t?.image_url ?? t?.imageUrl ?? t?.image;
+  return typeof img === "string" && img.trim() ? String(img).trim() : null;
+}
+
 /**
  * Coût + libellé depuis le QR (points = source de vérité) — l’index palier DB peut être décalé vs l’UI client triée.
  * @param {object} business
@@ -165,6 +174,8 @@ export function resolvePointsRewardFromQr(business, rewardRedeem) {
 
   let pointsRequired = qrPoints;
   let label = "";
+  let imageUrl = null;
+  let resolvedTierIndex = tierIndex;
 
   if (qrPoints > 0) {
     const match = tiers.find(
@@ -172,12 +183,17 @@ export function resolvePointsRewardFromQr(business, rewardRedeem) {
     );
     if (match) {
       label = String(match.label || "").trim();
+      imageUrl = tierImageUrlFromRow(match);
+      if (resolvedTierIndex == null) {
+        resolvedTierIndex = tiers.indexOf(match);
+      }
     }
   }
 
   if (!label && tierIndex != null && tierIndex < tiers.length) {
     const tier = tiers[tierIndex];
     label = String(tier?.label || "").trim();
+    if (!imageUrl) imageUrl = tierImageUrlFromRow(tier);
     if (!pointsRequired) {
       pointsRequired = Math.max(0, Math.floor(Number(tier?.points) || 0));
     }
@@ -191,5 +207,9 @@ export function resolvePointsRewardFromQr(business, rewardRedeem) {
     label = pointsRequired > 0 ? `Récompense ${pointsRequired} pts` : "Récompense";
   }
 
-  return { pointsRequired, label, tierIndex, qrPoints };
+  if (resolvedTierIndex == null || resolvedTierIndex < 0) {
+    resolvedTierIndex = 0;
+  }
+
+  return { pointsRequired, label, tierIndex: resolvedTierIndex, qrPoints, imageUrl };
 }

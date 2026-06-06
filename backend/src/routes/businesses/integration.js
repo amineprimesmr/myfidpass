@@ -44,6 +44,7 @@ function resolveRewardRedeemPreview(business, member, rewardRedeem) {
     return {
       mode: "stamps",
       label: resolved.label,
+      tier_index: resolved.tierIndex ?? 0,
       points_required: resolved.pointsRequired,
       points_balance: balance,
       eligible: balance >= resolved.pointsRequired,
@@ -56,6 +57,7 @@ function resolveRewardRedeemPreview(business, member, rewardRedeem) {
     mode: "points",
     tier_index: resolved.tierIndex ?? rewardRedeem.tierIndex ?? 0,
     label: resolved.label,
+    tier_image_url: resolved.imageUrl ?? null,
     points_required: pointsRequired,
     points_balance: balance,
     eligible: balance >= pointsRequired && pointsRequired > 0,
@@ -83,6 +85,55 @@ async function syncGoogleWalletAfterMemberMutation(member, business, req, contex
       error: e?.message || String(e),
     });
   }
+}
+
+/** PassKit / Google Wallet en arrière-plan : la réponse HTTP part tout de suite (évite timeout app commerçant). */
+function scheduleWalletSyncAfterIntegrationScan({
+  business,
+  memberId,
+  previousBalance,
+  updated,
+  req,
+}) {
+  void (async () => {
+    try {
+      await pushPassKitAfterMemberBalanceChange({
+        business,
+        memberId,
+        previousBalance,
+        reason: "integration_scan",
+      });
+      await syncGoogleWalletAfterMemberMutation(updated, business, req, "integration_scan");
+    } catch (e) {
+      console.warn("[integration/scan] sync Wallet arrière-plan:", e?.message || String(e));
+    }
+  })();
+}
+
+function buildIntegrationScanResponseBody({
+  member,
+  updated,
+  points,
+  secured,
+  programType,
+  stampCycleCompleted,
+  stampCyclesCompleted,
+}) {
+  return {
+    member: {
+      id: updated.id,
+      name: member.name,
+      email: member.email,
+      points: updated.points,
+    },
+    points_added: points,
+    new_balance: updated.points,
+    points_capped: secured.capped === true,
+    points_requested: secured.capped ? secured.originalPoints : undefined,
+    stamp_cycle_completed: programType === "stamps" ? stampCycleCompleted : undefined,
+    stamp_cycles_completed:
+      programType === "stamps" && stampCyclesCompleted > 0 ? stampCyclesCompleted : undefined,
+  };
 }
 
 router.get("/lookup", (req, res) => {
@@ -293,27 +344,24 @@ router.post("/scan", async (req, res) => {
       metadata: metaBase,
       actorUserId: req.user?.id,
     });
-    await pushPassKitAfterMemberBalanceChange({
+    scheduleWalletSyncAfterIntegrationScan({
       business,
       memberId: member.id,
       previousBalance: previousPoints,
-      reason: "integration_scan",
+      updated,
+      req,
     });
-    await syncGoogleWalletAfterMemberMutation(updated, business, req, "integration_scan");
-    res.json({
-      member: {
-        id: updated.id,
-        name: member.name,
-        email: member.email,
-        points: updated.points,
-      },
-      points_added: points,
-      new_balance: updated.points,
-      points_capped: secured.capped === true,
-      points_requested: secured.capped ? secured.originalPoints : undefined,
-      stamp_cycle_completed: programType === "stamps" ? stampCycleCompleted : undefined,
-      stamp_cycles_completed: programType === "stamps" && stampCyclesCompleted > 0 ? stampCyclesCompleted : undefined,
-    });
+    res.json(
+      buildIntegrationScanResponseBody({
+        member,
+        updated,
+        points,
+        secured,
+        programType,
+        stampCycleCompleted,
+        stampCyclesCompleted,
+      }),
+    );
     return;
   }
   createTransaction({
@@ -324,27 +372,24 @@ router.post("/scan", async (req, res) => {
     metadata: metaBase,
     actorUserId: req.user?.id,
   });
-  await pushPassKitAfterMemberBalanceChange({
+  scheduleWalletSyncAfterIntegrationScan({
     business,
     memberId: member.id,
     previousBalance: previousRaw,
-    reason: "integration_scan",
+    updated,
+    req,
   });
-  await syncGoogleWalletAfterMemberMutation(updated, business, req, "integration_scan");
-  res.json({
-    member: {
-      id: updated.id,
-      name: member.name,
-      email: member.email,
-      points: updated.points,
-    },
-    points_added: points,
-    new_balance: updated.points,
-    points_capped: secured.capped === true,
-    points_requested: secured.capped ? secured.originalPoints : undefined,
-    stamp_cycle_completed: programType === "stamps" ? stampCycleCompleted : undefined,
-    stamp_cycles_completed: programType === "stamps" && stampCyclesCompleted > 0 ? stampCyclesCompleted : undefined,
-  });
+  res.json(
+    buildIntegrationScanResponseBody({
+      member,
+      updated,
+      points,
+      secured,
+      programType,
+      stampCycleCompleted,
+      stampCyclesCompleted,
+    }),
+  );
 });
 
 export default router;
