@@ -269,6 +269,7 @@ router.post("/scan", async (req, res) => {
   let stampCycleCompleted = false;
   let stampCyclesCompleted = 0;
   if (programType === "stamps") {
+    const previousRaw = Math.max(0, Math.floor(Number(member.points) || 0));
     const r = addStampsWithCycleRollover(member.id, points, stampCycleN);
     if (!r.member) {
       return res.status(500).json({ error: "Mise à jour membre impossible.", code: "MEMBER_UPDATE_FAILED" });
@@ -323,7 +324,12 @@ router.post("/scan", async (req, res) => {
     metadata: metaBase,
     actorUserId: req.user?.id,
   });
-  await pushPassKitUpdateForMember(business.id, member.id, "integration_scan");
+  await pushPassKitAfterMemberBalanceChange({
+    business,
+    memberId: member.id,
+    previousBalance: previousRaw,
+    reason: "integration_scan",
+  });
   await syncGoogleWalletAfterMemberMutation(updated, business, req, "integration_scan");
   res.json({
     member: {

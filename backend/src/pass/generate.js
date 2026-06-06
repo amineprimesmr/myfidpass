@@ -17,6 +17,7 @@ import {
 } from "./images-logo.js";
 import { getBusinessAssetData } from "../db/business-assets.js";
 import { businessAllowsWalletCustomerAlerts } from "../lib/notification-icon-gate.js";
+import { WALLET_TIER_UNLOCK_CHANGE_MESSAGE } from "../lib/points-reward-tiers.js";
 import { createStripBuffer, buildPassLocations, createDefaultIconBuffer } from "./images-strip.js";
 import { drawStampsOnStrip } from "./images-stamps.js";
 import { buildBuffers } from "./build-buffers.js";
@@ -470,16 +471,31 @@ export async function generatePass(member, business = null, options = {}) {
     lastMessageBackField.changeMessage = normalizeChangeMessage(changeMsg, rawBroadcast);
   }
 
+  /** Notif écran verrouillé « Nouvelle récompense » — indépendante du gate icône notif campagnes. */
+  const tierUnlockBackFields = [];
+  if (Number(member?.wallet_tier_unlock_pending) === 1) {
+    const tierLabel = String(member?.wallet_tier_unlock_label || "").trim();
+    if (tierLabel) {
+      tierUnlockBackFields.push({
+        key: "tierUnlock",
+        label: "Récompense",
+        value: tierLabel,
+        changeMessage: WALLET_TIER_UNLOCK_CHANGE_MESSAGE,
+      });
+    }
+  }
+
   const backAddress =
     business?.location_address != null ? String(business.location_address).trim() : "";
   const addressBackFields = backAddress.length > 0 ? [{ key: "address", label: "Adresse", value: backAddress }] : [];
 
   if (format === "tampons") {
-    pass.backFields.push(lastMessageBackField, ...addressBackFields, webAccountBackField, poweredByBackField);
+    pass.backFields.push(...tierUnlockBackFields, lastMessageBackField, ...addressBackFields, webAccountBackField, poweredByBackField);
   } else {
     const pts = Math.max(0, Math.floor(Number(member.points) || 0));
 
     pass.backFields.push(
+      ...tierUnlockBackFields,
       lastMessageBackField,
       ...addressBackFields,
       { key: "progress", label: "Votre progression", value: `${pts} points` },

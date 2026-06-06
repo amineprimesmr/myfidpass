@@ -1801,4 +1801,14 @@ export function runMigrations(db) {
     }
     markMigrationApplied(db, 45, "world_cup_cutoff_iso_fix");
   }
+
+  // v46 : libellé palier Wallet en attente de livraison (.pkpass)
+  const m46 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 46").get();
+  if (!m46) {
+    const memberCols46 = db.prepare("PRAGMA table_info(members)").all().map((c) => c.name);
+    if (!memberCols46.includes("wallet_tier_unlock_label")) {
+      safeRun(db, () => db.exec("ALTER TABLE members ADD COLUMN wallet_tier_unlock_label TEXT"));
+    }
+    markMigrationApplied(db, 46, "members_wallet_tier_unlock_label");
+  }
 }

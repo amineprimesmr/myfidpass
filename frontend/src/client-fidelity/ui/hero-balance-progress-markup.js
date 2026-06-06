@@ -1,6 +1,7 @@
 import {
   parsePointTiers,
   buildStampTiers,
+  stampProgressTiers,
   tierProgressState,
   buildHeroLinearTickMarks,
   heroFillPercentLinear,
@@ -19,7 +20,7 @@ export function buildHeroBalanceProgressState(p) {
   const pts = isStamps
     ? stampCycleDisplayBalance(p.memberPoints, p.business)
     : Math.max(0, Math.floor(Number(p.memberPoints) || 0));
-  const tiers = isStamps ? buildStampTiers(p.business) : parsePointTiers(p.business);
+  const tiers = isStamps ? stampProgressTiers(p.business) : parsePointTiers(p.business);
 
   let pct;
   let maxScale;

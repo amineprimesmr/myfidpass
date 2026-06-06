@@ -1,4 +1,4 @@
-import { buildStampTiers, parsePointTiers } from "./tier-progress.js";
+import { buildStampTiers, STAMP_START_GAME_THRESHOLD, parsePointTiers } from "./tier-progress.js";
 
 const DEFAULT_GIFT_BASE = "/assets/gift";
 
@@ -35,6 +35,20 @@ export function defaultTierImageUrl(tierIndex) {
 export function getStartingRewardOffer(business, programType) {
   const pt = String(programType || "points").toLowerCase();
   const isStamps = pt === "stamps";
+  if (isStamps) {
+    const start = buildStampTiers(business).find(
+      (t) => t.isStartGame || t.threshold === STAMP_START_GAME_THRESHOLD,
+    );
+    if (start) {
+      return {
+        threshold: start.threshold,
+        label: start.label,
+        imageUrl: start.imageUrl || defaultTierImageUrl(0),
+        costLine: "Début du jeu",
+        isStamps: true,
+      };
+    }
+  }
   const tiers = getProgramTiers(business, programType);
   const first = tiers[0];
   if (!first) {

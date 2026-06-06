@@ -17,7 +17,7 @@ import {
   getPassKitPushTokensForBusiness,
   getAnyBusinessLinkedToGooglePlaceId,
 } from "../../db.js";
-import { sendPassKitUpdateIfCustomerAlertsAllowed } from "../../lib/passkit-member-push.js";
+import { sendPassKitUpdateIfCustomerAlertsAllowed, pushPassKitUpdateForAllBusinessPasses } from "../../lib/passkit-member-push.js";
 import { businessAllowsWalletCustomerAlerts } from "../../lib/notification-icon-gate.js";
 import { getApiBase, ensureDashboardAccess, normalizeHex } from "./shared.js";
 import { isOnlyTeamUser } from "../../db/business-team.js";
@@ -606,7 +606,7 @@ export async function updateHandler(req, res) {
       fromType: programTypeSwitch.prevType,
       toType: programTypeSwitch.nextType,
     });
-    bumpBusinessPassRefreshTimestamp(business.id);
+    pushPassKitUpdateForAllBusinessPasses(business.id, "program_mode_switch").catch(() => {});
   }
 
   /**

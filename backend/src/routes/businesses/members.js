@@ -444,6 +444,7 @@ router.post("/:memberId/points", async (req, res) => {
   let previousPoints = null;
   let metaMerged = secured.capped ? { ...(meta || {}), points_capped: true, requested_points: secured.originalPoints } : meta;
   if (programType === "stamps") {
+    previousPoints = Math.max(0, Math.floor(Number(member.points) || 0));
     const r = addStampsWithCycleRollover(member.id, points, stampCycleN);
     if (!r.member) {
       return res.status(500).json({ error: "Mise à jour membre impossible." });
@@ -471,7 +472,12 @@ router.post("/:memberId/points", async (req, res) => {
     actorUserId: req.user?.id,
   });
   if (programType === "stamps") {
-    await pushPassKitUpdateForMember(business.id, member.id, "points_add");
+    await pushPassKitAfterMemberBalanceChange({
+      business,
+      memberId: member.id,
+      previousBalance: previousPoints,
+      reason: "points_add",
+    });
   } else {
     await pushPassKitAfterMemberBalanceChange({
       business,

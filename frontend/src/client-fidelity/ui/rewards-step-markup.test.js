@@ -62,6 +62,7 @@ describe("renderRewardsStepMarkup", () => {
     const html = renderRewardsStepMarkup(idEsc, {
       business: {
         required_stamps: 10,
+        start_game_reward_label: "Boisson offerte",
         stamp_mid_reward_label: "Viennoiserie",
         stamp_reward_label: "Menu offert",
       },
@@ -69,6 +70,8 @@ describe("renderRewardsStepMarkup", () => {
       programType: "stamps",
       balanceUnit: "tampons",
     });
+    expect(html).toContain("Boisson offerte");
+    expect(html).toContain("Début du jeu");
     expect(html).toContain("Viennoiserie");
     expect(html).toContain("Menu offert");
     expect(html).toContain("5 tampons");

@@ -21,7 +21,7 @@ export function businessHasCustomNotificationIcon(business) {
   return false;
 }
 
-/** Alertes écran verrouillé Wallet (`changeMessage`) et push PassKit après scan / campagne. */
+/** Alertes écran verrouillé Wallet (`changeMessage` dans pass/generate.js). Le push PassKit silencieux (solde) n’est pas gated ici. */
 export function businessAllowsWalletCustomerAlerts(business) {
   return businessHasCustomNotificationIcon(business);
 }

@@ -36,7 +36,7 @@ import { getMatchPredictionConfig } from "../../db/match-predictions.js";
 import { resolveBusinessProgramType } from "../../db/businesses.js";
 import { applyProgramTypeSwitchSideEffects } from "../../lib/program-type-switch.js";
 import { resetAllMemberBalancesForBusiness } from "../../db/members.js";
-import { sendPassKitUpdateIfCustomerAlertsAllowed } from "../../lib/passkit-member-push.js";
+import { sendPassKitUpdateIfCustomerAlertsAllowed, pushPassKitUpdateForAllBusinessPasses } from "../../lib/passkit-member-push.js";
 import {
   ensureDashboardAccess,
   blockStaffDashboardWrites,
@@ -883,20 +883,9 @@ router.patch("/settings", async (req, res) => {
       fromType: programTypeSwitch.prevType,
       toType: programTypeSwitch.nextType,
     });
-    bumpBusinessPassRefreshTimestamp(business.id);
-    const bAfterModeSwitch = getBusinessById(business.id);
-    if (bAfterModeSwitch && businessAllowsWalletCustomerAlerts(bAfterModeSwitch)) {
-      const modeSwitchTokens = getPassKitPushTokensForBusiness(business.id);
-      if (modeSwitchTokens.length > 0) {
-        const passMs = Number(bAfterModeSwitch.pass_last_modified_ms) || Date.now();
-        const modeCollapseId = `mode-${passMs}`;
-        for (const row of modeSwitchTokens.slice(0, 300)) {
-          sendPassKitUpdateIfCustomerAlertsAllowed(bAfterModeSwitch, row.push_token, {
-            collapseId: modeCollapseId,
-          }).catch(() => {});
-        }
-      }
-    }
+    pushPassKitUpdateForAllBusinessPasses(business.id, "program_mode_switch").catch((err) => {
+      logger.warn({ err, businessId: business.id }, "[dashboard] PassKit push after program switch");
+    });
   }
   if (passNotifTextsUpdated || passVisualMediaUpdated) {
     bumpBusinessPassRefreshTimestamp(business.id);
@@ -980,7 +969,8 @@ router.patch("/settings", async (req, res) => {
           updates.stamp_emoji !== undefined ||
           updates.stamp_icon_base64 !== undefined ||
           updates.card_background_base64 !== undefined ||
-          updates.required_stamps !== undefined;
+          updates.required_stamps !== undefined ||
+          programTypeSwitch.switched;
         if (stampHeroVisualUpdated) {
           process.nextTick(() => {
             syncGoogleWalletHeroForBusinessMembers(bFresh, apiBase).catch((gwErr) => {

@@ -9,8 +9,9 @@ export function stampCycleDisplayBalance(memberPoints, business) {
   return p % n;
 }
 
-/** Palier tampon atteint pour l’UI (carte complète = N-1 tampons visibles sur N). */
+/** Palier atteint pour l’UI (carte complète = N-1 tampons visibles sur N). */
 export function isStampTierUnlocked(threshold, balance, business, tiers) {
+  if (threshold === STAMP_START_GAME_THRESHOLD) return true;
   const cycleN = Math.max(1, Math.floor(Number(business?.required_stamps) || 10));
   const last = tiers.length ? tiers[tiers.length - 1].threshold : cycleN;
   if (threshold >= last && threshold >= cycleN - 1) {
@@ -20,6 +21,8 @@ export function isStampTierUnlocked(threshold, balance, business, tiers) {
 }
 /** Palier inscription / début du jeu (aligné SaaS commerçant). */
 export const SIGNUP_REWARD_POINTS = 10;
+/** Palier « Début du jeu » sur la page client tampons (récompense 1er tour / roue). */
+export const STAMP_START_GAME_THRESHOLD = 0;
 
 /**
  * @param {unknown} raw
@@ -82,9 +85,22 @@ export function parsePointTiers(business) {
 export function buildStampTiers(business) {
   const required = Number(business?.required_stamps);
   if (!Number.isInteger(required) || required <= 0) return [];
+  const startLabel = String(
+    business?.start_game_reward_label ??
+      business?.startGameRewardLabel ??
+      business?.signup_reward_label ??
+      business?.signupRewardLabel ??
+      "",
+  ).trim();
   const midLabel = String(business?.stamp_mid_reward_label ?? "").trim();
   const finalLabel = String(business?.stamp_reward_label ?? "").trim() || "Récompense";
+  /** @type {{ threshold: number; label: string; isStartGame?: boolean }[]} */
   const tiers = [];
+  tiers.push({
+    threshold: STAMP_START_GAME_THRESHOLD,
+    label: startLabel || "Boisson offerte",
+    isStartGame: true,
+  });
   if (midLabel && required > STAMP_MID_DEFAULT) {
     tiers.push({ threshold: STAMP_MID_DEFAULT, label: midLabel });
   }
@@ -96,6 +112,11 @@ export function buildStampTiers(business) {
     seen.add(t.threshold);
     return true;
   });
+}
+
+/** Paliers pour jauge / bannière (sans « Début du jeu » à 0). */
+export function stampProgressTiers(business) {
+  return buildStampTiers(business).filter((t) => t.threshold > 0);
 }
 
 /**

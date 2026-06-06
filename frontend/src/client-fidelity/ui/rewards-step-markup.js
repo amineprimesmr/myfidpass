@@ -3,6 +3,7 @@ import {
   isStampTierUnlocked,
   parsePointTiers,
   stampCycleDisplayBalance,
+  STAMP_START_GAME_THRESHOLD,
 } from "../lib/tier-progress.js";
 
 /** Images par défaut : `public/assets/gift/gift1.png` … `gift5.png` (rotation par palier). */
@@ -99,7 +100,11 @@ ${tiers
       ? isStampTierUnlocked(t.threshold, balance, business, tiers)
       : balance >= t.threshold;
     const costNum = esc(String(t.threshold));
-    const costLine = isStamps ? `${costNum} ${unitEsc}` : `${costNum} points`;
+    const costLine = isStamps
+      ? t.threshold === STAMP_START_GAME_THRESHOLD || t.isStartGame
+        ? "Début du jeu"
+        : `${costNum} ${unitEsc}`
+      : `${costNum} points`;
     const tier = /** @type {{ threshold: number; label: string; imageUrl?: string }} */ (t);
     const displayImageUrl = tier.imageUrl || defaultGiftImageUrl(tierIndex);
     return renderRewardCard(tier, unlocked, costLine, esc, displayImageUrl, tierIndex);

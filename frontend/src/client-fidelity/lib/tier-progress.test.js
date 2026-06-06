@@ -3,7 +3,9 @@ import {
   buildHeroLinearTickMarks,
   heroFillPercentLinear,
   parsePointTiers,
+  buildStampTiers,
   SIGNUP_REWARD_POINTS,
+  STAMP_START_GAME_THRESHOLD,
 } from "./tier-progress.js";
 
 describe("buildHeroLinearTickMarks", () => {
@@ -57,5 +59,19 @@ describe("heroFillPercentLinear", () => {
     expect(heroFillPercentLinear(tiers, 10)).toBe(10);
     expect(heroFillPercentLinear(tiers, 50)).toBe(50);
     expect(heroFillPercentLinear(tiers, 100)).toBe(100);
+  });
+});
+
+describe("buildStampTiers", () => {
+  it("inclut la récompense début du jeu", () => {
+    const tiers = buildStampTiers({
+      required_stamps: 10,
+      start_game_reward_label: "Boisson offerte",
+      stamp_mid_reward_label: "Dessert offert",
+      stamp_reward_label: "Menu offert",
+    });
+    expect(tiers[0].threshold).toBe(STAMP_START_GAME_THRESHOLD);
+    expect(tiers[0].label).toBe("Boisson offerte");
+    expect(tiers.some((t) => t.threshold === 5)).toBe(true);
   });
 });

@@ -1,4 +1,4 @@
-import { buildStampTiers, parsePointTiers, tierProgressState } from "../lib/tier-progress.js";
+import { buildStampTiers, parsePointTiers, stampProgressTiers, tierProgressState, stampCycleDisplayBalance } from "../lib/tier-progress.js";
 
 /**
  * @param {{
@@ -13,9 +13,11 @@ export function buildNextRewardBannerState(opts) {
   const { hasMember, business, member, programType, balanceUnit } = opts;
   if (!hasMember) return { kind: "visitor" };
 
-  const balance = Math.max(0, Math.floor(Number(member?.points) || 0));
   const isStamps = programType === "stamps";
-  const tiers = isStamps ? buildStampTiers(business) : parsePointTiers(business);
+  const balance = isStamps
+    ? stampCycleDisplayBalance(member?.points, business)
+    : Math.max(0, Math.floor(Number(member?.points) || 0));
+  const tiers = isStamps ? stampProgressTiers(business) : parsePointTiers(business);
   const unitShort = String(balanceUnit || "").trim() || "pts";
 
   if (!tiers.length) {
