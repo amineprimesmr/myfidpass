@@ -70,7 +70,7 @@ console.log("Mot de passe:", password);
 console.log("Créé      :", result.created ? "oui" : "non (compte existant, mot de passe mis à jour + is_admin=1)");
 console.log("Admins en base:", countPlatformAdmins());
 console.log("");
-console.log("App iOS / Android : connexion par e-mail → code OTP (6 chiffres reçu par mail).");
+console.log("App iOS / Android : e-mail admin → mot de passe ; autres comptes → code OTP par mail.");
 console.log("API (legacy)      : POST https://api.myfidpass.fr/api/auth/login");
 console.log('                    { "login": "' + result.email + '", "password": "…" }');
 console.log("Hub Administration après connexion si is_admin=1.");

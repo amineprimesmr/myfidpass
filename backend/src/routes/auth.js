@@ -436,14 +436,23 @@ async function getAppleSigningKeyPem(kid) {
   return key.export({ type: "spki", format: "pem" });
 }
 
+/** Méthode de connexion pour un compte e-mail connu (`email_otp` par défaut, `password` pour admin plateforme). */
+function resolveEmailAuthMethodForUser(user) {
+  if (user && isUserAdmin(user)) return "password";
+  return "email_otp";
+}
+
 /**
  * POST /api/auth/check-email
- * Body: { email } — indique si un compte existe (flux e-mail en deux étapes côté app).
+ * Body: { email } — existence + méthode de connexion (`auth_method`: `email_otp` | `password`).
  */
 router.post("/check-email", validate(schemas.checkEmail), (req, res) => {
   const emailNorm = req.body.email;
-  const exists = !!getUserByEmail(emailNorm);
-  return res.json({ account_exists: exists });
+  const user = getUserByEmail(emailNorm);
+  return res.json({
+    account_exists: !!user,
+    auth_method: user ? resolveEmailAuthMethodForUser(user) : "email_otp",
+  });
 });
 
 /**
@@ -456,8 +465,12 @@ router.post("/check-identifier", validate(schemas.checkIdentifier), (req, res) =
     return res.json({ account_exists: false, kind: null });
   }
   if (raw.includes("@")) {
-    const exists = !!getUserByEmail(raw.toLowerCase());
-    return res.json({ account_exists: exists, kind: "email" });
+    const user = getUserByEmail(raw.toLowerCase());
+    return res.json({
+      account_exists: !!user,
+      kind: "email",
+      auth_method: user ? resolveEmailAuthMethodForUser(user) : "email_otp",
+    });
   }
   const n = normalizeStaffLogin(raw);
   if (!n) {
@@ -1344,6 +1357,14 @@ router.post("/email/send-code", validate(schemas.emailSend), async (req, res) =>
     return res.status(400).json({ error: "Adresse e-mail invalide.", code: "email_reserved" });
   }
 
+  const existingUser = getUserByEmail(emailNorm);
+  if (existingUser && isUserAdmin(existingUser)) {
+    return res.status(403).json({
+      error: "Compte administrateur : connectez-vous avec votre mot de passe.",
+      code: "platform_admin_password_required",
+    });
+  }
+
   const existing = getEmailOtpChallenge(emailNorm);
   if (existing?.last_sent_at) {
     const last = Date.parse(existing.last_sent_at);
@@ -1409,6 +1430,14 @@ router.post("/email/verify", validate(schemas.emailVerify), async (req, res) => 
 
   if (isReservedStaffEmailOnly(emailNorm)) {
     return res.status(400).json({ error: "Adresse e-mail invalide.", code: "email_reserved" });
+  }
+
+  const existingAdmin = getUserByEmail(emailNorm);
+  if (existingAdmin && isUserAdmin(existingAdmin)) {
+    return res.status(403).json({
+      error: "Compte administrateur : connectez-vous avec votre mot de passe.",
+      code: "platform_admin_password_required",
+    });
   }
 
   const row = getEmailOtpChallenge(emailNorm);
