@@ -304,6 +304,8 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     console.error("[fidelity] resolveClientSession", e);
   }
 
+  ensureQrGateAlignedWithServer(store.get().member, slug);
+
   const hydratedMember = store.get().member;
   if (hydratedMember?.id && (hydratedMember.apple_wallet_registered === true || hydratedMember.appleWalletRegistered === true)) {
     markRewardsWalletUnlocked(slug, hydratedMember.id);

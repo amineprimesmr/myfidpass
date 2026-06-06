@@ -14,6 +14,12 @@ export const QR_GATE_KEY = "fid_qr_spin_gate";
 export const QR_GOOGLE_PENDING_KEY = "fid_qr_google_pending";
 /** Après retour de l’avis Google : hero « Merci, bonne chance ! » (pas après « Continuer » sans Google). */
 export const QR_THANKS_HERO_KEY = "fid_qr_thanks_hero";
+const QR_THANKS_HERO_TS_KEY = "fid_qr_thanks_hero_ts";
+const PENDING_ENGAGEMENT_CLAIM_KEY = "fidelity_pending_engagement_claim";
+/** Reprise auto « retour Google » : au-delà, on considère la clé pending comme abandonnée. */
+export const QR_GOOGLE_PENDING_MAX_MS = 30 * 60 * 1000;
+/** Fenêtre courte après vérif locale (claim serveur peut encore être en vol). */
+const QR_THANKS_HERO_RECENT_MS = 5 * 60 * 1000;
 
 /** Même si sessionStorage échoue (Safari privé), le prochain rerender ne doit pas réécraser le titre. */
 let qrThanksHeroMemory = false;
@@ -30,7 +36,89 @@ export function markQrThanksHeroDone(slug) {
   try {
     if (s) sessionStorage.setItem(`${QR_THANKS_HERO_KEY}:slug:${s}`, "1");
     sessionStorage.setItem(QR_THANKS_HERO_KEY, "1");
+    sessionStorage.setItem(QR_THANKS_HERO_TS_KEY, String(Date.now()));
   } catch (_) {}
+}
+
+export function clearQrThanksHeroClientState(slug) {
+  qrThanksHeroMemory = false;
+  qrThanksHeroSlug = null;
+  const s = String(slug ?? "").trim();
+  try {
+    sessionStorage.removeItem(QR_THANKS_HERO_KEY);
+    sessionStorage.removeItem(QR_THANKS_HERO_TS_KEY);
+    if (s) sessionStorage.removeItem(`${QR_THANKS_HERO_KEY}:slug:${s}`);
+  } catch (_) {}
+}
+
+function isRecentQrThanksHeroMarked(slug) {
+  try {
+    const s = String(slug ?? "").trim();
+    if (!shouldShowQrThanksHero(s || undefined)) return false;
+    const ts = Number(sessionStorage.getItem(QR_THANKS_HERO_TS_KEY) || 0);
+    return Number.isFinite(ts) && ts > 0 && Date.now() - ts < QR_THANKS_HERO_RECENT_MS;
+  } catch {
+    return false;
+  }
+}
+
+/** Pending « je suis allé sur Google » encore valide (évite reprise sur un vieux scan). */
+export function isFreshGoogleReviewPending(slug) {
+  try {
+    if (sessionStorage.getItem(QR_GOOGLE_PENDING_KEY) !== "1") return false;
+    const raw = sessionStorage.getItem(PENDING_ENGAGEMENT_CLAIM_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    const want = String(slug ?? "").trim();
+    if (want && data.slug !== want) return false;
+    if (data.actionType !== "google_review") return false;
+    const ts = Number(data.ts) || 0;
+    return ts > 0 && Date.now() - ts < QR_GOOGLE_PENDING_MAX_MS;
+  } catch {
+    return false;
+  }
+}
+
+function clearStaleGoogleReviewPending(slug) {
+  try {
+    sessionStorage.removeItem(QR_GOOGLE_PENDING_KEY);
+    const raw = sessionStorage.getItem(PENDING_ENGAGEMENT_CLAIM_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    const want = String(slug ?? "").trim();
+    if (data.actionType === "google_review" && (!want || data.slug === want)) {
+      sessionStorage.removeItem(PENDING_ENGAGEMENT_CLAIM_KEY);
+    }
+  } catch (_) {}
+}
+
+/**
+ * Aligne hero « Merci / avis enregistré », gate spin et pending Google avec le serveur.
+ * Corrige l’affichage « avis déjà fait » au scan QR quand seul un ancien sessionStorage traîne.
+ */
+export function reconcileQrReviewClientState(member, slug) {
+  if (!isGuestMember(member)) return;
+  const s = String(slug ?? "").trim();
+
+  if (member?.google_review_engagement_done === true) {
+    setQrGateUnlocked();
+    markQrThanksHeroDone(s || undefined);
+    return;
+  }
+
+  const freshPending = isFreshGoogleReviewPending(s);
+  if (!freshPending) {
+    clearStaleGoogleReviewPending(s);
+  }
+
+  if (!freshPending && !isRecentQrThanksHeroMarked(s)) {
+    if (shouldShowQrThanksHero(s || undefined)) {
+      clearQrThanksHeroClientState(s);
+    }
+    try {
+      sessionStorage.removeItem(QR_GATE_KEY);
+    } catch (_) {}
+  }
 }
 
 /**
@@ -137,11 +225,9 @@ export function setQrGateUnlocked() {
  * @param {string} [slug] — commerce courant ; recommandé pour le test slug-scopé du hero Merci.
  */
 export function ensureQrGateAlignedWithServer(member, slug) {
+  reconcileQrReviewClientState(member, slug);
   if (!isGuestMember(member)) return;
-  if (member?.google_review_engagement_done === true) {
-    setQrGateUnlocked();
-    return;
-  }
+  if (member?.google_review_engagement_done === true) return;
   const s = String(slug || "").trim();
   if (shouldShowQrThanksHero(s || undefined)) {
     setQrGateUnlocked();
@@ -623,14 +709,18 @@ export function bindQrGameUi(ctx) {
     if (!isGuestMember(state.member)) return;
     /* Ne pas interrompre la reward panel si elle est déjà affichée (la clé n'aurait pas dû persister, mais par sécurité). */
     if (rootEl.querySelector("#fidelity-qr-panel-reward:not(.hidden)")) return;
+    reconcileQrReviewClientState(state.member, slug);
     if (guestQrSpinGateSatisfied(state, slug)) {
       try {
         sessionStorage.removeItem(QR_GOOGLE_PENDING_KEY);
       } catch (_) {}
       return;
     }
+    if (!isFreshGoogleReviewPending(slug)) {
+      clearStaleGoogleReviewPending(slug);
+      return;
+    }
     try {
-      if (sessionStorage.getItem(QR_GOOGLE_PENDING_KEY) !== "1") return;
       sessionStorage.removeItem(QR_GOOGLE_PENDING_KEY);
       openQrModalRoot(rootEl);
       showQrVerifyPanel(rootEl);
@@ -657,7 +747,7 @@ export function bindQrGameUi(ctx) {
     try {
       sessionStorage.setItem(QR_GOOGLE_PENDING_KEY, "1");
       sessionStorage.setItem(
-        "fidelity_pending_engagement_claim",
+        PENDING_ENGAGEMENT_CLAIM_KEY,
         JSON.stringify({ slug, actionType: "google_review", ts: Date.now() }),
       );
     } catch (_) {}
@@ -673,7 +763,6 @@ export function bindQrGameUi(ctx) {
   const resumeSig = qrResumeListenersAbort.signal;
   document.addEventListener("visibilitychange", resumeGoogleReviewIfPending, { signal: resumeSig });
   globalThis.addEventListener("pageshow", resumeGoogleReviewIfPending, { signal: resumeSig });
-  globalThis.setTimeout(resumeGoogleReviewIfPending, 0);
 
   backdrop?.addEventListener(
     "click",

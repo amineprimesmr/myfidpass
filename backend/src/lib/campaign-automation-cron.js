@@ -40,14 +40,50 @@ const DEFAULT_MESSAGES = {
   reward_ready: "Votre récompense est prête — passez en magasin pour en profiter.",
   points_near: "Plus que quelques points pour débloquer votre récompense !",
   birthday_today: "Joyeux anniversaire ! Profitez de -20 % en commandant aujourd'hui.",
+  locationEntry:
+    "Vous êtes à proximité de notre commerce. Passez nous voir, votre carte Wallet est prête.",
 };
+
+/** Règles du carrousel « Notifications automatiques » (hub app + périmètre Wallet). */
+const HUB_AUTOMATION_RULE_IDS = [
+  "locationEntry",
+  "points_near",
+  "reward_ready",
+  "inactive_14",
+  "birthday_today",
+];
+
+function defaultHubRuleRow(id) {
+  return { enabled: true, message: DEFAULT_MESSAGES[id] || "" };
+}
 
 function defaultAutomationConfig() {
   const rules = {};
-  for (const id of Object.keys(RULE_TO_SEGMENT)) {
-    rules[id] = { enabled: false, message: DEFAULT_MESSAGES[id] || "" };
+  for (const id of HUB_AUTOMATION_RULE_IDS) {
+    rules[id] = defaultHubRuleRow(id);
   }
   return { version: 1, global_cooldown_days: 7, rules };
+}
+
+/** Ancien état usine (toutes désactivées + textes par défaut) → activer le hub pour les commerces existants. */
+function upgradeFactoryDisabledHubRules(rules) {
+  if (!rules || typeof rules !== "object") return rules;
+  const allHubDisabled = HUB_AUTOMATION_RULE_IDS.every((id) => !rules[id]?.enabled);
+  if (!allHubDisabled) return rules;
+  const onlyDefaultMessages = HUB_AUTOMATION_RULE_IDS.every((id) => {
+    const msg = String(rules[id]?.message ?? "").trim();
+    const def = String(DEFAULT_MESSAGES[id] ?? "").trim();
+    return !msg || msg === def;
+  });
+  if (!onlyDefaultMessages) return rules;
+  const out = { ...rules };
+  for (const id of HUB_AUTOMATION_RULE_IDS) {
+    out[id] = {
+      enabled: true,
+      message: String((out[id]?.message ?? DEFAULT_MESSAGES[id]) || "").slice(0, 200),
+    };
+  }
+  return out;
 }
 
 export function mergeCampaignAutomationJson(raw) {
@@ -58,8 +94,8 @@ export function mergeCampaignAutomationJson(raw) {
     if (!parsed || typeof parsed !== "object") return base;
     const merged = { ...base, ...parsed };
     merged.rules = { ...base.rules, ...(parsed.rules || {}) };
-    for (const id of Object.keys(RULE_TO_SEGMENT)) {
-      if (!merged.rules[id]) merged.rules[id] = { enabled: false, message: DEFAULT_MESSAGES[id] || "" };
+    for (const id of HUB_AUTOMATION_RULE_IDS) {
+      if (!merged.rules[id]) merged.rules[id] = defaultHubRuleRow(id);
       else {
         merged.rules[id] = {
           enabled: !!merged.rules[id].enabled,
@@ -67,6 +103,7 @@ export function mergeCampaignAutomationJson(raw) {
         };
       }
     }
+    merged.rules = upgradeFactoryDisabledHubRules(merged.rules);
     /** Ancienne règle produit retirée : ne plus exécuter ni renvoyer dans les PATCH. */
     delete merged.rules.loyal_boost;
     /** « Nouveaux 7 j » retiré du produit : ne plus exécuter. */
