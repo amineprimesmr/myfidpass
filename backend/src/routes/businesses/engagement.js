@@ -10,6 +10,9 @@ import {
   businessUsesTicketBonuses,
   createEngagementCompletion,
   hasMemberCompletedEngagementAction,
+  hasMemberCompletedAnySocialFollow,
+  isSocialFollowActionType,
+  resolveBusinessProgramType,
   createEngagementProof,
   getEngagementProofByTokenHash,
   markEngagementProofReturned,
@@ -67,10 +70,12 @@ export function engagementActionsHandler(req, res) {
         tripadvisor_review: "Laisser un avis TripAdvisor",
       };
       const pts = Math.max(1, Math.min(200, Math.floor(Number(c.points) || 1)));
+      const programType = resolveBusinessProgramType(business);
+      const displayPts = programType === "stamps" && isSocialFollowActionType(key) ? 1 : pts;
       actions.push({
         action_type: key,
         label: labels[key] || key,
-        points: pts,
+        points: displayPts,
         url: String(c.url).trim(),
       });
     }
@@ -78,9 +83,14 @@ export function engagementActionsHandler(req, res) {
   if (memberId) {
     const member = getMemberForBusiness(memberId, business.id);
     if (member) {
-      actions = actions.filter(
-        (a) => !hasMemberCompletedEngagementAction(business.id, memberId, a.action_type),
-      );
+      const programType = resolveBusinessProgramType(business);
+      const anySocialDone =
+        programType === "stamps" &&
+        hasMemberCompletedAnySocialFollow(business.id, memberId);
+      actions = actions.filter((a) => {
+        if (anySocialDone && isSocialFollowActionType(a.action_type)) return false;
+        return !hasMemberCompletedEngagementAction(business.id, memberId, a.action_type);
+      });
     }
   }
   res.json({ actions });

@@ -9,6 +9,21 @@ import { addPoints, addStampsWithCycleRollover } from "./members.js";
 
 const db = getDb();
 
+/** Missions « nous suivre » — récompense cumulée en mode tampons (1 tampon total). */
+export const SOCIAL_FOLLOW_ACTION_TYPES = [
+  "instagram_follow",
+  "tiktok_follow",
+  "facebook_follow",
+  "twitter_follow",
+  "snapchat_follow",
+  "linkedin_follow",
+  "youtube_follow",
+];
+
+export function isSocialFollowActionType(actionType) {
+  return SOCIAL_FOLLOW_ACTION_TYPES.includes(String(actionType || ""));
+}
+
 const DEFAULT_ENGAGEMENT_REWARDS = {
   google_review: { enabled: false, points: 50, place_id: "", require_approval: false, auto_verify_enabled: true },
   instagram_follow: { enabled: false, points: 10, url: "" },
@@ -79,6 +94,16 @@ export function hasMemberCompletedEngagementAction(businessId, memberId, actionT
   return !!row;
 }
 
+/** Mode tampons : le client ne peut créditer qu’un seul tampon via les missions « follow », tous réseaux confondus. */
+export function hasMemberCompletedAnySocialFollow(businessId, memberId, cooldownMonths = 120) {
+  for (const actionType of SOCIAL_FOLLOW_ACTION_TYPES) {
+    if (hasMemberCompletedEngagementAction(businessId, memberId, actionType, cooldownMonths)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function createEngagementCompletion(businessId, memberId, actionType, options = {}) {
   const rewards = getEngagementRewards(businessId);
   const config = rewards[actionType];
@@ -88,13 +113,21 @@ export function createEngagementCompletion(businessId, memberId, actionType, opt
   const cooldown = Number.isFinite(Number(options.cooldownMonths))
     ? Number(options.cooldownMonths)
     : (actionType === "google_review" ? 12 : 120);
-  if (hasMemberCompletedEngagementAction(businessId, memberId, actionType, cooldown)) {
+  const business = getBusinessById(businessId);
+  const programType = business ? resolveBusinessProgramType(business) : "points";
+  const socialFollow = isSocialFollowActionType(actionType);
+  if (programType === "stamps" && socialFollow) {
+    if (hasMemberCompletedAnySocialFollow(businessId, memberId, cooldown)) {
+      return { error: "already_done", alreadyDone: true };
+    }
+  } else if (hasMemberCompletedEngagementAction(businessId, memberId, actionType, cooldown)) {
     return { error: "already_done", alreadyDone: true };
   }
   const status = "approved";
-  const rewardAmount = Math.max(1, Math.min(200, Math.floor(Number(config.points) || 1)));
-  const business = getBusinessById(businessId);
-  const programType = business ? resolveBusinessProgramType(business) : "points";
+  let rewardAmount = Math.max(1, Math.min(200, Math.floor(Number(config.points) || 1)));
+  if (programType === "stamps" && socialFollow) {
+    rewardAmount = 1;
+  }
   const id = randomUUID();
   db.prepare(
     `INSERT INTO engagement_completions (id, business_id, member_id, action_type, points_granted, status, proof_id, proof_score, created_at)

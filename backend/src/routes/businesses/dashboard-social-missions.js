@@ -5,7 +5,7 @@
 import { Router } from "express";
 import { getDb } from "../../db/connection.js";
 import { getEngagementRewards } from "../../db.js";
-import { updateBusiness } from "../../db/businesses.js";
+import { updateBusiness, resolveBusinessProgramType } from "../../db/businesses.js";
 import { ensureDashboardAccess } from "./shared.js";
 
 const router = Router({ mergeParams: true });
@@ -82,6 +82,7 @@ router.patch("/social-missions", (req, res) => {
   const body = req.body || {};
 
   const rewards = getEngagementRewards(business.id);
+  const programType = resolveBusinessProgramType(business);
   let changed = false;
 
   for (const net of SOCIAL_NETWORKS) {
@@ -95,7 +96,10 @@ router.patch("/social-missions", (req, res) => {
       : extractUsername(net, prev.url || "");
     const url = username ? buildUrl(net, username) : (prev.url || "");
     const enabled = patch.enabled !== undefined ? !!patch.enabled : !!(prev.enabled);
-    const pts = patch.points !== undefined ? Math.max(1, Math.min(200, Math.floor(Number(patch.points) || 20))) : (Number(prev.points) || 20);
+    let pts = patch.points !== undefined ? Math.max(1, Math.min(200, Math.floor(Number(patch.points) || 20))) : (Number(prev.points) || 20);
+    if (programType === "stamps") {
+      pts = 1;
+    }
 
     rewards[key] = { ...prev, url, enabled: enabled && !!url, points: pts };
     changed = true;
