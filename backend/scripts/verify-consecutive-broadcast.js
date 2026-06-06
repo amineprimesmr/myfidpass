@@ -31,7 +31,7 @@ const {
   bumpBusinessPassRefreshTimestamp,
   updateBusiness,
 } = await import("../src/db/businesses.js");
-const { setLastBroadcastMessage } = await import("../src/db/categories.js");
+const { setLastBroadcastMessage } = await import("../src/db/businesses.js");
 const { registerPassDevice, getUpdatedPassSerialNumbersForDevice } = await import("../src/db/passes.js");
 const { setBusinessAssetData } = await import("../src/db/business-assets.js");
 const { formatUtcSqlWithMs } = await import("../src/db/datetime-sql.js");

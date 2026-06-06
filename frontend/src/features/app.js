@@ -5998,15 +5998,15 @@ function initAppDashboard(slug) {
     } catch (_) {}
   }
 
-  const NOTIF_FIXED_CATEGORIES = [
-    { id: "inactive_14d", name: "Client inactif depuis plus de 14 jours", color_hex: "#f59e0b" },
-    { id: "loyal_10_visits_month", name: "Client fidèle (+10 visites/mois)", color_hex: "#2563eb" },
+  const NOTIF_FIXED_SEGMENTS = [
+    { id: "inactive14", name: "Client inactif depuis plus de 14 jours", color_hex: "#f59e0b" },
+    { id: "recurrent", name: "Client fidèle (+10 visites/mois)", color_hex: "#2563eb" },
   ];
   let notifCategoriesCache = [];
 
   async function loadAppNotificationCategories() {
     try {
-      const categories = NOTIF_FIXED_CATEGORIES;
+      const categories = NOTIF_FIXED_SEGMENTS;
       notifCategoriesCache = categories;
 
       const targetAll = document.getElementById("app-notif-target-all");
@@ -6225,18 +6225,27 @@ function initAppDashboard(slug) {
       }
       return;
     }
-    let categoryIds = undefined;
+    let segment = undefined;
     if (targetCategories?.checked) {
       const checked = document.querySelectorAll(".app-notif-category-cb:checked");
-      categoryIds = Array.from(checked).map((c) => c.dataset.id).filter(Boolean);
-      if (categoryIds.length === 0) {
+      const ids = Array.from(checked).map((c) => c.dataset.id).filter(Boolean);
+      if (ids.length === 0) {
         if (notifFeedbackEl) {
-          notifFeedbackEl.textContent = "Cochez au moins une catégorie pour envoyer.";
+          notifFeedbackEl.textContent = "Cochez au moins un segment pour envoyer.";
           notifFeedbackEl.classList.remove("hidden", "success");
           notifFeedbackEl.classList.add("error");
         }
         return;
       }
+      if (ids.length > 1) {
+        if (notifFeedbackEl) {
+          notifFeedbackEl.textContent = "Choisissez un seul segment à la fois.";
+          notifFeedbackEl.classList.remove("hidden", "success");
+          notifFeedbackEl.classList.add("error");
+        }
+        return;
+      }
+      segment = ids[0];
     }
     notificationSendInFlight = true;
     if (btn) btn.disabled = true;
@@ -6260,7 +6269,7 @@ function initAppDashboard(slug) {
         body: JSON.stringify({
           title: titleEl?.value?.trim() || undefined,
           message,
-          ...(categoryIds && categoryIds.length > 0 ? { category_ids: categoryIds } : {}),
+          ...(segment ? { segment } : {}),
         }),
       });
       const data = await res.json().catch(() => ({}));

@@ -306,39 +306,8 @@ export function initDashboardPage() {
           diagEl.innerHTML = "";
         }
       }
-      await loadDashboardNotificationCategories();
-    } catch (_) {}
-  }
-
-  async function loadDashboardNotificationCategories() {
-    try {
-      const res = await api("/dashboard/categories");
-      if (!res.ok) return;
-      const data = await res.json();
-      const categories = data.categories || [];
       const wrap = document.getElementById("dashboard-notif-categories-wrap");
-      const listEl = document.getElementById("dashboard-notif-categories-list");
-      const targetAll = document.getElementById("dashboard-notif-target-all");
-      if (!wrap || !listEl) return;
-      if (categories.length === 0) {
-        wrap.classList.add("hidden");
-        return;
-      }
-      wrap.classList.remove("hidden");
-      listEl.innerHTML = categories
-        .map((c) => `<label class="dashboard-checkbox-label"><input type="checkbox" class="dashboard-notif-category-cb" data-id="${escapeHtml(c.id)}" /> ${escapeHtml(c.name)}</label>`)
-        .join("");
-      listEl.querySelectorAll(".dashboard-notif-category-cb").forEach((cb) => {
-        cb.addEventListener("change", () => {
-          if (cb.checked && targetAll) targetAll.checked = false;
-        });
-      });
-      if (targetAll && !targetAll.dataset.notifCatListen) {
-        targetAll.dataset.notifCatListen = "1";
-        targetAll.addEventListener("change", () => {
-          if (targetAll.checked) listEl.querySelectorAll(".dashboard-notif-category-cb").forEach((c) => { c.checked = false; });
-        });
-      }
+      if (wrap) wrap.classList.add("hidden");
     } catch (_) {}
   }
 
@@ -353,18 +322,13 @@ export function initDashboardPage() {
       if (feedbackEl) { feedbackEl.textContent = "Saisissez un message."; feedbackEl.classList.remove("hidden", "success"); feedbackEl.classList.add("error"); }
       return;
     }
-    let categoryIds = undefined;
-    if (!targetAll?.checked) {
-      const checked = document.querySelectorAll(".dashboard-notif-category-cb:checked");
-      if (checked.length > 0) categoryIds = Array.from(checked).map((c) => c.dataset.id).filter(Boolean);
-    }
     if (btn) btn.disabled = true;
     if (feedbackEl) feedbackEl.classList.add("hidden");
     try {
       const res = await fetch(`${API_BASE}/api/businesses/${encodeURIComponent(slug)}/notifications/send?token=${encodeURIComponent(token)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: titleEl?.value?.trim() || undefined, message, ...(categoryIds && categoryIds.length > 0 ? { category_ids: categoryIds } : {}) }),
+        body: JSON.stringify({ title: titleEl?.value?.trim() || undefined, message }),
       });
       const data = await res.json().catch(() => ({}));
       if (feedbackEl) {

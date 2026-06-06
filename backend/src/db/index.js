@@ -17,7 +17,6 @@ export * from "./member-delete.js";
 export * from "./transactions.js";
 export * from "./subscriptions.js";
 export * from "./level.js";
-export * from "./categories.js";
 export * from "./passes.js";
 export * from "./webpush.js";
 export * from "./dashboard.js";

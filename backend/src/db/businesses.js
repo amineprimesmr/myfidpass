@@ -199,6 +199,16 @@ export function bumpBusinessPassRefreshTimestamp(businessId) {
   touchPassLastModifiedMs(businessId);
 }
 
+/** Dernier message broadcast campagne (séquence + horodatage pass). */
+export function setLastBroadcastMessage(businessId, message) {
+  if (!businessId || message == null) return;
+  const now = nowUtcSqlWithMs();
+  db.prepare(
+    "UPDATE businesses SET last_broadcast_message = ?, last_broadcast_at = ?, broadcast_send_seq = COALESCE(broadcast_send_seq, 0) + 1 WHERE id = ?"
+  ).run(String(message).trim().slice(0, 500), now, businessId);
+  touchPassLastModifiedMs(businessId);
+}
+
 export function updateBusiness(businessId, updates) {
   const b = getBusinessById(businessId);
   if (!b) return null;

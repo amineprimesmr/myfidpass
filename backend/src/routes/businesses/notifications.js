@@ -4,7 +4,6 @@
  */
 import { Router } from "express";
 import {
-  getMemberIdsInCategories,
   getMemberIdsBySegment,
   getWebPushSubscriptionsByBusiness,
   getWebPushSubscriptionsByBusinessFiltered,
@@ -96,8 +95,7 @@ export async function notifyHandler(req, res) {
   } catch (e) {
     return res.status(e.statusCode || 422).json(notificationIconRequiredHttpBody());
   }
-  const categoryIds = Array.isArray(req.body?.category_ids) ? req.body.category_ids.filter(Boolean) : null;
-  const memberIds = categoryIds && categoryIds.length > 0 ? getMemberIdsInCategories(business.id, categoryIds) : null;
+  const memberIds = null;
   const apiBase = getApiBase(req);
   const slug = req.params.slug ?? business.slug;
 
@@ -160,7 +158,7 @@ router.post("/send", async (req, res) => {
   try {
   const business = req.business;
   if (!ensureDashboardAccess(req, res, business)) return;
-  const { title, message, category_ids: reqCategoryIds, segment } = req.body || {};
+  const { title, message, segment } = req.body || {};
   if (!assertOperationalSubscription(req, res, business)) return;
   const body = (message || "").trim();
   if (!body) {
@@ -171,13 +169,10 @@ router.post("/send", async (req, res) => {
   } catch (e) {
     return res.status(e.statusCode || 422).json(notificationIconRequiredHttpBody());
   }
-  let memberIds;
-  if (segment && CAMPAIGN_SEGMENT_KEYS.includes(segment)) {
-    memberIds = getMemberIdsBySegment(business.id, segment);
-  } else {
-    const categoryIds = Array.isArray(reqCategoryIds) ? reqCategoryIds.filter(Boolean) : null;
-    memberIds = categoryIds && categoryIds.length > 0 ? getMemberIdsInCategories(business.id, categoryIds) : null;
-  }
+  const memberIds =
+    segment && CAMPAIGN_SEGMENT_KEYS.includes(segment)
+      ? getMemberIdsBySegment(business.id, segment)
+      : null;
   const apiBase = getApiBase(req);
   const slug = req.params.slug ?? business.slug;
   const webSubscriptions =
@@ -209,9 +204,7 @@ router.post("/send", async (req, res) => {
   const triggerName =
     segment && CAMPAIGN_SEGMENT_KEYS.includes(segment)
       ? `campaign_segment_${segment}`
-      : Array.isArray(reqCategoryIds) && reqCategoryIds.filter(Boolean).length > 0
-        ? "campaign_manual_categories"
-        : "campaign_manual";
+      : "campaign_manual";
 
   // Synchronise les textes de notification AVANT de créer le job, pour que le pass
   // refetché par les iPhones contienne déjà le bon changeMessage.

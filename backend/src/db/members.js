@@ -3,7 +3,6 @@
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
-import { getCategoryIdsForMembers } from "./categories.js";
 import { nowUtcSqlWithMs } from "./datetime-sql.js";
 import { computeStampRolloverState, normalizeStampBalance } from "../lib/stamps-cycle-math.js";
 
@@ -152,9 +151,7 @@ export function getMembersForBusiness(businessId, { search = "", limit = 50, off
   const countStmt = db.prepare(`SELECT COUNT(*) as n FROM members WHERE ${where}`);
   const rows = stmt.all(...params, limit, offset);
   const total = countStmt.get(...params)?.n ?? 0;
-  const catMap = getCategoryIdsForMembers(rows.map((m) => m.id));
-  const members = rows.map((m) => ({ ...m, category_ids: catMap.get(m.id) ?? [] }));
-  return { members, total };
+  return { members: rows, total };
 }
 
 /** Retourne les IDs des membres correspondant au segment (pour campagnes ciblées). */

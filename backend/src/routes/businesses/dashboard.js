@@ -22,13 +22,7 @@ import {
   getDashboardEvolutionForMonth,
   getMembersForBusiness,
   getTransactionsForBusiness,
-  getCategoriesForBusiness,
-  createCategory,
-  getCategoryById,
-  updateCategory,
-  deleteCategory,
   getMemberForBusiness,
-  setMemberCategories,
 } from "../../db.js";
 import { deleteMemberForBusiness, deleteAllMembersForBusiness } from "../../db/member-delete.js";
 import { getRoulettePublicSegments } from "../../db/games.js";
@@ -1393,47 +1387,6 @@ router.post("/members/:memberId/points/remove", postMemberPointsRemove);
 
 /** Même logique que PATCH /members/:id — mise à jour profil depuis le panneau Membres. */
 router.patch("/members/:memberId", patchMemberProfile);
-
-// ——— Categories ———
-router.get("/categories", (req, res) => {
-  const categories = getCategoriesForBusiness(req.business.id);
-  res.json({ categories });
-});
-
-router.post("/categories", (req, res) => {
-  const name = (req.body?.name ?? "").trim();
-  if (!name) return res.status(400).json({ error: "Le nom est obligatoire" });
-  const colorHex = req.body?.color_hex ?? req.body?.colorHex ?? null;
-  const sortOrder = req.body?.sort_order ?? req.body?.sortOrder ?? 0;
-  const category = createCategory({ businessId: req.business.id, name, colorHex, sortOrder });
-  res.status(201).json(category);
-});
-
-router.patch("/categories/:categoryId", (req, res) => {
-  const cat = getCategoryById(req.params.categoryId);
-  if (!cat || cat.business_id !== req.business.id) return res.status(404).json({ error: "Catégorie introuvable" });
-  const name = req.body?.name != null ? String(req.body.name).trim() : undefined;
-  const colorHex = req.body?.color_hex !== undefined ? (req.body.color_hex ? String(req.body.color_hex).trim() : null) : undefined;
-  const sortOrder = req.body?.sort_order !== undefined ? Number(req.body.sort_order) : undefined;
-  const updated = updateCategory(req.params.categoryId, { name, colorHex, sortOrder });
-  res.json(updated);
-});
-
-router.delete("/categories/:categoryId", (req, res) => {
-  const cat = getCategoryById(req.params.categoryId);
-  if (!cat || cat.business_id !== req.business.id) return res.status(404).json({ error: "Catégorie introuvable" });
-  deleteCategory(req.params.categoryId);
-  res.status(204).end();
-});
-
-router.post("/members/:memberId/categories", (req, res) => {
-  const member = getMemberForBusiness(req.params.memberId, req.business.id);
-  if (!member) return res.status(404).json({ error: "Membre introuvable" });
-  const categoryIds = Array.isArray(req.body?.category_ids) ? req.body.category_ids : (req.body?.categoryIds || []);
-  const ids = categoryIds.filter((id) => id && getCategoryById(id)?.business_id === req.business.id);
-  setMemberCategories(req.params.memberId, ids);
-  res.status(200).json({ ok: true });
-});
 
 // ——— Transactions + export ———
 router.get("/transactions/export", (req, res) => {
