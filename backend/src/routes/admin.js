@@ -13,7 +13,9 @@ import {
   listUsersForAdmin,
   isUserAdmin,
 } from "../db/users.js";
-import { getBusinessById, listAllBusinessesForAdmin } from "../db/businesses.js";
+import { getBusinessById, getBusinessForAdminById, listAllBusinessesForAdmin } from "../db/businesses.js";
+import { provisionMerchantAccountByAdmin } from "../lib/admin-provision-merchant.js";
+import { insertAdminEvent } from "../db/admin-events.js";
 import { deleteBusinessCompletely, deleteUserAccount } from "../db/reset.js";
 import {
   cancelBusinessSubscriptionBeforeDeletion,
@@ -203,6 +205,65 @@ router.get("/businesses", (req, res) => {
   }
 });
 
+/**
+ * POST /api/admin/merchant-accounts
+ * Crée un compte commerçant (ou réutilise l’e-mail existant) + un commerce.
+ * Body: { email, business_name, owner_name?, slug?, organization_name?, password? }
+ */
+router.post("/merchant-accounts", async (req, res) => {
+  try {
+    const result = await provisionMerchantAccountByAdmin({
+      email: req.body?.email,
+      ownerName: req.body?.owner_name ?? req.body?.ownerName,
+      businessName: req.body?.business_name ?? req.body?.businessName,
+      slug: req.body?.slug,
+      organizationName: req.body?.organization_name ?? req.body?.organizationName,
+      password: req.body?.password,
+    });
+    if (!result.ok) {
+      const status =
+        result.code === "slug_taken" || result.code === "email_taken" ? 409 : 400;
+      return res.status(status).json({ error: result.error, code: result.code });
+    }
+
+    const adminRow = getBusinessForAdminById(result.business.id);
+    const businessPayload = enrichAdminBusinessRow(adminRow ?? result.business);
+
+    insertAdminEvent({
+      eventType: "admin_provision_merchant",
+      payloadJson: {
+        user_id: result.user?.id,
+        user_created: result.user_created,
+        business_id: result.business.id,
+        slug: result.business.slug,
+        by_admin_id: req.user?.id,
+      },
+    });
+
+    console.info("[admin] provision-merchant", {
+      userId: result.user?.id,
+      userCreated: result.user_created,
+      businessId: result.business.id,
+      slug: result.business.slug,
+      byAdminId: req.user?.id,
+    });
+
+    return res.status(201).json({
+      ok: true,
+      user_created: result.user_created,
+      user: {
+        id: result.user?.id,
+        email: result.user?.email,
+        name: result.user?.name ?? null,
+      },
+      business: businessPayload,
+    });
+  } catch (e) {
+    console.error("[admin] merchant-accounts:", e);
+    return res.status(500).json({ error: "Erreur lors de la création du compte commerçant." });
+  }
+});
+
 router.get("/events", (req, res) => {
   try {
     const lim = Math.min(500, Math.max(1, parseInt(String(req.query.limit || "100"), 10) || 100));
@@ -287,27 +348,20 @@ const ADMIN_DELETE_CONFIRM = "SUPPRIMER";
 
 /**
  * DELETE /api/admin/businesses/:businessId
- * Body: { "confirm": "SUPPRIMER", "slug": "slug-du-commerce" }
+ * Body: { "confirm": "SUPPRIMER" } — admin plateforme uniquement (pas de ressaisie slug).
  */
 router.delete("/businesses/:businessId", async (req, res) => {
   const confirm = String(req.body?.confirm ?? "").trim();
   if (confirm !== ADMIN_DELETE_CONFIRM) {
     return res.status(400).json({
-      error: 'Confirmation requise : body { "confirm": "SUPPRIMER", "slug": "…" }.',
+      error: 'Confirmation requise : body { "confirm": "SUPPRIMER" }.',
       code: "confirm_required",
     });
   }
   const businessId = String(req.params.businessId ?? "").trim();
-  const slugConfirm = String(req.body?.slug ?? "").trim().toLowerCase();
   if (!businessId) return res.status(400).json({ error: "Commerce introuvable." });
   const business = getBusinessById(businessId);
   if (!business) return res.status(404).json({ error: "Commerce introuvable.", code: "business_not_found" });
-  if (!slugConfirm || slugConfirm !== String(business.slug || "").trim().toLowerCase()) {
-    return res.status(400).json({
-      error: "Le slug saisi ne correspond pas à ce commerce.",
-      code: "slug_mismatch",
-    });
-  }
   try {
     const billing = await cancelBusinessSubscriptionBeforeDeletion(business.user_id, business.id);
     const deleted = deleteBusinessCompletely(business.id);
@@ -334,18 +388,17 @@ router.delete("/businesses/:businessId", async (req, res) => {
 
 /**
  * DELETE /api/admin/users/:userId
- * Body: { "confirm": "SUPPRIMER", "email": "email@du-compte" }
+ * Body: { "confirm": "SUPPRIMER" } — admin plateforme uniquement (pas de ressaisie e-mail).
  */
 router.delete("/users/:userId", async (req, res) => {
   const confirm = String(req.body?.confirm ?? "").trim();
   if (confirm !== ADMIN_DELETE_CONFIRM) {
     return res.status(400).json({
-      error: 'Confirmation requise : body { "confirm": "SUPPRIMER", "email": "…" }.',
+      error: 'Confirmation requise : body { "confirm": "SUPPRIMER" }.',
       code: "confirm_required",
     });
   }
   const userId = String(req.params.userId ?? "").trim();
-  const emailConfirm = String(req.body?.email ?? "").trim().toLowerCase();
   if (!userId) return res.status(400).json({ error: "Compte introuvable." });
   if (userId === String(req.user?.id || "")) {
     return res.status(400).json({
@@ -359,13 +412,6 @@ router.delete("/users/:userId", async (req, res) => {
     return res.status(403).json({
       error: "Impossible de supprimer un compte administrateur plateforme.",
       code: "cannot_delete_platform_admin",
-    });
-  }
-  const expectedEmail = String(user.email || "").trim().toLowerCase();
-  if (!emailConfirm || emailConfirm !== expectedEmail) {
-    return res.status(400).json({
-      error: "L’e-mail saisi ne correspond pas à ce compte.",
-      code: "email_mismatch",
     });
   }
   try {

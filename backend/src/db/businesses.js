@@ -93,6 +93,30 @@ export function listAllBusinessesForAdmin(p = {}) {
     .all(limit, offset);
 }
 
+/** Une ligne commerce pour la console admin (même projection que `listAllBusinessesForAdmin`). */
+export function getBusinessForAdminById(businessId) {
+  const id = String(businessId ?? "").trim();
+  if (!id) return null;
+  return (
+    db
+      .prepare(
+        `SELECT b.id, b.slug, b.name, b.organization_name, b.user_id, b.created_at, b.dashboard_token,
+      b.asset_logo_present, b.logo_updated_at,
+      b.asset_logo_icon_present, b.logo_icon_updated_at,
+      b.asset_notification_icon_present, b.notification_icon_updated_at,
+      u.email AS owner_email,
+      (SELECT COUNT(*) FROM members m WHERE m.business_id = b.id) AS member_count,
+      s.status AS owner_subscription_status,
+      s.plan_id AS owner_plan_id
+    FROM businesses b
+    LEFT JOIN users u ON u.id = b.user_id
+    LEFT JOIN subscriptions s ON s.user_id = b.user_id
+    WHERE b.id = ?`,
+      )
+      .get(id) || null
+  );
+}
+
 /**
  * Programme fidélité effectif (points vs tampons), aligné sur la logique du pass et du dashboard.
  * Source de vérité : `program_type` explicite. Les commerces historiques avec seulement `required_stamps`
