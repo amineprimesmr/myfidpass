@@ -9,6 +9,7 @@ import {
   getSubscriptionByUserId,
   getUserByEmail,
   hasStripeBackedActiveSubscription,
+  hasAppleBackedActiveSubscription,
   hasOperationalMerchantAccess,
   isUserInMerchantTrial,
   incrementFlyerAiGenerationsBonus,
@@ -17,10 +18,14 @@ import {
   upsertMerchantEntitlement,
   cancelNonStripeBackedSubscriptionRow,
   hasPaidMerchantSubscription,
+  getMerchantEntitlementByUserId,
+  resolveEffectiveAllowedBusinesses,
+  getDefaultAllowedBusinessesFromLegacyPlan,
 } from "../db.js";
 import {
   multiBusinessAnnualTotalCents,
   multiBusinessMonthlyTotalCents,
+  merchantPricingQuote,
   resolveBusinessSplitAmountCents,
 } from "../lib/merchant-multi-pricing.js";
 import { tryBeginStripeWebhookEvent, rollbackStripeWebhookEvent } from "../db/stripe-webhook-events.js";
@@ -123,6 +128,115 @@ function parseMerchantSlotCount(body) {
   const n = parseInt(String(raw ?? "1"), 10);
   if (!Number.isFinite(n) || n < 1) return 1;
   return Math.min(5, Math.floor(n));
+}
+
+/** Palier payé actuel (entitlements > metadata Stripe > plan legacy). */
+function resolveCurrentPaidSlots(userId, stripeSub = null) {
+  const ent = getMerchantEntitlementByUserId(userId);
+  if (ent?.allowed_businesses != null) {
+    return Math.min(5, Math.max(1, parseInt(String(ent.allowed_businesses), 10) || 1));
+  }
+  const meta = stripeSub?.metadata?.merchant_slots;
+  if (meta != null && String(meta).trim() !== "") {
+    return Math.min(5, Math.max(1, parseInt(String(meta), 10) || 1));
+  }
+  const sub = getSubscriptionByUserId(userId);
+  return Math.min(5, Math.max(1, getDefaultAllowedBusinessesFromLegacyPlan(sub?.plan_id)));
+}
+
+/** Ligne d’abonnement Stripe (catalogue 1 commerce ou `price_data` multi). */
+function buildSubscriptionLineItem(slots, plan) {
+  const n = Math.min(5, Math.max(1, Math.floor(Number(slots) || 1)));
+  const p = String(plan || "monthly").toLowerCase() === "annual" ? "annual" : "monthly";
+  if (n === 1) {
+    const priceId = p === "annual" ? PRICE_ID_ANNUAL : PRICE_ID_MONTHLY;
+    return { price: priceId, quantity: 1 };
+  }
+  const unitAmount = p === "annual" ? multiBusinessAnnualTotalCents(n) : multiBusinessMonthlyTotalCents(n);
+  const interval = p === "annual" ? "year" : "month";
+  return {
+    price_data: {
+      currency: "eur",
+      product_data: {
+        name:
+          n > 1
+            ? `MyFidpass — ${n} commerces (${p === "annual" ? "annuel" : "mensuel"})`
+            : `MyFidpass (${p === "annual" ? "annuel" : "mensuel"})`,
+      },
+      recurring: { interval },
+      unit_amount: unitAmount,
+    },
+    quantity: 1,
+  };
+}
+
+/**
+ * Monte le palier d’un abonnement Stripe unifié existant (proration).
+ * @returns {Promise<import("stripe").Stripe.Subscription>}
+ */
+async function performStripeMerchantSubscriptionUpgrade({ userId, targetSlots, plan }) {
+  if (!stripe) {
+    const err = new Error("stripe_not_configured");
+    err.code = "stripe_not_configured";
+    throw err;
+  }
+  if (hasAppleBackedActiveSubscription(userId)) {
+    const err = new Error("Abonnement géré par l’App Store. Passez au forfait supérieur depuis Réglages iOS.");
+    err.code = "apple_billing";
+    throw err;
+  }
+  const subRow = getSubscriptionByUserId(userId);
+  const subId = subscriptionIdOf(subRow);
+  if (!subId || !/^sub_[A-Za-z0-9]+$/.test(subId)) {
+    const err = new Error("Aucun abonnement Stripe actif à mettre à niveau.");
+    err.code = "no_stripe_subscription";
+    throw err;
+  }
+  const target = Math.min(5, Math.max(1, Math.floor(Number(targetSlots) || 1)));
+  const stripeSub = await stripe.subscriptions.retrieve(subId, { expand: ["items.data.price"] });
+  const currentSlots = resolveCurrentPaidSlots(userId, stripeSub);
+  if (target <= currentSlots) {
+    const err = new Error(`Palier cible (${target}) doit être supérieur au palier actuel (${currentSlots}).`);
+    err.code = "target_not_higher";
+    throw err;
+  }
+  const firstItem = stripeSub.items?.data?.[0];
+  const itemId = firstItem?.id;
+  if (!itemId) {
+    const err = new Error("Abonnement Stripe sans ligne de prix.");
+    err.code = "stripe_item_missing";
+    throw err;
+  }
+  const line = buildSubscriptionLineItem(target, plan);
+  const planIdForMetadata = target > 1 ? "pro" : "starter";
+  const billingModeMeta = target > 1 ? "unified_multi" : "unified_single";
+  const updated = await stripe.subscriptions.update(subId, {
+    items: [{ id: itemId, ...line }],
+    proration_behavior: "create_prorations",
+    payment_behavior: "pending_if_incomplete",
+    metadata: {
+      ...(stripeSub.metadata || {}),
+      user_id: String(userId),
+      plan: String(plan || "monthly").toLowerCase() === "annual" ? "annual" : "monthly",
+      plan_id: planIdForMetadata,
+      merchant_slots: String(target),
+      billing_mode: billingModeMeta,
+    },
+    expand: [
+      "latest_invoice.confirmation_secret",
+      "latest_invoice.payment_intent",
+      "pending_setup_intent",
+    ],
+  });
+  await syncSubscriptionFromStripeObject(updated, userId);
+  upsertMerchantEntitlement({
+    userId,
+    allowedBusinesses: target,
+    billingProvider: "stripe",
+    status: isStripeSubscriptionStatusPaying(updated.status) ? "active" : "inactive",
+    source: "stripe_unified_subscription",
+  });
+  return updated;
 }
 
 function getTrialDaysForPlan(plan) {
@@ -270,6 +384,83 @@ router.post("/create-checkout-session", requireAuth, async (req, res) => {
 });
 
 /**
+ * GET /api/payment/merchant-pricing-quote?from=1&to=2
+ * Devis mensuel / annuel pour passage d’un palier multi-commerces à un autre.
+ */
+router.get("/merchant-pricing-quote", requireAuth, (req, res) => {
+  const from = parseInt(String(req.query?.from ?? "1"), 10);
+  const to = parseInt(String(req.query?.to ?? from), 10);
+  const quote = merchantPricingQuote(from, to);
+  const userId = String(req.user.id);
+  const current = resolveEffectiveAllowedBusinesses(userId);
+  return res.json({
+    ...quote,
+    current_allowed_slots: current,
+    used_businesses: getBusinessesByUserId(userId).length,
+  });
+});
+
+/**
+ * POST /api/payment/upgrade-merchant-subscription
+ * Monte le palier multi-commerces d’un abonnement Stripe unifié (proration).
+ * Body: { slots | merchant_slots, plan?: "monthly"|"annual" }
+ */
+router.post("/upgrade-merchant-subscription", requireAuth, async (req, res) => {
+  if (!stripe) {
+    return res.status(503).json({ error: "Paiement non configuré", code: "stripe_not_configured" });
+  }
+  const userId = String(req.user.id);
+  const plan = String(req.body?.plan || "monthly").toLowerCase() === "annual" ? "annual" : "monthly";
+  const targetSlots = parseMerchantSlotCount(req.body);
+  try {
+    const currentSlots = resolveCurrentPaidSlots(userId);
+    if (targetSlots <= currentSlots) {
+      return res.status(400).json({
+        error: `Palier cible (${targetSlots}) doit être supérieur au palier actuel (${currentSlots}).`,
+        code: "target_not_higher",
+        current_slots: currentSlots,
+      });
+    }
+    const updated = await performStripeMerchantSubscriptionUpgrade({
+      userId,
+      targetSlots,
+      plan,
+    });
+    const secretResult = await getClientSecretForEmbeddedSubscription(updated);
+    const quote = merchantPricingQuote(currentSlots, targetSlots);
+    if (secretResult?.clientSecret) {
+      return res.json({
+        upgraded: true,
+        client_secret: secretResult.clientSecret,
+        confirm_mode: secretResult.mode,
+        subscription_id: updated.id,
+        quote,
+        current_slots: currentSlots,
+        target_slots: targetSlots,
+      });
+    }
+    return res.json({
+      upgraded: true,
+      no_payment_required: true,
+      subscription_id: updated.id,
+      quote,
+      current_slots: currentSlots,
+      target_slots: targetSlots,
+    });
+  } catch (err) {
+    const code = err?.code || "upgrade_failed";
+    if (code === "apple_billing") {
+      return res.status(409).json({ error: err.message, code });
+    }
+    if (code === "no_stripe_subscription" || code === "target_not_higher") {
+      return res.status(400).json({ error: err.message, code });
+    }
+    console.error("[payment] upgrade-merchant-subscription:", err?.message || err);
+    return res.status(500).json({ error: err.message || "Impossible de mettre à niveau l’abonnement", code });
+  }
+});
+
+/**
  * POST /api/payment/create-embedded-subscription
  * Abonnement avec Stripe Payment Element (carte, Apple Pay, Google Pay) sur myfidpass.fr — sans redirection Checkout hébergé.
  * Réponse : { client_secret, confirm_mode, subscription_id } — `confirm_mode` = "payment" | "setup" (essai Stripe seulement sur l’annuel si jours > 0 : SetupIntent 0 €).
@@ -350,9 +541,51 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
     ]);
 
     if (hasStripeBackedActiveSubscription(userId)) {
+      const currentSlots = resolveCurrentPaidSlots(userId);
+      if (slots > currentSlots) {
+        try {
+          const upgraded = await performStripeMerchantSubscriptionUpgrade({
+            userId,
+            targetSlots: slots,
+            plan,
+          });
+          const secretResult = await getClientSecretForEmbeddedSubscription(upgraded);
+          const quote = merchantPricingQuote(currentSlots, slots);
+          if (secretResult?.clientSecret) {
+            return res.json({
+              upgraded: true,
+              client_secret: secretResult.clientSecret,
+              confirm_mode: secretResult.mode,
+              subscription_id: upgraded.id,
+              quote,
+              current_slots: currentSlots,
+              target_slots: slots,
+            });
+          }
+          return res.json({
+            upgraded: true,
+            no_payment_required: true,
+            subscription_id: upgraded.id,
+            quote,
+            current_slots: currentSlots,
+            target_slots: slots,
+          });
+        } catch (upgradeErr) {
+          const code = upgradeErr?.code || "upgrade_failed";
+          if (code === "apple_billing") {
+            return res.status(409).json({ error: upgradeErr.message, code });
+          }
+          console.error("[payment] embedded upgrade:", upgradeErr?.message || upgradeErr);
+          return res.status(500).json({
+            error: upgradeErr.message || "Impossible de mettre à niveau l’abonnement",
+            code,
+          });
+        }
+      }
       return res.status(409).json({
         error: "Un abonnement actif est déjà associé à ce compte.",
         code: "already_subscribed",
+        current_slots: currentSlots,
       });
     }
 
@@ -378,8 +611,8 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
       ],
     };
 
+    subscriptionParams.items = [buildSubscriptionLineItem(slots, plan)];
     if (useCatalogPrice) {
-      subscriptionParams.items = [{ price: priceId, quantity: 1 }];
       if (plan === "monthly" && STRIPE_COUPON_ID_FIRST_MONTH_1_EUR) {
         subscriptionParams.discounts = [{ coupon: STRIPE_COUPON_ID_FIRST_MONTH_1_EUR }];
       } else if (
@@ -389,26 +622,6 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
       ) {
         subscriptionParams.discounts = [{ coupon: STRIPE_COUPON_ID_ANNUAL_FIRST_1_EUR }];
       }
-    } else {
-      const unitAmount =
-        plan === "annual" ? multiBusinessAnnualTotalCents(slots) : multiBusinessMonthlyTotalCents(slots);
-      const interval = plan === "annual" ? "year" : "month";
-      subscriptionParams.items = [
-        {
-          price_data: {
-            currency: "eur",
-            product_data: {
-              name:
-                slots > 1
-                  ? `MyFidpass — ${slots} commerces (${plan === "annual" ? "annuel" : "mensuel"})`
-                  : `MyFidpass (${plan === "annual" ? "annuel" : "mensuel"})`,
-            },
-            recurring: { interval },
-            unit_amount: unitAmount,
-          },
-          quantity: 1,
-        },
-      ];
     }
 
     const subscription = await stripe.subscriptions.create(subscriptionParams);

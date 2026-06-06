@@ -29,7 +29,10 @@ import { getRoulettePublicSegments } from "../../db/games.js";
 import { getMatchPredictionConfig } from "../../db/match-predictions.js";
 import { resolveBusinessProgramType } from "../../db/businesses.js";
 import { applyProgramTypeSwitchSideEffects } from "../../lib/program-type-switch.js";
-import { resetAllMemberBalancesForBusiness } from "../../db/members.js";
+import {
+  resetAllMemberBalancesForBusiness,
+  purgeTransactionsForBusiness,
+} from "../../db/members.js";
 import { sendPassKitUpdateIfCustomerAlertsAllowed, pushPassKitUpdateForAllBusinessPasses } from "../../lib/passkit-member-push.js";
 import {
   ensureDashboardAccess,
@@ -877,6 +880,7 @@ router.patch("/settings", async (req, res) => {
       fromType: programTypeSwitch.prevType,
       toType: programTypeSwitch.nextType,
     });
+    purgeTransactionsForBusiness(business.id);
     pushPassKitUpdateForAllBusinessPasses(business.id, "program_mode_switch").catch((err) => {
       logger.warn({ err, businessId: business.id }, "[dashboard] PassKit push after program switch");
     });

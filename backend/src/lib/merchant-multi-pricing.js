@@ -57,3 +57,43 @@ export function resolveBusinessSplitAmountCents(totalBusinesses, businessIndexZe
     interval === "year" ? multiBusinessAnnualTotalCents(n) : multiBusinessMonthlyTotalCents(n);
   return amountCentsForSplitIndex(total, n, businessIndexZeroBased);
 }
+
+/** Affichage EUR (ex. `49,99 €`). */
+export function formatEuroFromCents(cents) {
+  const n = Math.max(0, Math.floor(Number(cents) || 0));
+  const euros = (n / 100).toFixed(2).replace(".", ",");
+  return `${euros} €`;
+}
+
+/**
+ * Devis passage d’un palier à un autre (mensuel).
+ * @param {number} fromSlots — quota actuellement payé (1–5)
+ * @param {number} toSlots — quota cible (1–5, ≥ fromSlots)
+ */
+export function merchantPricingQuote(fromSlots, toSlots) {
+  const from = Math.min(5, Math.max(1, Math.floor(Number(fromSlots) || 1)));
+  const to = Math.min(5, Math.max(from, Math.floor(Number(toSlots) || from)));
+  const fromMonthlyCents = multiBusinessMonthlyTotalCents(from);
+  const toMonthlyCents = multiBusinessMonthlyTotalCents(to);
+  const fromAnnualCents = multiBusinessAnnualTotalCents(from);
+  const toAnnualCents = multiBusinessAnnualTotalCents(to);
+  const incrementalMonthlyCents = Math.max(0, toMonthlyCents - fromMonthlyCents);
+  const incrementalAnnualCents = Math.max(0, toAnnualCents - fromAnnualCents);
+  return {
+    from_slots: from,
+    to_slots: to,
+    from_monthly_cents: fromMonthlyCents,
+    to_monthly_cents: toMonthlyCents,
+    from_annual_cents: fromAnnualCents,
+    to_annual_cents: toAnnualCents,
+    incremental_monthly_cents: incrementalMonthlyCents,
+    incremental_annual_cents: incrementalAnnualCents,
+    from_monthly_label: formatEuroFromCents(fromMonthlyCents),
+    to_monthly_label: formatEuroFromCents(toMonthlyCents),
+    incremental_monthly_label: formatEuroFromCents(incrementalMonthlyCents),
+    from_annual_label: formatEuroFromCents(fromAnnualCents),
+    to_annual_label: formatEuroFromCents(toAnnualCents),
+    incremental_annual_label: formatEuroFromCents(incrementalAnnualCents),
+    is_upgrade: to > from,
+  };
+}

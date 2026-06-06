@@ -111,7 +111,12 @@ export default function SaasProPaymentPage() {
     return Math.min(5, Math.max(1, n));
   })();
   const [annual, setAnnual] = useState(initialPlanAnnual);
-  const commerceSlots = initialCommerceSlots;
+  const [commerceSlots, setCommerceSlots] = useState(initialCommerceSlots);
+  const [currentAllowedSlots, setCurrentAllowedSlots] = useState(1);
+  const [usedBusinesses, setUsedBusinesses] = useState(0);
+  const [merchantBusinesses, setMerchantBusinesses] = useState([]);
+  const [pricingQuote, setPricingQuote] = useState(null);
+  const [isUpgradeFlow, setIsUpgradeFlow] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [country, setCountry] = useState("FR");
   const [saveCard, setSaveCard] = useState(false);
@@ -171,6 +176,81 @@ export default function SaasProPaymentPage() {
   useEffect(() => {
     wireLiquidGlassTrackPrevious(liquidGlassSwitcherRef.current);
   }, [isPaymentRoute]);
+
+  const minSelectableSlots = Math.min(
+    5,
+    Math.max(
+      1,
+      isUpgradeFlow
+        ? Math.max(currentAllowedSlots + 1, usedBusinesses + 1)
+        : commerceSlots
+    )
+  );
+
+  useEffect(() => {
+    if (!isPaymentRoute) return;
+    let cancelled = false;
+    const loadEntitlements = async () => {
+      const token = await ensureWebSessionFresh();
+      if (!token || cancelled) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const me = await res.json().catch(() => ({}));
+        if (!res.ok || cancelled) return;
+        const allowed = Math.min(
+          5,
+          Math.max(1, parseInt(String(me?.entitlements?.allowed_businesses ?? 1), 10) || 1)
+        );
+        const used = Math.max(
+          0,
+          parseInt(String(me?.entitlements?.used_businesses ?? me?.businesses?.length ?? 0), 10) || 0
+        );
+        const paid = me?.has_paid_merchant_subscription === true;
+        const upgrade = paid && used >= allowed;
+        setCurrentAllowedSlots(allowed);
+        setUsedBusinesses(used);
+        setMerchantBusinesses(Array.isArray(me?.businesses) ? me.businesses : []);
+        setIsUpgradeFlow(upgrade);
+        if (upgrade) {
+          const next = Math.min(5, Math.max(allowed + 1, used + 1, commerceSlots));
+          setCommerceSlots(next);
+        }
+      } catch (_) {
+        /* garde les valeurs par défaut */
+      }
+    };
+    void loadEntitlements();
+    return () => {
+      cancelled = true;
+    };
+  }, [isPaymentRoute, authHandoffTick]);
+
+  useEffect(() => {
+    if (!isPaymentRoute) return;
+    let cancelled = false;
+    const from = isUpgradeFlow ? currentAllowedSlots : Math.max(1, commerceSlots - 1);
+    const to = commerceSlots;
+    const loadQuote = async () => {
+      const token = await ensureWebSessionFresh();
+      if (!token || cancelled) return;
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/payment/merchant-pricing-quote?from=${from}&to=${to}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const data = await res.json().catch(() => ({}));
+        if (!cancelled && res.ok) setPricingQuote(data);
+      } catch (_) {
+        if (!cancelled) setPricingQuote(null);
+      }
+    };
+    void loadQuote();
+    return () => {
+      cancelled = true;
+    };
+  }, [isPaymentRoute, commerceSlots, currentAllowedSlots, isUpgradeFlow, authHandoffTick]);
 
   useEffect(() => {
     if (!isPaymentRoute) return;
@@ -236,6 +316,10 @@ export default function SaasProPaymentPage() {
             return;
           }
           throw new Error(data?.error || "Impossible de préparer le paiement.");
+        }
+        if (data?.upgraded && data?.no_payment_required) {
+          navigateAfterSuccessfulPayment(isAppEmbed);
+          return;
         }
         const clientSecret = String(data?.client_secret || "");
         const nextMode = String(data?.confirm_mode || "payment");
@@ -433,7 +517,7 @@ export default function SaasProPaymentPage() {
         paymentRequestButtonElementRef.current = null;
       } catch (_) {}
     };
-  }, [isPaymentRoute, annual, saveCard, authHandoffTick]);
+  }, [isPaymentRoute, annual, saveCard, authHandoffTick, commerceSlots]);
 
   useEffect(() => {
     setElementsReady(Boolean(cardState.number && cardState.expiry && cardState.cvc));
@@ -445,9 +529,28 @@ export default function SaasProPaymentPage() {
     if (annual) renewAnchor.setFullYear(renewAnchor.getFullYear() + 1);
     else renewAnchor.setMonth(renewAnchor.getMonth() + 1);
     const renewSubtitle = annual
-      ? "Soit 399\u00a0€ facturés\u00a0annuellement,\u00a0sans\u00a0engagement."
-      : "Sans engagement, annulable à tout moment\u202f!";
-    const renewAmount = annual ? "34 € /mois" : "49,99 € /mois";
+      ? `Soit ${pricingQuote?.to_annual_label || "399 €"} facturés annuellement, sans engagement.`
+      : "Sans engagement, annulable à tout moment !";
+    const renewAmount = annual
+      ? `${pricingQuote?.to_annual_label || "399 €"} /an`
+      : `${pricingQuote?.to_monthly_label || "49,99 €"} /mois`;
+
+    if (isUpgradeFlow && pricingQuote?.is_upgrade) {
+      return [
+        {
+          title: "Aujourd’hui",
+          subtitle: `Passage de ${pricingQuote.from_monthly_label} à ${pricingQuote.to_monthly_label} /mois`,
+          amount: `+${pricingQuote.incremental_monthly_label}`,
+          icon: "lock",
+        },
+        {
+          title: formatDateFr(renewAnchor),
+          subtitle: renewSubtitle,
+          amount: renewAmount,
+          icon: "check",
+        },
+      ];
+    }
 
     return [
       { title: "Aujourd’hui", subtitle: "Offre premier mois", amount: "Payez 1€", icon: "lock" },
@@ -458,11 +561,11 @@ export default function SaasProPaymentPage() {
         icon: "check",
       },
     ];
-  }, [annual]);
+  }, [annual, isUpgradeFlow, pricingQuote]);
 
   const priceLine = annual
-    ? { main: "399€", detail: "facturé annuellement" }
-    : { main: "49,99€", detail: "par mois" };
+    ? { main: pricingQuote?.to_annual_label?.replace(" €", "€") || "399€", detail: "facturé annuellement" }
+    : { main: pricingQuote?.to_monthly_label?.replace(" €", "€") || "49,99€", detail: "par mois" };
   const compareRows = expanded ? [...BASE_COMPARE, ...EXTRA_COMPARE] : BASE_COMPARE;
 
   const handlePay = async () => {
@@ -527,14 +630,69 @@ export default function SaasProPaymentPage() {
           ) : null}
           <h1>DÉBLOQUEZ TOUT</h1>
           <p className="saas-pay-checkout-trust-lead">
-            {annual ? (
+            {isUpgradeFlow && pricingQuote?.is_upgrade ? (
               <>
-                Commencez pour <strong>1&nbsp;€</strong>, puis <strong>399&nbsp;€&nbsp;/&nbsp;an</strong>
+                Vous payez <strong>{pricingQuote.from_monthly_label}</strong> / mois →{" "}
+                <strong>{pricingQuote.to_monthly_label}</strong> / mois (
+                <strong>+{pricingQuote.incremental_monthly_label}</strong> / mois)
+              </>
+            ) : annual ? (
+              <>
+                Commencez pour <strong>1&nbsp;€</strong>, puis{" "}
+                <strong>{pricingQuote?.to_annual_label || "399 €"}&nbsp;/&nbsp;an</strong>
               </>
             ) : (
-              <>Commencez à fidéliser dès aujourd&apos;hui pour 1&nbsp;€</>
+              <>
+                Commencez à fidéliser dès aujourd&apos;hui pour 1&nbsp;€, puis{" "}
+                <strong>{pricingQuote?.to_monthly_label || "49,99 €"}</strong> / mois
+              </>
             )}
           </p>
+          {merchantBusinesses.length > 0 || isUpgradeFlow ? (
+            <div className="saas-pay-commerce-quota" style={{ marginTop: 14, textAlign: "left", width: "100%" }}>
+              <p style={{ fontSize: 12, fontWeight: 700, opacity: 0.55, margin: "0 0 8px", textTransform: "uppercase" }}>
+                Vos commerces ({usedBusinesses} / {currentAllowedSlots})
+              </p>
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 10px" }}>
+                {merchantBusinesses.map((b) => (
+                  <li key={b.id || b.slug} style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>
+                    {b.organization_name || b.name || b.slug}
+                  </li>
+                ))}
+                {isUpgradeFlow
+                  ? Array.from({
+                      length: Math.max(0, commerceSlots - Math.max(usedBusinesses, merchantBusinesses.length)),
+                    }).map((_, i) => (
+                      <li key={`pending-${i}`} style={{ fontSize: 13, opacity: 0.65, marginBottom: 4 }}>
+                        + Nouveau commerce (après paiement)
+                      </li>
+                    ))
+                  : null}
+              </ul>
+              {isUpgradeFlow ? (
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {Array.from({ length: 5 - minSelectableSlots + 1 }, (_, i) => minSelectableSlots + i).map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setCommerceSlots(n)}
+                      style={{
+                        border: "none",
+                        borderRadius: 10,
+                        padding: "8px 14px",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        background: commerceSlots === n ? "#1d7cf2" : "rgba(255,255,255,0.12)",
+                        color: commerceSlots === n ? "#fff" : "inherit",
+                      }}
+                    >
+                      {n} commerces
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
           <div className="saas-pay-checkout-trust-badge" role="status">
             <div className="saas-pay-checkout-trust-badge__stack" aria-hidden="true">
               {AVA.map((src, idx) => (

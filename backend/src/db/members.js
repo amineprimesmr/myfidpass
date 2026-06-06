@@ -116,6 +116,20 @@ export function resetAllMemberBalancesForBusiness(businessId, meta = {}) {
   return { resetCount, ...meta };
 }
 
+/** Efface l’historique transactions du commerce (bascule programme points ↔ tampons). */
+export function purgeTransactionsForBusiness(businessId) {
+  if (!businessId) return 0;
+  const r = db.prepare("DELETE FROM transactions WHERE business_id = ?").run(businessId);
+  return Number(r.changes) || 0;
+}
+
+/** Nombre de membres avec carte pour ce commerce (hors aperçu Wallet commerçant si exclu ailleurs). */
+export function countMembersForBusiness(businessId) {
+  if (!businessId) return 0;
+  const row = db.prepare("SELECT COUNT(*) AS n FROM members WHERE business_id = ?").get(businessId);
+  return Number(row?.n) || 0;
+}
+
 export function touchMemberLastVisit(memberId) {
   if (!memberId) return;
   db.prepare("UPDATE members SET last_visit_at = ? WHERE id = ?").run(nowUtcSqlWithMs(), memberId);

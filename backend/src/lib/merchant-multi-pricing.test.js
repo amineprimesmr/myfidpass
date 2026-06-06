@@ -4,6 +4,7 @@ import {
   multiBusinessAnnualTotalCents,
   amountCentsForSplitIndex,
   resolveBusinessSplitAmountCents,
+  merchantPricingQuote,
   MULTI_BUSINESS_MONTHLY_1_CENTS,
   MULTI_BUSINESS_ANNUAL_1_REFERENCE_CENTS,
 } from "./merchant-multi-pricing.js";
@@ -38,5 +39,13 @@ describe("merchant-multi-pricing", () => {
     expect(amountCentsForSplitIndex(100, 3, 0)).toBe(34);
     expect(amountCentsForSplitIndex(100, 3, 1)).toBe(33);
     expect(amountCentsForSplitIndex(100, 3, 2)).toBe(33);
+  });
+
+  it("merchantPricingQuote 1→2 commerce (+40 €)", () => {
+    const q = merchantPricingQuote(1, 2);
+    expect(q.from_monthly_cents).toBe(4999);
+    expect(q.to_monthly_cents).toBe(8999);
+    expect(q.incremental_monthly_cents).toBe(4000);
+    expect(q.is_upgrade).toBe(true);
   });
 });

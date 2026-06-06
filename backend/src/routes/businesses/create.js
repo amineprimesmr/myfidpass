@@ -25,7 +25,10 @@ import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js
 import {
   applyProgramTypeSwitchSideEffects,
 } from "../../lib/program-type-switch.js";
-import { resetAllMemberBalancesForBusiness } from "../../db/members.js";
+import {
+  resetAllMemberBalancesForBusiness,
+  purgeTransactionsForBusiness,
+} from "../../db/members.js";
 import { fetchGooglePlaceBusinessEnrichment } from "../../lib/google-place-business-enrichment.js";
 import { refreshGooglePlacesSnapshotFromPlaceId } from "../../services/social-metrics-service.js";
 
@@ -606,6 +609,7 @@ export async function updateHandler(req, res) {
       fromType: programTypeSwitch.prevType,
       toType: programTypeSwitch.nextType,
     });
+    purgeTransactionsForBusiness(business.id);
     pushPassKitUpdateForAllBusinessPasses(business.id, "program_mode_switch").catch(() => {});
   }
 
