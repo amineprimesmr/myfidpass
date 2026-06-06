@@ -2,11 +2,15 @@
  * QR récompense caisse — associé à un palier (points ou tampons).
  * Format : MYFIDPASS_REDEEM:1:{memberId}:p:{tierIndex}:{points}
  *         MYFIDPASS_REDEEM:1:{memberId}:s — carte complète (cycle)
+ *         MYFIDPASS_REDEEM:1:{memberId}:s:0 — début du jeu (Boisson offerte, coût 0)
  *         MYFIDPASS_REDEEM:1:{memberId}:s:{stampThreshold} — palier intermédiaire (ex. 5 tampons)
  */
 
 export const REWARD_REDEEM_QR_VERSION = 1;
 const PREFIX = "MYFIDPASS_REDEEM:";
+
+/** Palier « Début du jeu » (récompense roue / 1er palier tampons). */
+export const STAMP_START_GAME_QR_THRESHOLD = 0;
 
 /** Taille du cycle tampons (colonne `required_stamps`). */
 export function stampCycleSize(business) {
@@ -23,8 +27,24 @@ export function resolveStampRewardFromQr(business, rewardRedeem) {
   const midDefault = 5;
   const midLabel = String(business?.stamp_mid_reward_label ?? "").trim();
   const finalLabel = String(business?.stamp_reward_label ?? "").trim() || "Récompense tampons";
-  let threshold = Math.floor(Number(rewardRedeem?.stampThreshold));
-  if (!Number.isFinite(threshold) || threshold <= 0) {
+  const startLabel =
+    String(business?.start_game_reward_label ?? "").trim() || "Boisson offerte";
+
+  const rawTh = rewardRedeem?.stampThreshold;
+
+  if (rawTh === STAMP_START_GAME_QR_THRESHOLD) {
+    return {
+      label: startLabel,
+      pointsRequired: 0,
+      stampThreshold: STAMP_START_GAME_QR_THRESHOLD,
+      cycleN,
+      isFullCard: false,
+      isStartGame: true,
+    };
+  }
+
+  let threshold = Math.floor(Number(rawTh));
+  if (rawTh == null || !Number.isFinite(threshold) || threshold <= 0) {
     threshold = cycleN;
   }
   threshold = Math.min(threshold, cycleN);
@@ -32,7 +52,14 @@ export function resolveStampRewardFromQr(business, rewardRedeem) {
   const label =
     !isFullCard && midLabel && threshold > 0 && threshold <= midDefault + 1 ? midLabel : finalLabel;
   const pointsRequired = isFullCard ? Math.max(1, cycleN - 1) : threshold;
-  return { label, pointsRequired, stampThreshold: threshold, cycleN, isFullCard };
+  return {
+    label,
+    pointsRequired,
+    stampThreshold: threshold,
+    cycleN,
+    isFullCard,
+    isStartGame: false,
+  };
 }
 
 /**
@@ -43,6 +70,9 @@ export function buildRewardRedeemQrPayload(p) {
   if (!memberId) return "";
   const pt = String(p.programType || "points").toLowerCase();
   if (pt === "stamps") {
+    if (p.stampThreshold === STAMP_START_GAME_QR_THRESHOLD) {
+      return `${PREFIX}${REWARD_REDEEM_QR_VERSION}:${memberId}:s:0`;
+    }
     const th = Math.floor(Number(p.stampThreshold ?? p.points));
     if (Number.isFinite(th) && th > 0) {
       return `${PREFIX}${REWARD_REDEEM_QR_VERSION}:${memberId}:s:${th}`;
@@ -56,7 +86,7 @@ export function buildRewardRedeemQrPayload(p) {
 
 /**
  * @param {string} raw
- * @returns {null | { memberId: string; mode: "points" | "stamps"; tierIndex?: number; points?: number }}
+ * @returns {null | { memberId: string; mode: "points" | "stamps"; tierIndex?: number; points?: number; stampThreshold?: number | null }}
  */
 export function parseRewardRedeemQrPayload(raw) {
   const s = String(raw || "").trim();
@@ -72,8 +102,12 @@ export function parseRewardRedeemQrPayload(raw) {
   if (mode === "s") {
     let stampThreshold = null;
     if (parts.length >= 4) {
-      const t = Math.floor(Number(parts[3]));
-      if (Number.isFinite(t) && t > 0) stampThreshold = t;
+      if (parts[3] === "0") {
+        stampThreshold = STAMP_START_GAME_QR_THRESHOLD;
+      } else {
+        const t = Math.floor(Number(parts[3]));
+        if (Number.isFinite(t) && t > 0) stampThreshold = t;
+      }
     }
     return { memberId, mode: "stamps", stampThreshold };
   }

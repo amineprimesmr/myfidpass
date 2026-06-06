@@ -2549,12 +2549,14 @@ function initAppDashboard(slug) {
     const bandeauEl = document.getElementById("app-preview-bandeau");
     orgEl.textContent = personnaliserOrg?.value?.trim() || currentOrganizationName;
     const isStamps = programTypeStamps && programTypeStamps.checked;
+    /** Fond image réservé au mode points — jamais affiché après bascule tampons. */
+    const showPointsCardBg = hasCardBgUrl && !isStamps;
     /**
      * Image de fond (strip) : exclusif avec points et tampons — soit l’image, soit points, soit tampons.
      */
     if (bodyEl) {
       bodyEl.style.color = fg;
-      if (hasCardBgUrl) {
+      if (showPointsCardBg) {
         bodyEl.style.background = "transparent";
         bodyEl.style.backgroundImage = "none";
         bodyEl.style.removeProperty("background-size");
@@ -2599,7 +2601,7 @@ function initAppDashboard(slug) {
     const stampEmoji = (stampEmojiEl && stampEmojiEl.value.trim()) || "✅";
     const requiredStamps = 10;
     const useStripImage = stripDisplayLogo && stripDisplayLogo.checked;
-    const showPointsOrStamps = !hasCardBgUrl;
+    const showPointsOrStamps = !showPointsCardBg;
     if (ptsWrap) {
       /* Nettoyage demandé : on retire le gros compteur points dans les 2 modes. */
       ptsWrap.classList.add("hidden");
@@ -2656,9 +2658,9 @@ function initAppDashboard(slug) {
       if (rewardValueEl) rewardValueEl.textContent = `${pointsValue} points`;
       if (valueEl) valueEl.textContent = pointsValue;
     }
-    if (isStamps && valueEl) valueEl.textContent = "0";
+    if (isStamps && valueEl) valueEl.textContent = "";
     if (labelEl) {
-      labelEl.textContent = isStamps ? "Tampons" : "";
+      labelEl.textContent = isStamps ? "" : "";
     }
     if (ptsEmojiEl) ptsEmojiEl.textContent = isStamps ? stampEmoji : (stampEmoji || "⭐");
     if (stampsGridEl && isStamps && showPointsOrStamps) {
@@ -3996,6 +3998,7 @@ function initAppDashboard(slug) {
         const midTrim = stampMidRewardLabelEl?.value?.trim() || "";
         body.stampMidRewardLabel = midTrim || null;
       }
+      body.cardBackgroundBase64 = "";
     }
     if (personnaliserStampIconRemoveRequested) body.stampIconBase64 = "";
     else if (personnaliserStampIconDataUrl && typeof personnaliserStampIconDataUrl === "string" && personnaliserStampIconDataUrl.startsWith("data:")) {
@@ -4163,7 +4166,9 @@ function initAppDashboard(slug) {
       } else if (personnaliserLogoDataUrl && typeof personnaliserLogoDataUrl === "string" && personnaliserLogoDataUrl.startsWith("data:")) {
         body.logoBase64 = personnaliserLogoDataUrl;
       }
-      if (personnaliserCardBgRemoveRequested) body.cardBackgroundBase64 = "";
+      if (programTypeStamps && programTypeStamps.checked) {
+        body.cardBackgroundBase64 = "";
+      } else if (personnaliserCardBgRemoveRequested) body.cardBackgroundBase64 = "";
       else if (personnaliserCardBgDataUrl && typeof personnaliserCardBgDataUrl === "string" && personnaliserCardBgDataUrl.startsWith("data:")) body.cardBackgroundBase64 = personnaliserCardBgDataUrl;
       const addressEl = document.getElementById("app-personnaliser-address");
       if (addressEl) {

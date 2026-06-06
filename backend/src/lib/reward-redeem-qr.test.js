@@ -48,6 +48,46 @@ describe("reward-redeem-qr", () => {
     });
   });
 
+  it("encode tampons début du jeu (:s:0) — distinct de carte complète", () => {
+    const raw = buildRewardRedeemQrPayload({
+      memberId: MEMBER,
+      programType: "stamps",
+      stampThreshold: 0,
+    });
+    expect(raw).toBe(`MYFIDPASS_REDEEM:1:${MEMBER}:s:0`);
+    expect(parseRewardRedeemQrPayload(raw)).toEqual({
+      memberId: MEMBER,
+      mode: "stamps",
+      stampThreshold: 0,
+    });
+  });
+
+  it("resolve tampons — début du jeu (Boisson offerte, coût 0)", () => {
+    const business = {
+      required_stamps: 10,
+      start_game_reward_label: "Boisson offerte",
+      stamp_mid_reward_label: "Dessert offert",
+      stamp_reward_label: "Menu offert",
+    };
+    const resolved = resolveStampRewardFromQr(business, { mode: "stamps", stampThreshold: 0 });
+    expect(resolved.label).toBe("Boisson offerte");
+    expect(resolved.pointsRequired).toBe(0);
+    expect(resolved.isStartGame).toBe(true);
+    expect(resolved.isFullCard).toBe(false);
+  });
+
+  it("resolve tampons — QR sans palier = carte complète (Menu offert)", () => {
+    const business = {
+      required_stamps: 10,
+      start_game_reward_label: "Boisson offerte",
+      stamp_reward_label: "Menu offert",
+    };
+    const resolved = resolveStampRewardFromQr(business, { mode: "stamps", stampThreshold: null });
+    expect(resolved.label).toBe("Menu offert");
+    expect(resolved.pointsRequired).toBe(9);
+    expect(resolved.isFullCard).toBe(true);
+  });
+
   it("resolve tampons — palier 5 avec solde cycle", () => {
     const business = {
       required_stamps: 10,

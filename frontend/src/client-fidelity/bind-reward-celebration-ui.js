@@ -125,11 +125,16 @@ async function showOneCelebration(rootEl, item, ctx) {
   let qrPrefetchPromise = null;
   if (unlocked && memberId) {
     prefetchQRCodeModule();
+    const stampThreshold =
+      programType === "stamps"
+        ? Math.max(0, Number(item.threshold ?? item.points) || 0)
+        : undefined;
     qrPrefetchPromise = rewardRedeemQrDataUrl({
       memberId: String(memberId),
       programType,
       tierIndex,
       points,
+      stampThreshold,
     }).then((url) => {
       prefetchedQr = url;
       return url;
@@ -160,6 +165,10 @@ async function showOneCelebration(rootEl, item, ctx) {
           costLine: String(item.costLine || ""),
           tierIndex,
           points,
+          stampThreshold:
+            programType === "stamps"
+              ? Math.max(0, Number(item.threshold ?? item.points) || 0)
+              : undefined,
           qrDataUrl: prefetchedQr || undefined,
           qrPrefetchPromise: qrPrefetchPromise ?? undefined,
         });

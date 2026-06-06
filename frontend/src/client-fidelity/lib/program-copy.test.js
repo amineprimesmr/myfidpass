@@ -4,6 +4,7 @@ import {
   deliveryReceiptStickyCtaLabel,
   deliveryReceiptSuccessMessage,
   engagementClaimSuccessMessage,
+  profileCompleteBonusAmount,
   missionRewardSnippet,
   missionsHeroCtaLabel,
 } from "./program-copy.js";
@@ -17,6 +18,8 @@ describe("program-copy", () => {
   it("missions et livraison suivent le programme", () => {
     expect(missionsHeroCtaLabel("stamps")).toBe("Gagner plus de tampons");
     expect(missionRewardSnippet("stamps")).toBe("1 tampon");
+    expect(profileCompleteBonusAmount("stamps")).toBe(1);
+    expect(profileCompleteBonusAmount("points")).toBe(5);
     expect(missionRewardSnippet("stamps", 15)).toBe("15 tampons");
     expect(missionRewardSnippet("points", 20)).toBe("20 points");
     expect(deliveryReceiptStickyCtaLabel("stamps")).toBe("Réclamer mes tampons");

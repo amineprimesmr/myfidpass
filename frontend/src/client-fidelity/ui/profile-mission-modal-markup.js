@@ -1,4 +1,4 @@
-import { missionRewardSnippet, profileModalSubmitLabel, PROFILE_COMPLETE_BONUS } from "../lib/program-copy.js";
+import { missionRewardSnippet, profileCompleteBonusAmount, profileModalSubmitLabel } from "../lib/program-copy.js";
 
 /**
  * Modale mission « Complète ton profil » (extrait pour limite lignes view.js).
@@ -10,7 +10,7 @@ export function renderProfileMissionModalMarkup(esc, data) {
   const profilePhone = esc(data.phone || "");
   const profileCity = esc(data.city || "");
   const profileBirth = esc(data.birth || "");
-  const reward = esc(missionRewardSnippet(programType, PROFILE_COMPLETE_BONUS));
+  const reward = esc(missionRewardSnippet(programType, profileCompleteBonusAmount(programType)));
 
   return `
     <div id="fidelity-profile-mission-modal" class="fidelity-profile-mission-modal hidden" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="fidelity-profile-mission-modal-title">

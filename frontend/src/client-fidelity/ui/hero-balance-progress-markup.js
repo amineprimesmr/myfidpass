@@ -1,6 +1,5 @@
 import {
   parsePointTiers,
-  buildStampTiers,
   stampProgressTiers,
   tierProgressState,
   buildHeroLinearTickMarks,
@@ -21,6 +20,10 @@ export function buildHeroBalanceProgressState(p) {
     ? stampCycleDisplayBalance(p.memberPoints, p.business)
     : Math.max(0, Math.floor(Number(p.memberPoints) || 0));
   const tiers = isStamps ? stampProgressTiers(p.business) : parsePointTiers(p.business);
+  const requiredStamps = isStamps
+    ? Math.max(1, Math.floor(Number(p.business?.required_stamps) || 10))
+    : 0;
+  const stampEmoji = String(p.business?.stamp_emoji || "✅").trim() || "✅";
 
   let pct;
   let maxScale;
@@ -75,7 +78,34 @@ export function buildHeroBalanceProgressState(p) {
     tiersComplete,
     isStamps,
     hasProgressScale,
+    requiredStamps,
+    stampEmoji,
   };
+}
+
+/**
+ * Grille visuelle tampons (sans chiffre en texte).
+ * @param {(s: string) => string} esc
+ * @param {{ filled: number; total: number; stampEmoji: string }} p
+ */
+export function buildHeroStampGridMarkup(esc, p) {
+  const total = Math.max(1, Math.floor(Number(p.total) || 10));
+  const filled = Math.min(Math.max(0, Math.floor(Number(p.filled) || 0)), total);
+  const emoji = esc(p.stampEmoji || "✅");
+  const cols = 5;
+  const rows = Math.max(1, Math.ceil(total / cols));
+  const rowHtml = [];
+  for (let row = 0; row < rows; row += 1) {
+    const cells = [];
+    for (let col = 0; col < cols; col += 1) {
+      const index = row * cols + col;
+      if (index >= total) break;
+      const filledClass = index < filled ? " fidelity-hero-stamp--filled" : "";
+      cells.push(`<span class="fidelity-hero-stamp${filledClass}">${emoji}</span>`);
+    }
+    rowHtml.push(`<div class="fidelity-hero-stamps-row">${cells.join("")}</div>`);
+  }
+  return `<div class="fidelity-hero-stamps-grid" aria-hidden="true">${rowHtml.join("")}</div>`;
 }
 
 /**
@@ -94,6 +124,9 @@ export function renderHeroBalanceProgressMarkup(esc, st) {
     nextGoal,
     tiersComplete,
     hasProgressScale,
+    isStamps,
+    requiredStamps,
+    stampEmoji,
   } = st;
   const ariaText = nextGoal
     ? `Solde ${points} ${unitWord}, prochain palier à ${nextGoal.threshold} (${nextGoal.label})`
@@ -103,7 +136,13 @@ export function renderHeroBalanceProgressMarkup(esc, st) {
         ? `Solde ${points} ${unitWord}, échelle jusqu'à ${maxScale}`
         : `Solde ${points} ${unitWord}`;
 
-  const labelBlock = `
+  const labelBlock = isStamps
+    ? buildHeroStampGridMarkup(esc, {
+        filled: points,
+        total: requiredStamps,
+        stampEmoji,
+      })
+    : `
             <p class="fidelity-hero-progress-label">
               <span class="fidelity-hero-progress-gradient-text">
                 <span class="fidelity-hero-progress-amount">${esc(String(points))}</span>
@@ -113,22 +152,24 @@ export function renderHeroBalanceProgressMarkup(esc, st) {
 
   if (!hasProgressScale) {
     return `
-          <div class="fidelity-hero-progress fidelity-hero-progress--no-scale" role="region" aria-label="${esc(ariaText)}">
+          <div class="fidelity-hero-progress fidelity-hero-progress--no-scale${isStamps ? " fidelity-hero-progress--stamps" : ""}" role="region" aria-label="${esc(ariaText)}">
             ${labelBlock}
           </div>`;
   }
 
-  const tickSpans = tickMarks
-    .map(
-      (m) =>
-        `<span class="fidelity-hero-progress-tick" style="left:${m.leftPct}%">${esc(String(m.value))}</span>`,
-    )
-    .join("");
+  const tickSpans = isStamps
+    ? ""
+    : tickMarks
+        .map(
+          (m) =>
+            `<span class="fidelity-hero-progress-tick" style="left:${m.leftPct}%">${esc(String(m.value))}</span>`,
+        )
+        .join("");
 
   const barNow = Math.min(Math.max(points, progressMin), progressMax);
 
   return `
-          <div class="fidelity-hero-progress" role="region" aria-label="${esc(ariaText)}">
+          <div class="fidelity-hero-progress${isStamps ? " fidelity-hero-progress--stamps" : ""}" role="region" aria-label="${esc(ariaText)}">
             ${labelBlock}
             <div
               class="fidelity-hero-progress-track-outer"
@@ -142,7 +183,7 @@ export function renderHeroBalanceProgressMarkup(esc, st) {
                 <div class="fidelity-hero-progress-fill" style="width:${pct}%"></div>
                 <span class="fidelity-hero-progress-thumb" style="left:${pct}%"></span>
               </div>
-              <div class="fidelity-hero-progress-ticks">${tickSpans}</div>
+              ${tickSpans ? `<div class="fidelity-hero-progress-ticks">${tickSpans}</div>` : ""}
             </div>
           </div>`;
 }

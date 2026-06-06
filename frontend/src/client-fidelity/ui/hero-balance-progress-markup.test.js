@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildHeroBalanceProgressState } from "./hero-balance-progress-markup.js";
+import { buildHeroBalanceProgressState, renderHeroBalanceProgressMarkup } from "./hero-balance-progress-markup.js";
 
 describe("buildHeroBalanceProgressState", () => {
   it("échelle linéaire 0→max : 10 pts sur paliers 10…250", () => {
@@ -64,5 +64,18 @@ describe("buildHeroBalanceProgressState", () => {
     expect(st.progressMax).toBe(10);
     expect(st.pct).toBeCloseTo(10, 1);
     expect(st.tickMarks[0].value).toBe(0);
+  });
+
+  it("tampons : grille visuelle sans texte « X tampons »", () => {
+    const st = buildHeroBalanceProgressState({
+      memberPoints: 3,
+      programType: "stamps",
+      business: { required_stamps: 10, stamp_emoji: "☕" },
+    });
+    const html = renderHeroBalanceProgressMarkup((s) => s, st);
+    expect(html).toContain("fidelity-hero-stamps-grid");
+    expect(html).toContain("☕");
+    expect(html).not.toContain("fidelity-hero-progress-amount");
+    expect(html).not.toContain("fidelity-hero-progress-unit");
   });
 });

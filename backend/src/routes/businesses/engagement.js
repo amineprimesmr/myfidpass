@@ -38,10 +38,11 @@ export function engagementActionsHandler(req, res) {
   let actions = [];
   /** Pas de mission « avis Google » ici : l’avis est demandé au premier tour de roue (page jeu invité). */
   if (businessUsesTicketBonuses(business.id)) {
+    const programType = resolveBusinessProgramType(business);
     actions.unshift({
       action_type: "profile_complete",
       label: "Complète ton profil",
-      points: 5,
+      points: programType === "stamps" ? 1 : 5,
       url: "#",
     });
   }

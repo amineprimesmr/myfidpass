@@ -41,6 +41,10 @@ export function applyProgramTypeSwitchSideEffects(business, updates, body = {}) 
       updates.points_reward_tiers = null;
     }
     updates.loyalty_mode = "points_cash";
+    /** Fond image mode points : incompatible avec la grille tampons Wallet / client. */
+    if (updates.card_background_base64 === undefined) {
+      updates.card_background_base64 = null;
+    }
     if (updates.required_stamps === undefined) {
       const rs = Number(business.required_stamps);
       updates.required_stamps = Number.isInteger(rs) && rs > 0 ? rs : 10;

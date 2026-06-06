@@ -5,6 +5,7 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { completeMemberProfileForTicket, businessUsesTicketBonuses } from "../../db.js";
+import { pushPassKitAfterMemberBalanceChange } from "../../lib/wallet-reward-tier-notify.js";
 
 const router = Router();
 
@@ -17,7 +18,7 @@ const profileBonusLimiter = rateLimit({
   validate: { forwardedHeader: false },
 });
 
-router.post("/:memberId/profile-complete", profileBonusLimiter, (req, res) => {
+router.post("/:memberId/profile-complete", profileBonusLimiter, async (req, res) => {
   const business = req.business;
   if (!business) return res.status(404).json({ error: "Entreprise introuvable" });
 
@@ -34,9 +35,20 @@ router.post("/:memberId/profile-complete", profileBonusLimiter, (req, res) => {
     return res.status(code).json({ error: result.error, code: result.code });
   }
 
+  if (result.stamps_granted > 0 && !result.already_done) {
+    const prev = Math.max(0, Math.floor(Number(result.member?.points) || 0) - result.stamps_granted);
+    await pushPassKitAfterMemberBalanceChange({
+      business,
+      memberId,
+      previousBalance: prev,
+      reason: "profile_complete",
+    }).catch(() => {});
+  }
+
   return res.status(200).json({
     ok: true,
     ticket_granted: result.ticket_granted,
+    stamps_granted: result.stamps_granted,
     already_done: result.already_done,
     member: {
       id: result.member.id,

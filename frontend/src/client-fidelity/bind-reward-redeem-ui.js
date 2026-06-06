@@ -191,13 +191,15 @@ export function bindRewardRedeemUi({ rootEl, getState, signal }) {
 
     if (unlocked) {
       const stampThreshold =
-        programType === "stamps" ? Math.max(0, parseInt(String(threshold || "0"), 10) || 0) : 0;
+        programType === "stamps"
+          ? Math.max(0, parseInt(String(threshold || "0"), 10) || 0)
+          : undefined;
       void openUnlocked({
         label,
         costLine,
         tierIndex,
         points,
-        stampThreshold: stampThreshold > 0 ? stampThreshold : undefined,
+        stampThreshold,
       });
     } else {
       openLocked({ label, need, unitPhrase });

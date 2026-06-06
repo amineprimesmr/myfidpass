@@ -1,6 +1,13 @@
 /** Textes de l’espace client selon le type de programme (points vs tampons). */
 
-export const PROFILE_COMPLETE_BONUS = 5;
+export const PROFILE_COMPLETE_POINTS_BONUS = 5;
+export const PROFILE_COMPLETE_STAMPS_BONUS = 1;
+/** @deprecated Préférer profileCompleteBonusAmount(programType) */
+export const PROFILE_COMPLETE_BONUS = PROFILE_COMPLETE_POINTS_BONUS;
+
+export function profileCompleteBonusAmount(programType) {
+  return isStampsProgramType(programType) ? PROFILE_COMPLETE_STAMPS_BONUS : PROFILE_COMPLETE_POINTS_BONUS;
+}
 
 export function isStampsProgramType(programType) {
   return String(programType || "").toLowerCase() === "stamps";
