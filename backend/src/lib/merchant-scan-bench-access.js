@@ -1,5 +1,9 @@
+/** Plafonds scan « mode bench » — aligné iOS / Android (accès sans abo). */
+export const MERCHANT_SCAN_BENCH_PASSES = 102;
+export const MERCHANT_SCAN_BENCH_POINTS = 102;
+
 /**
- * Bench interne commerçant : plafonds scan 2 / 2 → accès opérationnel API
+ * Bench interne commerçant : plafonds scan 102 / 102 → accès opérationnel API
  * (aligné iOS `MerchantInternalBenchAccess` / Android `MerchantScanBenchAccess`).
  */
 export function hasMerchantScanBenchOperationalBypass(business) {
@@ -10,5 +14,5 @@ export function hasMerchantScanBenchOperationalBypass(business) {
   const p = Math.floor(Number(passes));
   const pts = Math.floor(Number(points));
   if (!Number.isFinite(p) || !Number.isFinite(pts)) return false;
-  return p === 2 && pts === 2;
+  return p === MERCHANT_SCAN_BENCH_PASSES && pts === MERCHANT_SCAN_BENCH_POINTS;
 }

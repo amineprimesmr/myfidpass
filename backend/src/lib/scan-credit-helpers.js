@@ -1,3 +1,5 @@
+import { hasMerchantScanBenchOperationalBypass } from "./merchant-scan-bench-access.js";
+
 /**
  * Calcul des points (scan / caisse) et plafonds anti-fraude (réglages commerce).
  * Utilisé par les endpoints de scan membre.
@@ -50,7 +52,9 @@ export function enforceScanSecurityLimits(business, rawPoints, countAddsToday) {
   const maxPts = maxPtsRaw != null && maxPtsRaw !== "" ? Math.floor(Number(maxPtsRaw)) : 0;
   let points = rawPoints;
   let capped = false;
-  if (Number.isFinite(maxPts) && maxPts > 0 && points > maxPts) {
+  /** Mode bench (102 / 102 réglés) = accès sans abo, pas un plafond métier sur les points. */
+  const skipPointsCap = hasMerchantScanBenchOperationalBypass(business);
+  if (!skipPointsCap && Number.isFinite(maxPts) && maxPts > 0 && points > maxPts) {
     points = maxPts;
     capped = true;
   }

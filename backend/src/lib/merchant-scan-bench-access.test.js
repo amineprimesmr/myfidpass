@@ -1,22 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { hasMerchantScanBenchOperationalBypass } from "./merchant-scan-bench-access.js";
+import {
+  MERCHANT_SCAN_BENCH_PASSES,
+  MERCHANT_SCAN_BENCH_POINTS,
+  hasMerchantScanBenchOperationalBypass,
+} from "./merchant-scan-bench-access.js";
 
 describe("hasMerchantScanBenchOperationalBypass", () => {
-  it("true when scan limits are exactly 2 and 2", () => {
+  it("true when scan limits are exactly 102 and 102", () => {
     expect(
       hasMerchantScanBenchOperationalBypass({
-        scan_max_passes_per_member_per_day: 2,
-        scan_max_points_per_transaction: 2,
+        scan_max_passes_per_member_per_day: MERCHANT_SCAN_BENCH_PASSES,
+        scan_max_points_per_transaction: MERCHANT_SCAN_BENCH_POINTS,
       }),
     ).toBe(true);
   });
 
   it("false when limits differ or missing", () => {
-    expect(hasMerchantScanBenchOperationalBypass({ scan_max_passes_per_member_per_day: 2 })).toBe(false);
+    expect(hasMerchantScanBenchOperationalBypass({ scan_max_passes_per_member_per_day: 102 })).toBe(false);
     expect(
       hasMerchantScanBenchOperationalBypass({
         scan_max_passes_per_member_per_day: 0,
-        scan_max_points_per_transaction: 2,
+        scan_max_points_per_transaction: 102,
       }),
     ).toBe(false);
     expect(hasMerchantScanBenchOperationalBypass(null)).toBe(false);
