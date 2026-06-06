@@ -49,6 +49,7 @@ import {
   maybeScheduleRewardCelebrations,
 } from "./bind-reward-celebration-ui.js";
 import { memberProgramBalance } from "./lib/member-reward-celebrations.js";
+import { markRewardsWalletUnlocked } from "./lib/wallet-rewards-gate.js";
 import { deliveryReceiptSuccessMessage, engagementClaimSuccessMessage } from "./lib/program-copy.js";
 import { isQrGameEntryIntent, markQrGameSession } from "./lib/client-entry-intent.js";
 import {
@@ -303,6 +304,11 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     console.error("[fidelity] resolveClientSession", e);
   }
 
+  const hydratedMember = store.get().member;
+  if (hydratedMember?.id && (hydratedMember.apple_wallet_registered === true || hydratedMember.appleWalletRegistered === true)) {
+    markRewardsWalletUnlocked(slug, hydratedMember.id);
+  }
+
   function syncWheelLabelsFromStore() {
     const segs = store.get().roulette_segments;
     wheelLabels = normalizeWheelLabelsFromSegments(Array.isArray(segs) ? segs : []);
@@ -423,7 +429,6 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
   }
 
   function rerender() {
-    if (isWalletReturnPending(slug)) return;
     resetFidelityClientPageUi(rootEl);
     renderClientPage(rootEl, store.get(), { slug, apiBase });
     applyFidelityClientPageBackground(store.get().business);
@@ -443,7 +448,11 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
     return root instanceof HTMLElement && !root.classList.contains("hidden");
   }
 
-  async function refreshMemberData() {
+  /**
+   * @param {{ forceRerender?: boolean }} [opts]
+   * forceRerender : ignore le garde wallet pending (retour Apple/Google Wallet terminé).
+   */
+  async function refreshMemberData(opts = {}) {
     const state = store.get();
     if (!state.member?.id) return;
     const programType = String(state.business?.program_type || "points").toLowerCase();
@@ -460,7 +469,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
      * seraient détruits et le popup disparaîtrait. Le code appelant (claimForm submit)
      * appelle rerender() explicitement après avoir fermé la modale. */
     if (isQrModalOpen()) return;
-    if (isWalletReturnPending(slug)) return;
+    if (!opts.forceRerender && isWalletReturnPending(slug)) return;
     deferredRerenderAfterSpin = false;
     rerender();
   }
@@ -970,6 +979,16 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
         "click",
         () => {
           markAppleWalletPending(slug);
+          openFidelityBusyOverlay(rootEl);
+          startFidelityBusyOverlayUx(rootEl, {
+            title: "Apple Wallet",
+            messages: [
+              "Ouverture de votre carte…",
+              "Ajoutez-la à Apple Wallet…",
+              "Retour automatique après ajout…",
+            ],
+            durationMs: 2200,
+          });
         },
         { signal },
       );
@@ -1186,6 +1205,7 @@ export async function initClientFidelityPage({ slug, apiBase, rootEl }) {
       getMember: api.getMember.bind(api),
       getState: () => store.get(),
       refreshMemberData,
+      rerender,
       isBlocked: () => isSpinning,
       signal,
     });

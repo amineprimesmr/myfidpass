@@ -123,12 +123,14 @@ export function runWalletReadyHeroReveal(rootEl) {
  * @param {string} opts.slug
  * @param {() => string | null | undefined} opts.getMemberId
  * @param {(slug: string, memberId: string) => Promise<object>} opts.getMember
- * @param {() => Promise<void>} opts.refreshMemberData
+ * @param {(opts?: { forceRerender?: boolean }) => Promise<void>} opts.refreshMemberData
+ * @param {() => void} [opts.rerender]
+ * @param {() => void} [opts.onSuccess]
  * @param {() => boolean} [opts.isBlocked]
  * @returns {Promise<boolean>}
  */
 export async function runWalletReturnRefresh(opts) {
-  const { rootEl, slug, getMemberId, getMember, refreshMemberData, isBlocked } = opts;
+  const { rootEl, slug, getMemberId, getMember, refreshMemberData, rerender, onSuccess, isBlocked } = opts;
   if (isBlocked?.()) return false;
 
   const pending = readWalletPending(slug);
@@ -137,11 +139,19 @@ export async function runWalletReturnRefresh(opts) {
   const memberId = getMemberId();
   if (!memberId) return false;
 
+  const finishWalletUiUpdate = async (success) => {
+    if (success) scheduleWalletHeroReveal();
+    await refreshMemberData({ forceRerender: true });
+    rerender?.();
+    if (success) onSuccess?.();
+  };
+
   const state = opts.getState?.();
   if (pending.platform === "apple" && state?.member && memberAppleWalletReady(state.member)) {
     clearWalletPending(pending.key);
     markRewardsWalletUnlocked(slug, memberId);
-    return false;
+    await finishWalletUiUpdate(true);
+    return true;
   }
 
   const messages =
@@ -153,7 +163,8 @@ export async function runWalletReturnRefresh(opts) {
 
   if (!openVerifyOverlay(rootEl)) {
     clearWalletPending(pending.key);
-    await refreshMemberData();
+    markRewardsWalletUnlocked(slug, memberId);
+    await finishWalletUiUpdate(true);
     return true;
   }
 
@@ -169,13 +180,12 @@ export async function runWalletReturnRefresh(opts) {
 
   let success = false;
   if (pending.platform === "google") {
-    await refreshMemberData();
     success = true;
   } else {
     const member = await pollMemberAppleWalletReady(getMember, slug, memberId);
     success = Boolean(member);
-    if (success) await refreshMemberData();
   }
+
   clearWalletPending(pending.key);
 
   if (success) {
@@ -185,16 +195,16 @@ export async function runWalletReturnRefresh(opts) {
       bar.classList.remove("fidelity-qr-verify-progress-bar--animate");
       bar.style.width = "100%";
     }
-    scheduleWalletHeroReveal();
     await new Promise((r) => globalThis.setTimeout(r, 280));
     closeVerifyOverlay(rootEl);
     if (panel) panel.classList.remove("fidelity-qr-modal--verify-done");
+    await finishWalletUiUpdate(true);
     return true;
   }
 
   closeVerifyOverlay(rootEl);
   if (panel) panel.classList.remove("fidelity-qr-modal--verify-done");
-  await refreshMemberData();
+  await finishWalletUiUpdate(false);
   return false;
 }
 
@@ -204,7 +214,9 @@ export async function runWalletReturnRefresh(opts) {
  * @param {string} opts.slug
  * @param {() => string | null | undefined} opts.getMemberId
  * @param {(slug: string, memberId: string) => Promise<object>} opts.getMember
- * @param {() => Promise<void>} opts.refreshMemberData
+ * @param {(opts?: { forceRerender?: boolean }) => Promise<void>} opts.refreshMemberData
+ * @param {() => void} [opts.rerender]
+ * @param {() => void} [opts.onSuccess]
  * @param {() => object} [opts.getState]
  * @param {() => boolean} [opts.isBlocked]
  * @param {AbortSignal} [opts.signal]
