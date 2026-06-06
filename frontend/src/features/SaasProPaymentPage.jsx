@@ -234,6 +234,12 @@ export default function SaasProPaymentPage() {
   }, [commerceSlots, minSelectableSlots]);
 
   useEffect(() => {
+    if (commerceSlots > 1 && annual) {
+      setAnnual(false);
+    }
+  }, [commerceSlots, annual]);
+
+  useEffect(() => {
     if (!isPaymentRoute) return;
     let cancelled = false;
     const from = isUpgradeFlow ? currentAllowedSlots : 1;
@@ -541,6 +547,39 @@ export default function SaasProPaymentPage() {
       ? `${pricingQuote?.to_annual_label || "399 €"} /an`
       : `${pricingQuote?.to_monthly_label || "49,99 €"} /mois`;
 
+    if (commerceSlots > 1) {
+      if (isUpgradeFlow && pricingQuote?.is_upgrade) {
+        return [
+          {
+            title: "Aujourd’hui",
+            subtitle: `${commerceSlots} commerces`,
+            amount: `+${pricingQuote.incremental_monthly_label}`,
+            icon: "lock",
+          },
+          {
+            title: formatDateFr(renewAnchor),
+            subtitle: renewSubtitle,
+            amount: renewAmount,
+            icon: "check",
+          },
+        ];
+      }
+      return [
+        {
+          title: "Aujourd’hui",
+          subtitle: `${commerceSlots} commerces`,
+          amount: renewAmount,
+          icon: "lock",
+        },
+        {
+          title: formatDateFr(renewAnchor),
+          subtitle: renewSubtitle,
+          amount: renewAmount,
+          icon: "check",
+        },
+      ];
+    }
+
     if (isUpgradeFlow && pricingQuote?.is_upgrade) {
       return [
         {
@@ -567,7 +606,7 @@ export default function SaasProPaymentPage() {
         icon: "check",
       },
     ];
-  }, [annual, isUpgradeFlow, pricingQuote]);
+  }, [annual, isUpgradeFlow, pricingQuote, commerceSlots]);
 
   const priceLine = annual
     ? { main: pricingQuote?.to_annual_label?.replace(" €", "€") || "399€", detail: "facturé annuellement" }
@@ -635,65 +674,41 @@ export default function SaasProPaymentPage() {
             </a>
           ) : null}
           <h1>DÉBLOQUEZ TOUT</h1>
-          <p className="saas-pay-checkout-trust-lead">
-            {isUpgradeFlow && pricingQuote?.is_upgrade ? (
-              <>
-                Le premier mois à <strong>1&nbsp;€</strong>, puis{" "}
-                <strong>{pricingQuote.to_monthly_label}</strong> / mois (
-                <strong>+{pricingQuote.incremental_monthly_label}</strong> / mois)
-              </>
-            ) : annual ? (
-              <>
-                Le premier mois à <strong>1&nbsp;€</strong>, puis{" "}
-                <strong>{pricingQuote?.to_annual_label || "399 €"}&nbsp;/&nbsp;an</strong>
-              </>
-            ) : (
-              <>
-                Le premier mois à <strong>1&nbsp;€</strong>, puis{" "}
-                <strong>{pricingQuote?.to_monthly_label || "49,99 €"}</strong> / mois
-              </>
-            )}
-          </p>
-          <div className="saas-pay-commerce-stepper">
-            <p className="saas-pay-commerce-stepper__label">Nombre de commerces</p>
-            {merchantBusinesses.length > 0 ? (
-              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 0.75rem", textAlign: "left" }}>
-                {merchantBusinesses.map((b) => (
-                  <li key={b.id || b.slug} style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>
-                    {b.organization_name || b.name || b.slug}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-            <div className="saas-pay-commerce-stepper__controls">
-              <button
-                type="button"
-                className="saas-pay-commerce-stepper__btn"
-                disabled={commerceSlots <= minSelectableSlots}
-                onClick={() => setCommerceSlots((n) => Math.max(minSelectableSlots, n - 1))}
-                aria-label="Retirer un commerce"
-              >
-                −
-              </button>
-              <div className="saas-pay-commerce-stepper__count">
-                <strong>{commerceSlots}</strong>
-                <span>commerce{commerceSlots > 1 ? "s" : ""}</span>
-              </div>
-              <button
-                type="button"
-                className="saas-pay-commerce-stepper__btn"
-                disabled={commerceSlots >= 5}
-                onClick={() => setCommerceSlots((n) => Math.min(5, n + 1))}
-                aria-label="Ajouter un commerce"
-              >
-                +
-              </button>
-            </div>
-            <p className="saas-pay-commerce-stepper__price">
-              {pricingQuote?.is_upgrade
-                ? `Vous payez ${pricingQuote.from_monthly_label} / mois → ${pricingQuote.to_monthly_label} / mois (+${pricingQuote.incremental_monthly_label} / mois)`
-                : `Forfait ${pricingQuote?.to_monthly_label || "49,99 €"} / mois pour ${commerceSlots} commerce${commerceSlots > 1 ? "s" : ""}`}
+          {commerceSlots === 1 ? (
+            <p className="saas-pay-checkout-trust-lead">
+              {annual ? (
+                <>
+                  Le premier mois à <strong>1&nbsp;€</strong>, puis{" "}
+                  <strong>{pricingQuote?.to_annual_label || "399 €"}&nbsp;/&nbsp;an</strong>
+                </>
+              ) : (
+                <>
+                  Le premier mois à <strong>1&nbsp;€</strong>, puis{" "}
+                  <strong>{pricingQuote?.to_monthly_label || "49,99 €"}</strong> / mois
+                </>
+              )}
             </p>
+          ) : null}
+          <div className="saas-pay-commerce-stepper" aria-label="Nombre de commerces">
+            <button
+              type="button"
+              className="saas-pay-commerce-stepper__btn liquid-glass"
+              disabled={commerceSlots <= minSelectableSlots}
+              onClick={() => setCommerceSlots((n) => Math.max(minSelectableSlots, n - 1))}
+              aria-label="Retirer un commerce"
+            >
+              −
+            </button>
+            <strong className="saas-pay-commerce-stepper__count">{commerceSlots}</strong>
+            <button
+              type="button"
+              className="saas-pay-commerce-stepper__btn liquid-glass"
+              disabled={commerceSlots >= 5}
+              onClick={() => setCommerceSlots((n) => Math.min(5, n + 1))}
+              aria-label="Ajouter un commerce"
+            >
+              +
+            </button>
           </div>
           <div className="saas-pay-checkout-trust-badge" role="status">
             <div className="saas-pay-checkout-trust-badge__stack" aria-hidden="true">
@@ -717,6 +732,7 @@ export default function SaasProPaymentPage() {
           </div>
         </header>
 
+        {commerceSlots === 1 ? (
         <div className="saas-pay-billing saas-pay-billing--checkout">
           <div className="saas-pay-billing-liquid">
             <fieldset
@@ -769,6 +785,7 @@ export default function SaasProPaymentPage() {
             </fieldset>
           </div>
         </div>
+        ) : null}
 
         <section className="saas-pay-timeline">
           {billingTimeline.map((step, idx) => (
@@ -913,10 +930,17 @@ export default function SaasProPaymentPage() {
                   "Paiement en cours..."
                 ) : initializing ? (
                   "Chargement du module..."
+                ) : commerceSlots > 1 ? (
+                  <span className="saas-pay-continue-label">Continuer</span>
                 ) : (
                   <span className="saas-pay-continue-label">Commencer pour 1€</span>
                 )}
               </button>
+              {commerceSlots > 1 ? (
+                <p className="saas-pay-continue-foot">
+                  Puis {pricingQuote?.to_monthly_label || "49,99 €"}/mois sans engagement
+                </p>
+              ) : null}
             </>
           )}
         </section>
