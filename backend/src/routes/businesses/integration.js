@@ -327,8 +327,8 @@ router.post("/scan", async (req, res) => {
   let updated;
   let stampCycleCompleted = false;
   let stampCyclesCompleted = 0;
+  const previousBalance = Math.max(0, Math.floor(Number(member.points) || 0));
   if (programType === "stamps") {
-    const previousRaw = Math.max(0, Math.floor(Number(member.points) || 0));
     const r = addStampsWithCycleRollover(member.id, points, stampCycleN);
     if (!r.member) {
       return res.status(500).json({ error: "Mise à jour membre impossible.", code: "MEMBER_UPDATE_FAILED" });
@@ -383,7 +383,7 @@ router.post("/scan", async (req, res) => {
   scheduleWalletSyncAfterIntegrationScan({
     business,
     memberId: member.id,
-    previousBalance: previousRaw,
+    previousBalance,
     updated,
     req,
   });
