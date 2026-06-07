@@ -1,0 +1,121 @@
+/* Hero desktop — téléchargement app commerçant (QR + stores) */
+
+.fintap-hero-desk-download {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(0.85rem, 2vw, 1.15rem);
+  width: 100%;
+  max-width: 22rem;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.42s ease, transform 0.42s ease;
+}
+
+.fintap-hero-iphone__actions.is-visible .fintap-hero-desk-download {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 0.12s;
+}
+
+.fintap-hero-desk-download__title {
+  margin: 0;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: clamp(2rem, 3.2vw, 2.75rem);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  text-align: left;
+  color: #fff;
+  text-shadow: 0 1px 18px rgba(0, 45, 95, 0.18);
+}
+
+.fintap-hero-desk-download__qr-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: clamp(9.5rem, 18vw, 11.5rem);
+  height: clamp(9.5rem, 18vw, 11.5rem);
+  border-radius: 1.1rem;
+  overflow: hidden;
+  background: #0f1920;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.12),
+    0 12px 28px rgba(0, 0, 0, 0.18);
+}
+
+.fintap-hero-desk-download__qr-wrap.hidden {
+  display: none;
+}
+
+.fintap-hero-desk-download__qr {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #0f1920;
+}
+
+.fintap-hero-desk-download__qr svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.fintap-hero-desk-download__stores {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.fintap-hero-desk-download__store-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 0.55rem;
+  transition: transform 0.16s ease, opacity 0.16s ease;
+}
+
+.fintap-hero-desk-download__store-btn:hover {
+  transform: translateY(-1px);
+  opacity: 0.92;
+}
+
+.fintap-hero-desk-download__store-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 3px;
+}
+
+.fintap-hero-desk-download__store-logo {
+  display: block;
+  width: auto;
+  height: clamp(2.35rem, 4.5vw, 2.85rem);
+}
+
+.fintap-hero-desk-download__caption {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 12px rgba(0, 45, 95, 0.22);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fintap-hero-desk-download,
+  .fintap-hero-desk-download__store-btn {
+    transition: none;
+  }
+
+  .fintap-hero-desk-download__store-btn:hover {
+    transform: none;
+  }
+}

@@ -414,6 +414,10 @@
     font-size: clamp(2.1rem, 3.5vw, 3rem);
   }
 
+  .fintap-hero-iphone__actions .fintap-hero-desk-download__title {
+    max-width: 12ch;
+  }
+
   .fintap-hero-iphone__btn--primary {
     display: none;
   }

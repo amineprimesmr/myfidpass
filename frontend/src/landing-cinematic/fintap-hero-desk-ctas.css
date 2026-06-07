@@ -19,7 +19,7 @@
   left: clamp(0.32rem, 1.2vw, 0.85rem);
   right: clamp(0.32rem, 1.2vw, 0.85rem);
   flex-wrap: nowrap;
-  justify-content: flex-start;
+  justify-content: flex-end;
   align-items: center;
   gap: clamp(0.3rem, 1.5vw, 0.5rem);
   box-sizing: border-box;

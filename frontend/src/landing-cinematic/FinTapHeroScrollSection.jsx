@@ -8,17 +8,11 @@ import {
   getPageScrollY,
   lerp,
 } from "./fintap-hero-scroll-lerp.js";
-import {
-  API_BASE,
-  getAuthToken,
-  clearPendingEstablishments,
-  getPendingEstablishment,
-  setPendingEstablishment,
-  checkGooglePlaceAvailable,
-} from "../config.js";
+import { clearPendingEstablishments } from "../config.js";
 import "./fintap-hero-scroll.css";
 import "./fintap-hero-blue-surface.css";
 import { FinTapHeroDeskCtas } from "./FinTapHeroDeskCtas.jsx";
+import { FinTapHeroDeskDownload } from "./FinTapHeroDeskDownload.jsx";
 import { FinTapHeroMobileLogo } from "./FinTapHeroMobileLogo.jsx";
 import { FinTapHeroMediaBadge } from "./FinTapHeroMediaBadge.jsx";
 
@@ -71,23 +65,6 @@ export function FinTapHeroScrollSection() {
       typeof window !== "undefined" &&
       window.matchMedia("(max-width: 767.98px)").matches
   );
-  const pendingShopInit =
-    typeof window !== "undefined" ? getPendingEstablishment() : null;
-  const [shopQuery, setShopQuery] = useState(
-    () => String(pendingShopInit?.establishment_name || "").trim()
-  );
-  const [shopPlaceId, setShopPlaceId] = useState(
-    () => String(pendingShopInit?.google_place_id || "").trim()
-  );
-  const [placePredictions, setPlacePredictions] = useState([]);
-  const [predictionsOpen, setPredictionsOpen] = useState(false);
-  const [placesSearching, setPlacesSearching] = useState(false);
-  const [noSuggestionsVisible, setNoSuggestionsVisible] = useState(false);
-  const [placeProbeBusy, setPlaceProbeBusy] = useState(false);
-  const [shopPlaceConflictError, setShopPlaceConflictError] = useState("");
-  const searchInputRef = useRef(null);
-  const searchWrapRef = useRef(null);
-  const emptyHintTimerRef = useRef(0);
   const isIosMobileRef = useRef(
     typeof navigator !== "undefined" && IOS_MOBILE_UA_RE.test(navigator.userAgent)
   );
@@ -378,165 +355,6 @@ export function FinTapHeroScrollSection() {
     };
   }, []);
 
-  useEffect(() => {
-    if (isMobile || !ctaVisible) {
-      setPlacesSearching(false);
-      return;
-    }
-    const query = shopQuery.trim();
-    if (shopPlaceId && query.length >= 2) {
-      setPredictionsOpen(false);
-      setPlacePredictions([]);
-      setPlacesSearching(false);
-      setNoSuggestionsVisible(false);
-      if (emptyHintTimerRef.current) {
-        window.clearTimeout(emptyHintTimerRef.current);
-        emptyHintTimerRef.current = 0;
-      }
-      return;
-    }
-    if (query.length < 2) {
-      setPlacePredictions([]);
-      setPredictionsOpen(false);
-      setPlacesSearching(false);
-      setNoSuggestionsVisible(false);
-      if (emptyHintTimerRef.current) {
-        window.clearTimeout(emptyHintTimerRef.current);
-        emptyHintTimerRef.current = 0;
-      }
-      return;
-    }
-    let cancelled = false;
-    if (emptyHintTimerRef.current) {
-      window.clearTimeout(emptyHintTimerRef.current);
-      emptyHintTimerRef.current = 0;
-    }
-    setNoSuggestionsVisible(false);
-    setPlacesSearching(true);
-    const debounce = window.setTimeout(async () => {
-      if (cancelled) return;
-      try {
-        const url = `${API_BASE}/api/places/autocomplete?input=${encodeURIComponent(query)}`;
-        const headers = {};
-        const t = getAuthToken();
-        if (t) headers.Authorization = `Bearer ${t}`;
-        const res = await fetch(url, { headers });
-        if (!res.ok) throw new Error("autocomplete_failed");
-        const data = await res.json();
-        if (cancelled) return;
-        const list = Array.isArray(data?.predictions) ? data.predictions.slice(0, 8) : [];
-        setPlacePredictions(list);
-        setPredictionsOpen(list.length > 0);
-        if (list.length > 0) {
-          if (emptyHintTimerRef.current) {
-            window.clearTimeout(emptyHintTimerRef.current);
-            emptyHintTimerRef.current = 0;
-          }
-          setNoSuggestionsVisible(false);
-        } else {
-          emptyHintTimerRef.current = window.setTimeout(() => {
-            if (cancelled) return;
-            const still = String(searchInputRef.current?.value || "").trim() === query;
-            if (still) setNoSuggestionsVisible(true);
-            emptyHintTimerRef.current = 0;
-          }, 2000);
-        }
-      } catch (_) {
-        if (cancelled) return;
-        setPlacePredictions([]);
-        setPredictionsOpen(false);
-        emptyHintTimerRef.current = window.setTimeout(() => {
-          if (cancelled) return;
-          const still = String(searchInputRef.current?.value || "").trim() === query;
-          if (still) setNoSuggestionsVisible(true);
-          emptyHintTimerRef.current = 0;
-        }, 2000);
-      } finally {
-        if (!cancelled) {
-          const still = String(searchInputRef.current?.value || "").trim() === query;
-          if (still) setPlacesSearching(false);
-        }
-      }
-    }, 300);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(debounce);
-      if (emptyHintTimerRef.current) {
-        window.clearTimeout(emptyHintTimerRef.current);
-        emptyHintTimerRef.current = 0;
-      }
-    };
-  }, [shopQuery, ctaVisible, shopPlaceId, isMobile]);
-
-  useEffect(() => {
-    const onClickOutside = (event) => {
-      const root = searchWrapRef.current;
-      if (!root) return;
-      if (root.contains(event.target)) return;
-      setPredictionsOpen(false);
-    };
-    document.addEventListener("click", onClickOutside);
-    return () => document.removeEventListener("click", onClickOutside);
-  }, []);
-
-  const applyPrediction = async (pred) => {
-    const name = String(pred?.main_text || pred?.description || "").trim();
-    const pid = String(pred?.place_id || "").trim();
-    if (!name || !pid) return;
-    setShopPlaceConflictError("");
-    setPlaceProbeBusy(true);
-    try {
-      const res = await checkGooglePlaceAvailable(pid);
-      if (!res.ok) {
-        setShopPlaceConflictError(res.message);
-        return;
-      }
-      setShopQuery(name);
-      setShopPlaceId(pid);
-      setPendingEstablishment({
-        establishment_name: name,
-        google_place_id: pid,
-      });
-      setPredictionsOpen(false);
-      setPlacePredictions([]);
-      setNoSuggestionsVisible(false);
-    } catch {
-      setShopPlaceConflictError("Impossible de vérifier ce commerce. Réessayez.");
-    } finally {
-      setPlaceProbeBusy(false);
-    }
-  };
-
-  const startHref = "/get";
-
-  const onStartCtaClick = async (event) => {
-    const selectedName = shopQuery.trim();
-    const selectedPid = String(shopPlaceId || "").trim();
-    if (!selectedName || !selectedPid) {
-      event.preventDefault();
-      return;
-    }
-    event.preventDefault();
-    setShopPlaceConflictError("");
-    setPlaceProbeBusy(true);
-    try {
-      const res = await checkGooglePlaceAvailable(selectedPid);
-      if (!res.ok) {
-        setShopPlaceConflictError(res.message);
-        return;
-      }
-      setPendingEstablishment({
-        establishment_name: selectedName,
-        google_place_id: selectedPid,
-      });
-      window.location.assign(startHref);
-    } catch {
-      setShopPlaceConflictError("Impossible de vérifier ce commerce. Réessayez.");
-    } finally {
-      setPlaceProbeBusy(false);
-    }
-  };
-
   return (
     <section
       className="hero fintap-hero-iphone fintap-hero-iphone--scroll"
@@ -585,11 +403,6 @@ export function FinTapHeroScrollSection() {
           className={`fintap-hero-iphone__actions${ctaVisible ? " is-visible" : ""}`}
           aria-hidden={ctaVisible || isMobile ? "false" : "true"}
         >
-          <p className="fintap-hero-iphone__actions-title">
-            Quel est le nom de
-            <br />
-            votre commerce ?
-          </p>
           {isMobile ? (
             <div className="fintap-hero-iphone__download-wrap">
               <a href="/get" className="fintap-hero-iphone__download-app">
@@ -610,92 +423,7 @@ export function FinTapHeroScrollSection() {
               <p className="fintap-hero-iphone__download-caption">+130 commerces équipés</p>
             </div>
           ) : (
-            <>
-              <label className="fintap-hero-iphone__search" aria-label="Nom de votre commerce" ref={searchWrapRef}>
-                <span className="fintap-hero-iphone__search-icon" aria-hidden="true">
-                  <img src="/assets/logos/google.png" alt="" width="18" height="18" loading="lazy" />
-                </span>
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  className="fintap-hero-iphone__search-input"
-                  placeholder="Nom de votre commerce"
-                  autoComplete="organization"
-                  value={shopQuery}
-                  onFocus={() => {
-                    if (placePredictions.length > 0) setPredictionsOpen(true);
-                  }}
-                  onChange={(e) => {
-                    setShopQuery(e.target.value);
-                    setShopPlaceId("");
-                    setNoSuggestionsVisible(false);
-                    setShopPlaceConflictError("");
-                  }}
-                />
-                {placesSearching || placeProbeBusy ? (
-                  <span
-                    className="fintap-hero-iphone__search-cta fintap-hero-iphone__search-cta--busy"
-                    aria-live="polite"
-                    aria-label="Recherche en cours"
-                    role="status"
-                  >
-                    <span className="fintap-hero-iphone__search-cta__spinner" aria-hidden="true" />
-                  </span>
-                ) : (
-                  <a
-                    href={startHref}
-                    className="fintap-hero-iphone__search-cta"
-                    aria-label="Commencer"
-                    title="Commencer"
-                    onClick={onStartCtaClick}
-                  >
-                    <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-                      <path
-                        d="M4.5 10h9m0 0-3.5-3.5M13.5 10l-3.5 3.5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </a>
-                )}
-                {predictionsOpen && placePredictions.length > 0 ? (
-                  <div className="fintap-hero-iphone__search-dropdown" role="listbox" aria-label="Suggestions commerces">
-                    {placePredictions.map((pred, idx) => (
-                      <button
-                        key={`${pred.place_id || pred.description || "pred"}-${idx}`}
-                        type="button"
-                        className="fintap-hero-iphone__search-option"
-                        onPointerDown={(e) => {
-                          e.preventDefault();
-                          applyPrediction(pred);
-                        }}
-                      >
-                        <span className="fintap-hero-iphone__search-option-main">
-                          {pred.main_text || pred.description}
-                        </span>
-                        {pred.secondary_text ? (
-                          <span className="fintap-hero-iphone__search-option-sub">{pred.secondary_text}</span>
-                        ) : null}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </label>
-              {shopPlaceConflictError ? (
-                <p className="fintap-hero-iphone__search-conflict" role="alert">
-                  {shopPlaceConflictError}
-                </p>
-              ) : null}
-              {noSuggestionsVisible && shopQuery.trim().length >= 2 && !placesSearching ? (
-                <p className="fintap-hero-iphone__search-empty-hint" role="status">
-                  Aucun commerce trouvé pour l’instant. Précisez le nom ou ajoutez la ville, puis choisissez une suggestion
-                  dans la liste.
-                </p>
-              ) : null}
-            </>
+            <FinTapHeroDeskDownload />
           )}
         </div>
       </div>
