@@ -31,7 +31,7 @@ export function FinTapFeaturesGridSection() {
         <div className="fintap-features-grid__cta-wrap">
           <ScrollReveal delay={0.08}>
             <a href="/get" className="fintap-features-grid__cta">
-              Télécharger l&apos;app
+              Télécharger l&apos;app commerçant
             </a>
           </ScrollReveal>
         </div>

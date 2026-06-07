@@ -17,12 +17,15 @@ export const REVENUE_SIMULATOR_ASSUMPTIONS = {
   maxIncrementalShareOfRevenue: 0.06,
 };
 
+/** Conversion visiteurs/jour → base mensuelle du modèle. */
+export const REVENUE_SIMULATOR_DAYS_PER_MONTH = 30;
+
 export const REVENUE_SIMULATOR_DEFAULTS = {
-  monthlyVisitors: 1200,
+  dailyVisitors: 40,
   avgBasket: 22,
 };
 
 export const REVENUE_SIMULATOR_LIMITS = {
-  monthlyVisitors: { min: 300, max: 6000 },
+  dailyVisitors: { min: 10, max: 200 },
   avgBasket: { min: 5, max: 90 },
 };

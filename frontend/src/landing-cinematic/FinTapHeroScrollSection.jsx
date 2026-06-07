@@ -593,7 +593,7 @@ export function FinTapHeroScrollSection() {
           {isMobile ? (
             <div className="fintap-hero-iphone__download-wrap">
               <a href="/get" className="fintap-hero-iphone__download-app">
-                <span className="fintap-hero-iphone__download-app-label">Télécharger l&apos;app</span>
+                <span className="fintap-hero-iphone__download-app-label">Télécharger l&apos;app commerçant</span>
                 <span className="fintap-hero-iphone__download-app-arrow" aria-hidden="true">
                   <svg viewBox="0 0 20 20" focusable="false">
                     <path

@@ -1,13 +1,22 @@
 /**
  * Galerie landing (FinTapContentCarouselSection).
- * Fichiers : frontend/public/assets/image-caroussel/content-{1..10}.jpg (~520px).
+ * Fichiers : frontend/public/assets/image-caroussel/content-{1..N}.jpg (~520px).
+ * Garder cette liste alignée avec les fichiers réellement présents dans le dossier.
  */
-export const FINTAP_CONTENT_CAROUSEL_COUNT = 10;
+const FINTAP_CONTENT_CAROUSEL_VERSION = 4;
 
-export const FINTAP_CONTENT_CAROUSEL_IMAGES = Array.from(
-  { length: FINTAP_CONTENT_CAROUSEL_COUNT },
-  (_, i) => `/assets/image-caroussel/content-${i + 1}.jpg`
-);
+export const FINTAP_CONTENT_CAROUSEL_IMAGES = [
+  `/assets/image-caroussel/content-1.jpg?v=${FINTAP_CONTENT_CAROUSEL_VERSION}`,
+  `/assets/image-caroussel/content-2.jpg?v=${FINTAP_CONTENT_CAROUSEL_VERSION}`,
+  `/assets/image-caroussel/content-3.jpg?v=${FINTAP_CONTENT_CAROUSEL_VERSION}`,
+  `/assets/image-caroussel/content-4.jpg?v=${FINTAP_CONTENT_CAROUSEL_VERSION}`,
+  `/assets/image-caroussel/content-5.jpg?v=${FINTAP_CONTENT_CAROUSEL_VERSION}`,
+  `/assets/image-caroussel/content-6.jpg?v=${FINTAP_CONTENT_CAROUSEL_VERSION}`,
+  `/assets/image-caroussel/content-7.jpg?v=${FINTAP_CONTENT_CAROUSEL_VERSION}`,
+  `/assets/image-caroussel/content-8.jpg?v=${FINTAP_CONTENT_CAROUSEL_VERSION}`,
+];
+
+export const FINTAP_CONTENT_CAROUSEL_COUNT = FINTAP_CONTENT_CAROUSEL_IMAGES.length;
 
 /**
  * @param {string[]} images

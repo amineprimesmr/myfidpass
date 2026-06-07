@@ -13,7 +13,7 @@ import { MYFIDPASS_MONTHLY_COST } from "./fintap-revenue-simulator-data.js";
 describe("computeRevenueSimulation", () => {
   it("calcule un revenu additionnel réaliste avec les entrées par défaut", () => {
     const result = computeRevenueSimulation({
-      monthlyVisitors: 1200,
+      dailyVisitors: 40,
       avgBasket: 22,
     });
     expect(result.additionalMonthly).toBeGreaterThan(200);
@@ -30,15 +30,15 @@ describe("computeRevenueSimulation", () => {
   });
 
   it("évolue de façon cohérente quand le trafic augmente", () => {
-    const low = computeRevenueSimulation({ monthlyVisitors: 500, avgBasket: 15 });
-    const high = computeRevenueSimulation({ monthlyVisitors: 3000, avgBasket: 15 });
+    const low = computeRevenueSimulation({ dailyVisitors: 17, avgBasket: 15 });
+    const high = computeRevenueSimulation({ dailyVisitors: 100, avgBasket: 15 });
     expect(high.additionalMonthly).toBeGreaterThan(low.additionalMonthly);
     expect(high.additionalMonthly / high.baseMonthlyRevenue).toBeLessThanOrEqual(0.06);
   });
 
   it("utilise le panier par défaut si absent", () => {
     const result = computeRevenueSimulation({
-      monthlyVisitors: 1000,
+      dailyVisitors: 33,
       avgBasket: null,
     });
     expect(result.avgBasket).toBe(22);
@@ -46,10 +46,10 @@ describe("computeRevenueSimulation", () => {
 
   it("borne les valeurs extrêmes", () => {
     const low = computeRevenueSimulation({
-      monthlyVisitors: 0,
+      dailyVisitors: 0,
       avgBasket: -5,
     });
-    expect(low.monthlyVisitors).toBe(300);
+    expect(low.dailyVisitors).toBe(10);
     expect(low.avgBasket).toBeGreaterThan(0);
   });
 });
@@ -66,19 +66,25 @@ describe("build30DayChart", () => {
 describe("buildRevenueSimulatorDisclaimer", () => {
   it("mentionne les métriques par client actif", () => {
     const results = computeRevenueSimulation({
-      monthlyVisitors: 1200,
+      dailyVisitors: 40,
       avgBasket: 22,
     });
     const text = buildRevenueSimulatorDisclaimer(results);
+    expect(text).toContain("Estimation :");
     expect(text).toContain("/client actif");
-    expect(text).toContain("visiteurs/mois");
+    expect(text).toContain("visiteurs/jour");
+    expect(text).not.toContain("indicative");
+    expect(text).not.toContain("abonnement réparti");
     expect(text).not.toContain("secteur");
   });
 });
 
 describe("formatEuro", () => {
-  it("formate en euros FR", () => {
-    expect(formatEuro(1200)).toMatch(/1[\s\u00a0]?200/);
+  it("formate en euros FR sans espace avant le symbole", () => {
+    expect(formatEuro(702)).toBe("702€");
+    expect(formatEuro(7.24, { maximumFractionDigits: 2 })).toBe("7,24€");
+    expect(formatEuro(1200)).toMatch(/1[\s\u00a0]?200€/);
+    expect(formatEuro(1200)).not.toMatch(/[\s\u00a0]€/);
   });
 });
 

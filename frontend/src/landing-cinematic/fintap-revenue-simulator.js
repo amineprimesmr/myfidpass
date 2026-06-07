@@ -1,6 +1,7 @@
 import {
   MYFIDPASS_MONTHLY_COST,
   REVENUE_SIMULATOR_ASSUMPTIONS,
+  REVENUE_SIMULATOR_DAYS_PER_MONTH,
   REVENUE_SIMULATOR_DEFAULTS,
   REVENUE_SIMULATOR_LIMITS,
 } from "./fintap-revenue-simulator-data.js";
@@ -56,7 +57,7 @@ export function build30DayChart(monthlyAdditional) {
 /**
  * Estime le revenu additionnel d'un programme fidélité (hypothèses fixes, sans secteur).
  *
- * @param {{ monthlyVisitors: number, avgBasket: number | null }} input
+ * @param {{ dailyVisitors: number, avgBasket: number | null }} input
  */
 export function computeRevenueSimulation(input) {
   const {
@@ -68,11 +69,12 @@ export function computeRevenueSimulation(input) {
     maxIncrementalShareOfRevenue,
   } = REVENUE_SIMULATOR_ASSUMPTIONS;
 
-  const visitors = clampSimulatorNumber(
-    input.monthlyVisitors,
-    REVENUE_SIMULATOR_LIMITS.monthlyVisitors.min,
-    REVENUE_SIMULATOR_LIMITS.monthlyVisitors.max
+  const dailyVisitors = clampSimulatorNumber(
+    input.dailyVisitors,
+    REVENUE_SIMULATOR_LIMITS.dailyVisitors.min,
+    REVENUE_SIMULATOR_LIMITS.dailyVisitors.max
   );
+  const visitors = dailyVisitors * REVENUE_SIMULATOR_DAYS_PER_MONTH;
   const basketRaw = input.avgBasket;
   const basket =
     basketRaw != null && Number.isFinite(Number(basketRaw)) && Number(basketRaw) > 0
@@ -114,6 +116,7 @@ export function computeRevenueSimulation(input) {
   const first30DaysRevenue = chartPoints[chartPoints.length - 1]?.cumulative ?? 0;
 
   return {
+    dailyVisitors,
     monthlyVisitors: visitors,
     avgBasket: basket,
     baseMonthlyRevenue: Math.round(baseMonthlyRevenue),
@@ -136,14 +139,14 @@ export function computeRevenueSimulation(input) {
  */
 export function buildRevenueSimulatorDisclaimer(results) {
   return (
-    `* Estimation indicative : +${formatEuro(results.revenuePerActiveMember, {
+    `* Estimation : +${formatEuro(results.revenuePerActiveMember, {
       maximumFractionDigits: 2,
     })}/client actif vs ${formatEuro(results.costPerActiveMember, {
       maximumFractionDigits: 2,
-    })}/client (abonnement réparti). ` +
+    })}/client. ` +
     `Basé sur ${results.activeMembers} clients actifs pour ${formatCompactNumber(
-      results.monthlyVisitors
-    )} visiteurs/mois.`
+      results.dailyVisitors
+    )} visiteurs/jour.`
   );
 }
 
@@ -158,7 +161,9 @@ export function formatEuro(amount, opts = {}) {
     style: "currency",
     currency: "EUR",
     maximumFractionDigits: opts.maximumFractionDigits ?? 0,
-  }).format(n);
+  })
+    .format(n)
+    .replace(/[\s\u00a0]+€/g, "€");
 }
 
 /** @param {number} value */

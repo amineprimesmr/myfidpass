@@ -39,6 +39,16 @@
   margin-inline: calc(50% - 50vw);
 }
 
+@media (min-width: 768px) {
+  .fintap-features-grid .fintap-var-cards--embedded {
+    width: 100%;
+    max-width: 70rem;
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+    --fintap-var-peek: clamp(2rem, 8vw, 3.5rem);
+  }
+}
+
 .fintap-features-grid__list {
   list-style: none;
   margin: 0;

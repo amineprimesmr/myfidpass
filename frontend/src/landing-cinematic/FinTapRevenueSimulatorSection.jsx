@@ -16,21 +16,21 @@ import "./fintap-revenue-simulator.css";
 
 /** Section simulateur ROI — carte bleue type Kanal. */
 export function FinTapRevenueSimulatorSection() {
-  const [monthlyVisitors, setMonthlyVisitors] = useState(
-    REVENUE_SIMULATOR_DEFAULTS.monthlyVisitors
+  const [dailyVisitors, setDailyVisitors] = useState(
+    REVENUE_SIMULATOR_DEFAULTS.dailyVisitors
   );
   const [avgBasket, setAvgBasket] = useState(REVENUE_SIMULATOR_DEFAULTS.avgBasket);
 
   const results = useMemo(
     () =>
       computeRevenueSimulation({
-        monthlyVisitors,
+        dailyVisitors,
         avgBasket,
       }),
-    [monthlyVisitors, avgBasket]
+    [dailyVisitors, avgBasket]
   );
 
-  const { monthlyVisitors: visitorsLimits, avgBasket: basketLimits } =
+  const { dailyVisitors: visitorsLimits, avgBasket: basketLimits } =
     REVENUE_SIMULATOR_LIMITS;
 
   return (
@@ -55,15 +55,15 @@ export function FinTapRevenueSimulatorSection() {
           <div className="fintap-revenue-simulator__card" aria-live="polite">
             <div className="fintap-revenue-simulator__sliders">
               <div className="fintap-revenue-simulator__slider-col">
-                <p className="fintap-revenue-simulator__slider-kicker">Visiteurs mensuels</p>
+                <p className="fintap-revenue-simulator__slider-kicker">Visiteurs quotidiens</p>
                 <FinTapLiquidSlider
                   theme="blue"
                   min={visitorsLimits.min}
                   max={visitorsLimits.max}
-                  step={50}
-                  value={monthlyVisitors}
-                  onChange={setMonthlyVisitors}
-                  ariaLabel="Visiteurs mensuels"
+                  step={5}
+                  value={dailyVisitors}
+                  onChange={setDailyVisitors}
+                  ariaLabel="Visiteurs quotidiens"
                   labelsMin={formatCompactNumber(visitorsLimits.min)}
                   labelsMax={`${formatCompactNumber(visitorsLimits.max)}+`}
                 />
@@ -78,8 +78,8 @@ export function FinTapRevenueSimulatorSection() {
                   value={avgBasket}
                   onChange={setAvgBasket}
                   ariaLabel="Panier moyen en euros"
-                  labelsMin={`${basketLimits.min} €`}
-                  labelsMax={`${basketLimits.max} €`}
+                  labelsMin={`${basketLimits.min}€`}
+                  labelsMax={`${basketLimits.max}€`}
                 />
               </div>
             </div>
@@ -87,7 +87,7 @@ export function FinTapRevenueSimulatorSection() {
             <div className="fintap-revenue-simulator__headline">
               <div className="fintap-revenue-simulator__headline-main">
                 <span className="fintap-revenue-simulator__headline-kicker">
-                  30 jours — programme fidélité
+                  Revenu mensuel additionnel potentiel
                 </span>
                 <p className="fintap-revenue-simulator__headline-value">
                   <strong>{formatEuro(results.first30DaysRevenue)}</strong> générés
@@ -114,9 +114,6 @@ export function FinTapRevenueSimulatorSection() {
                   /client actif
                 </span>
               </div>
-              <p className="fintap-revenue-simulator__legend-formula">
-                Calcul : visites + panier additionnels / abonnement Myfidpass
-              </p>
             </div>
 
             <div className="fintap-revenue-simulator__footer">
@@ -138,7 +135,7 @@ export function FinTapRevenueSimulatorSection() {
                 </div>
               </div>
               <a href="/get" className="fintap-revenue-simulator__cta">
-                Télécharger l&apos;app
+                Télécharger l&apos;app commerçant
               </a>
             </div>
 
