@@ -3,6 +3,7 @@ import {
   REVENUE_SIMULATOR_ASSUMPTIONS,
   REVENUE_SIMULATOR_DAYS_PER_MONTH,
   REVENUE_SIMULATOR_DEFAULTS,
+  REVENUE_SIMULATOR_ENGAGEMENT_CHANNELS,
   REVENUE_SIMULATOR_LIMITS,
 } from "./fintap-revenue-simulator-data.js";
 
@@ -52,6 +53,31 @@ export function build30DayChart(monthlyAdditional) {
   }
 
   return points;
+}
+
+/**
+ * @param {{ enrolledMembers: number, activeMembers: number }} input
+ */
+export function buildEngagementEstimates(input) {
+  const {
+    googleReviewsPerActiveMember,
+    instagramFollowsPerEnrolledMember,
+    tiktokFollowsPerEnrolledMember,
+  } = REVENUE_SIMULATOR_ASSUMPTIONS;
+
+  const enrolled = Math.max(0, input.enrolledMembers);
+  const active = Math.max(1, input.activeMembers);
+
+  const values = {
+    google: Math.max(1, Math.round(active * googleReviewsPerActiveMember)),
+    instagram: Math.max(1, Math.round(enrolled * instagramFollowsPerEnrolledMember)),
+    tiktok: Math.max(1, Math.round(enrolled * tiktokFollowsPerEnrolledMember)),
+  };
+
+  return REVENUE_SIMULATOR_ENGAGEMENT_CHANNELS.map((channel) => ({
+    ...channel,
+    value: values[channel.id] ?? 1,
+  }));
 }
 
 /**
@@ -114,6 +140,11 @@ export function computeRevenueSimulation(input) {
 
   const chartPoints = build30DayChart(additionalMonthly);
   const first30DaysRevenue = chartPoints[chartPoints.length - 1]?.cumulative ?? 0;
+  const enrolledMembersRounded = Math.round(enrolledMembers);
+  const engagementEstimates = buildEngagementEstimates({
+    enrolledMembers: enrolledMembersRounded,
+    activeMembers,
+  });
 
   return {
     dailyVisitors,
@@ -124,12 +155,13 @@ export function computeRevenueSimulation(input) {
     netMonthly,
     roiMultiple,
     activeMembers,
-    enrolledMembers: Math.round(enrolledMembers),
+    enrolledMembers: enrolledMembersRounded,
     revenuePerActiveMember,
     costPerActiveMember,
     first30DaysRevenue,
     chartPoints,
     subscriptionMonthly,
+    engagementEstimates,
   };
 }
 

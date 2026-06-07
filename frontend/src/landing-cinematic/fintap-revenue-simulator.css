@@ -347,11 +347,91 @@
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
 }
 
+.fintap-revenue-simulator__estimation {
+  margin-top: 1rem;
+}
+
 .fintap-revenue-simulator__disclaimer {
-  margin: 1rem 0 0;
+  margin: 0;
   font-size: 0.68rem;
   line-height: 1.45;
   color: rgba(255, 255, 255, 0.58);
+}
+
+.fintap-revenue-simulator__engagement-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+}
+
+@media (min-width: 540px) {
+  .fintap-revenue-simulator__engagement-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+}
+
+.fintap-revenue-simulator__engagement-card {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.fintap-revenue-simulator__engagement-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.fintap-revenue-simulator__engagement-icon img {
+  display: block;
+  width: 1.15rem;
+  height: 1.15rem;
+  object-fit: contain;
+}
+
+.fintap-revenue-simulator__engagement-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.fintap-revenue-simulator__engagement-label {
+  font-size: 0.62rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.2;
+}
+
+.fintap-revenue-simulator__engagement-value {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.fintap-revenue-simulator__engagement-period {
+  margin-left: 0.12rem;
+  font-size: 0.72em;
+  font-weight: 650;
+  color: rgba(255, 255, 255, 0.72);
 }
 
 @media (max-width: 639px) {

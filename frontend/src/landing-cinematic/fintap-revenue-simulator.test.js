@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   build30DayChart,
+  buildEngagementEstimates,
   buildRevenueSimulatorDisclaimer,
   computeRevenueSimulation,
   formatCompactNumber,
@@ -44,6 +45,29 @@ describe("computeRevenueSimulation", () => {
     expect(result.avgBasket).toBe(22);
   });
 
+  it("estime avis Google et abonnés réseaux selon le trafic", () => {
+    const result = computeRevenueSimulation({
+      dailyVisitors: 40,
+      avgBasket: 22,
+    });
+    expect(result.engagementEstimates).toHaveLength(3);
+    expect(result.engagementEstimates.map((e) => e.id)).toEqual([
+      "google",
+      "instagram",
+      "tiktok",
+    ]);
+    const byId = Object.fromEntries(result.engagementEstimates.map((e) => [e.id, e.value]));
+    expect(byId.google).toBeGreaterThanOrEqual(4);
+    expect(byId.instagram).toBeGreaterThan(byId.google);
+    expect(byId.tiktok).toBeGreaterThanOrEqual(6);
+
+    const low = computeRevenueSimulation({ dailyVisitors: 10, avgBasket: 15 });
+    const high = computeRevenueSimulation({ dailyVisitors: 100, avgBasket: 15 });
+    const lowGoogle = low.engagementEstimates.find((e) => e.id === "google")?.value ?? 0;
+    const highGoogle = high.engagementEstimates.find((e) => e.id === "google")?.value ?? 0;
+    expect(highGoogle).toBeGreaterThan(lowGoogle);
+  });
+
   it("borne les valeurs extrêmes", () => {
     const low = computeRevenueSimulation({
       dailyVisitors: 0,
@@ -60,6 +84,16 @@ describe("build30DayChart", () => {
     expect(points[0].cumulative).toBeGreaterThan(0);
     expect(points[points.length - 1].cumulative).toBe(800);
     expect(rampFactorForDay(30)).toBeCloseTo(1, 2);
+  });
+});
+
+describe("buildEngagementEstimates", () => {
+  it("retourne au minimum 1 par canal", () => {
+    const items = buildEngagementEstimates({ enrolledMembers: 2, activeMembers: 1 });
+    items.forEach((item) => {
+      expect(item.value).toBeGreaterThanOrEqual(1);
+      expect(item.icon).toMatch(/\/assets\/logos\//);
+    });
   });
 });
 
