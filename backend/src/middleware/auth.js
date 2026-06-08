@@ -89,10 +89,24 @@ export function optionalAuth(req, res, next) {
 
 /**
  * Exige un utilisateur connecté. Renvoie 401 si pas de JWT ou invalide.
+ * `session_revoked` : compte supprimé / session invalidée côté serveur — le client doit déconnecter
+ * même si le JWT access est encore dans sa fenêtre de validité.
  */
 export function requireAuth(req, res, next) {
   if (!req.user) {
-    return res.status(401).json({ error: "Authentification requise" });
+    if (req.authError === "user_not_found") {
+      return res.status(401).json({
+        error: "Compte introuvable ou session révoquée",
+        code: "session_revoked",
+      });
+    }
+    if (req.authError === "expired") {
+      return res.status(401).json({ error: "Session expirée", code: "token_expired" });
+    }
+    if (req.authError === "invalid") {
+      return res.status(401).json({ error: "Jeton invalide", code: "invalid_token" });
+    }
+    return res.status(401).json({ error: "Authentification requise", code: "auth_required" });
   }
   next();
 }
