@@ -617,8 +617,10 @@ export function getDashboardEvolutionForMonth(businessId, yyyymm) {
       AND json_extract(metadata, '$.amount_eur') IS NOT NULL
       AND CAST(json_extract(metadata, '$.amount_eur') AS REAL) > 0`;
     let avgBasketEurInMonth = null;
+    let avgBasketEurInInterval = null;
+    let basketTotalEurInMonth = null;
     try {
-      const basketRow = db
+      const basketMonthRow = db
         .prepare(
           `SELECT COALESCE(SUM(CAST(json_extract(metadata, '$.amount_eur') AS REAL)), 0) as total,
                   COUNT(*) as n
@@ -627,10 +629,30 @@ export function getDashboardEvolutionForMonth(businessId, yyyymm) {
            AND ${amountEurSqlFilter}`,
         )
         .get(businessId, monthStart, queryEndDate);
-      const n = basketRow?.n ?? 0;
-      const total = basketRow?.total ?? 0;
-      if (n > 0 && total > 0) {
-        avgBasketEurInMonth = Math.round((total / n) * 100) / 100;
+      const monthN = basketMonthRow?.n ?? 0;
+      const monthTotal = basketMonthRow?.total ?? 0;
+      if (monthTotal > 0) {
+        basketTotalEurInMonth = Math.round(monthTotal * 100) / 100;
+      }
+      if (monthN > 0 && monthTotal > 0) {
+        avgBasketEurInMonth = Math.round((monthTotal / monthN) * 100) / 100;
+      }
+
+      if (intervalStartDay <= intervalEndDay) {
+        const basketIntervalRow = db
+          .prepare(
+            `SELECT COALESCE(SUM(CAST(json_extract(metadata, '$.amount_eur') AS REAL)), 0) as total,
+                    COUNT(*) as n
+             FROM transactions
+             WHERE business_id = ? AND date(created_at) >= date(?) AND date(created_at) <= date(?)
+             AND ${amountEurSqlFilter}`,
+          )
+          .get(businessId, intervalStart, queryEndDate);
+        const intervalN = basketIntervalRow?.n ?? 0;
+        const intervalTotal = basketIntervalRow?.total ?? 0;
+        if (intervalN > 0 && intervalTotal > 0) {
+          avgBasketEurInInterval = Math.round((intervalTotal / intervalN) * 100) / 100;
+        }
       }
     } catch (_e) {
       /* json_extract */
@@ -649,6 +671,8 @@ export function getDashboardEvolutionForMonth(businessId, yyyymm) {
       membersCount: membersTotal?.n ?? 0,
       newMembersInMonth: newInMonth?.n ?? 0,
       avg_basket_eur_in_month: avgBasketEurInMonth,
+      avg_basket_eur_in_interval: avgBasketEurInInterval,
+      basket_total_eur_in_month: basketTotalEurInMonth,
     });
   }
   return rows;
