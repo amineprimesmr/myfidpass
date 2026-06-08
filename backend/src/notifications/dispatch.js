@@ -182,6 +182,9 @@ export async function deliverCustomerBroadcast({
     };
   }
 
+  /** Membres distincts réellement touchés (1 entrée par membre, pas par appareil). */
+  const touchedMemberIds = new Set();
+
   const dispatchStartedAt = Date.now();
   logger.info(
     {
@@ -236,6 +239,8 @@ export async function deliverCustomerBroadcast({
     webSubscriptions.map(async (sub) => {
       try {
         await sendWebPush({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload);
+        const mid = String(sub.member_id ?? "").trim().toLowerCase();
+        if (mid) touchedMemberIds.add(mid);
         logNotification({
           businessId: business.id,
           memberId: sub.member_id,
@@ -301,6 +306,8 @@ export async function deliverCustomerBroadcast({
     for (const { row, result } of waveResults) {
       if (result.sent) {
         sentPassKit++;
+        const mid = String(row.serial_number ?? "").trim().toLowerCase();
+        if (mid) touchedMemberIds.add(mid);
         logNotification({
           businessId: business.id,
           memberId: row.serial_number,
@@ -347,6 +354,8 @@ export async function deliverCustomerBroadcast({
           batchId,
         });
         if (result.sent > 0) {
+          const mid = String(member.id ?? "").trim().toLowerCase();
+          if (mid) touchedMemberIds.add(mid);
           logNotification({
             businessId: business.id,
             memberId: member.id,
@@ -407,6 +416,7 @@ export async function deliverCustomerBroadcast({
   const sent = sentWebPush + sentPassKit + sentGoogleWallet;
   let sentMerchantApp = 0;
 
+  const recipientsDistinct = touchedMemberIds.size;
   const summary = {
     sent,
     sentWebPush,
@@ -415,6 +425,8 @@ export async function deliverCustomerBroadcast({
     skippedGoogleWallet,
     failedGoogleWallet,
     sentMerchantApp: 0,
+    recipients_distinct: recipientsDistinct,
+    distinct_recipients: recipientsDistinct,
     failed: errors.length,
     errors: errors.length > 0 ? errors : undefined,
     batch_id: batchId,

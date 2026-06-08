@@ -38,6 +38,22 @@ function readSummarySentTotal(summary) {
   return sum > 0 ? sum : null;
 }
 
+function readSummaryRecipientsDistinct(summary) {
+  if (!summary || typeof summary !== "object") return null;
+  for (const key of ["recipients_distinct", "distinct_recipients", "touched_members"]) {
+    const v = Number(summary[key]);
+    if (Number.isFinite(v) && v > 0) return Math.floor(v);
+  }
+  return null;
+}
+
+function resolveCampaignRecipientCount(businessId, batchId, summary) {
+  const fromLog = countDistinctRecipientsForBatch(businessId, batchId);
+  const fromSummaryRecipients = readSummaryRecipientsDistinct(summary);
+  const sentTotal = readSummarySentTotal(summary);
+  return Math.max(fromLog, fromSummaryRecipients ?? 0, sentTotal ?? 0);
+}
+
 /** Membre « réel » pour les stats : e-mail absent OK, invités techniques exclus. */
 const REAL_MEMBER_FOR_STATS_SQL = `(
   TRIM(IFNULL(m.email, '')) = ''
@@ -361,7 +377,8 @@ export function getNotificationCampaignInsightsForBusiness(businessId, { limit =
       const sample = db
         .prepare(
           `SELECT title, body FROM notification_log
-           WHERE business_id = ? AND batch_id = ? AND status = 'sent'
+           WHERE business_id = ? AND batch_id = ?
+             AND (status IS NULL OR status = 'sent')
              AND IFNULL(type,'') != 'merchant_receipt'
            ORDER BY created_at ASC LIMIT 1`,
         )
@@ -375,14 +392,8 @@ export function getNotificationCampaignInsightsForBusiness(businessId, { limit =
     } catch (_e) {
       /* */
     }
-    const recipientsFromLog = countDistinctRecipientsForBatch(businessId, b.id);
     const sentTotal = readSummarySentTotal(summary);
-    const recipients =
-      recipientsFromLog > 0
-        ? recipientsFromLog
-        : sentTotal != null && sentTotal > 0
-          ? sentTotal
-          : 0;
+    const recipients = resolveCampaignRecipientCount(businessId, b.id, summary);
     let returnedWithin48h = 0;
     try {
       const rev = db

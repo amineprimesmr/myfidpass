@@ -1812,4 +1812,69 @@ export function runMigrations(db) {
     }
     markMigrationApplied(db, 46, "members_wallet_tier_unlock_label");
   }
+
+  // v47 : réparer l’historique « Membres touchés » (logs orphelins + summary_json incomplets)
+  const m47 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 47").get();
+  if (!m47) {
+    safeRun(db, () => {
+      const nlCols = db.prepare("PRAGMA table_info(notification_log)").all().map((c) => c.name);
+      if (nlCols.includes("batch_id")) {
+        const orphans = db
+          .prepare(
+            `SELECT id, business_id, created_at, trigger_name FROM notification_log
+             WHERE (batch_id IS NULL OR TRIM(batch_id) = '')
+               AND member_id IS NOT NULL AND TRIM(CAST(member_id AS TEXT)) != ''
+               AND (status IS NULL OR status = 'sent')
+               AND IFNULL(type, '') != 'merchant_receipt'`,
+          )
+          .all();
+        const linkStmt = db.prepare(
+          `SELECT id FROM notification_batches
+           WHERE business_id = ?
+             AND ABS(strftime('%s', created_at) - strftime('%s', ?)) <= 300
+           ORDER BY ABS(strftime('%s', created_at) - strftime('%s', ?)) ASC
+           LIMIT 1`,
+        );
+        const updLog = db.prepare("UPDATE notification_log SET batch_id = ? WHERE id = ?");
+        for (const row of orphans) {
+          const batch = linkStmt.get(row.business_id, row.created_at, row.created_at);
+          if (batch?.id) updLog.run(batch.id, row.id);
+        }
+      }
+
+      const batches = db.prepare("SELECT id, business_id, summary_json FROM notification_batches").all();
+      const countRecipients = db.prepare(
+        `SELECT COUNT(DISTINCT LOWER(TRIM(CAST(member_id AS TEXT)))) AS n
+         FROM notification_log
+         WHERE business_id = ? AND batch_id = ?
+           AND member_id IS NOT NULL AND TRIM(CAST(member_id AS TEXT)) != ''
+           AND (status IS NULL OR status = 'sent')
+           AND IFNULL(type, '') != 'merchant_receipt'`,
+      );
+      const updBatch = db.prepare("UPDATE notification_batches SET summary_json = ? WHERE id = ?");
+      for (const b of batches) {
+        let summary = {};
+        try {
+          summary = JSON.parse(b.summary_json || "{}");
+        } catch {
+          summary = {};
+        }
+        const hasSent = typeof summary.sent === "number" && summary.sent > 0;
+        const hasRecipients =
+          Number(summary.recipients_distinct ?? summary.distinct_recipients ?? 0) > 0;
+        if (hasSent && hasRecipients) continue;
+        const recipients = countRecipients.get(b.business_id, b.id)?.n ?? 0;
+        const next = { ...summary };
+        if (!hasSent && recipients > 0) next.sent = recipients;
+        if (!hasRecipients && recipients > 0) {
+          next.recipients_distinct = recipients;
+          next.distinct_recipients = recipients;
+        }
+        if (JSON.stringify(next) !== JSON.stringify(summary)) {
+          updBatch.run(JSON.stringify(next), b.id);
+        }
+      }
+    });
+    markMigrationApplied(db, 47, "notification_campaign_recipient_backfill");
+  }
 }

@@ -535,9 +535,9 @@ export function getDashboardEvolution(businessId, weeks = 6) {
       `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND created_at < ${end}`
     ).get(businessId);
     rows.push({
-      weekIndex: i,
-      operationsCount: op?.n ?? 0,
-      membersCount: members?.n ?? 0,
+      week_index: i,
+      operations_count: op?.n ?? 0,
+      members_count: members?.n ?? 0,
     });
   }
   return rows;
@@ -667,11 +667,11 @@ export function getDashboardEvolutionForMonth(businessId, yyyymm) {
       .get(businessId, queryEndDate);
 
     rows.push({
-      weekIndex: b,
-      dayOfMonth: queryDay,
-      operationsCount: op?.n ?? 0,
-      membersCount: membersTotal?.n ?? 0,
-      newMembersInMonth: newInMonth?.n ?? 0,
+      week_index: b,
+      day_of_month: queryDay,
+      operations_count: op?.n ?? 0,
+      members_count: membersTotal?.n ?? 0,
+      new_members_in_month: newInMonth?.n ?? 0,
       avg_basket_eur_in_month: avgBasketEurInMonth,
       avg_basket_eur_in_interval: avgBasketEurInInterval,
       basket_total_eur_in_month: basketTotalEurInMonth,
