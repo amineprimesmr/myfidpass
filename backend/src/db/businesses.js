@@ -11,8 +11,21 @@ import {
   DEMO_ENGAGEMENT_REWARDS_JSON,
 } from "./demo-business-defaults.js";
 import { nowUtcSqlWithMs } from "./datetime-sql.js";
+import { sqlExcludeTechnicalMembers } from "./member-segment-sql.js";
 
 const db = getDb();
+
+const adminMemberCountSql = `(SELECT COUNT(*) FROM members m WHERE m.business_id = b.id AND ${sqlExcludeTechnicalMembers("m.email")})`;
+
+const adminBusinessesFromSql = `
+    FROM businesses b
+    LEFT JOIN users u ON u.id = b.user_id
+    LEFT JOIN (
+      SELECT user_id, status, plan_id
+      FROM subscriptions
+      WHERE rowid IN (SELECT MAX(rowid) FROM subscriptions GROUP BY user_id)
+    ) sub ON sub.user_id = b.user_id
+  `;
 
 function generateToken() {
   return randomUUID().replace(/-/g, "") + randomUUID().replace(/-/g, "").slice(0, 16);
@@ -70,12 +83,10 @@ export function listAllBusinessesForAdmin(p = {}) {
       b.asset_logo_icon_present, b.logo_icon_updated_at,
       b.asset_notification_icon_present, b.notification_icon_updated_at,
       u.email AS owner_email,
-      (SELECT COUNT(*) FROM members m WHERE m.business_id = b.id) AS member_count,
-      s.status AS owner_subscription_status,
-      s.plan_id AS owner_plan_id
-    FROM businesses b
-    LEFT JOIN users u ON u.id = b.user_id
-    LEFT JOIN subscriptions s ON s.user_id = b.user_id
+      ${adminMemberCountSql} AS member_count,
+      sub.status AS owner_subscription_status,
+      sub.plan_id AS owner_plan_id
+    ${adminBusinessesFromSql}
   `;
   if (q) {
     const like = `%${q}%`;
@@ -105,12 +116,10 @@ export function getBusinessForAdminById(businessId) {
       b.asset_logo_icon_present, b.logo_icon_updated_at,
       b.asset_notification_icon_present, b.notification_icon_updated_at,
       u.email AS owner_email,
-      (SELECT COUNT(*) FROM members m WHERE m.business_id = b.id) AS member_count,
-      s.status AS owner_subscription_status,
-      s.plan_id AS owner_plan_id
-    FROM businesses b
-    LEFT JOIN users u ON u.id = b.user_id
-    LEFT JOIN subscriptions s ON s.user_id = b.user_id
+      ${adminMemberCountSql} AS member_count,
+      sub.status AS owner_subscription_status,
+      sub.plan_id AS owner_plan_id
+    ${adminBusinessesFromSql}
     WHERE b.id = ?`,
       )
       .get(id) || null
