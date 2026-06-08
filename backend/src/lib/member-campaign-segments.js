@@ -3,7 +3,9 @@
  */
 import { getDb } from "../db/connection.js";
 import { getBusinessById } from "../db/businesses.js";
-import { sqlInactiveMembersSinceDays } from "../db/member-segment-sql.js";
+import { sqlExcludeTechnicalMembers, sqlInactiveMembersSinceDays } from "../db/member-segment-sql.js";
+
+const REAL_MEMBERS_SQL = sqlExcludeTechnicalMembers();
 import { normalizeStampBalance } from "./stamps-cycle-math.js";
 import { STAMP_MID_DEFAULT } from "./stamp-reward-tiers.js";
 import {
@@ -133,14 +135,18 @@ export function memberCrossedRewardUnlocked(business, previousBalance, newBalanc
 export function getMemberIdsRewardReady(businessId, business = null) {
   const b = loadBusinessOrNull(businessId, business);
   if (!b) return [];
-  const rows = db.prepare("SELECT id, points FROM members WHERE business_id = ?").all(businessId);
+  const rows = db
+    .prepare(`SELECT id, points FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL}`)
+    .all(businessId);
   return rows.filter((m) => memberHasRewardReady(b, m)).map((m) => m.id);
 }
 
 export function getMemberIdsPointsNear(businessId, business = null) {
   const b = loadBusinessOrNull(businessId, business);
   if (!b) return [];
-  const rows = db.prepare("SELECT id, points FROM members WHERE business_id = ?").all(businessId);
+  const rows = db
+    .prepare(`SELECT id, points FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL}`)
+    .all(businessId);
   return rows.filter((m) => memberIsPointsNearReward(b, m)).map((m) => m.id);
 }
 
@@ -163,7 +169,7 @@ export function isBirthdayTodayInMerchantTz(birthDate, now = new Date(), timeZon
 
 export function getMemberIdsBirthdayToday(businessId, now = new Date(), timeZone = getMerchantNotificationTimezone()) {
   const rows = db
-    .prepare(`SELECT id, birth_date FROM members WHERE business_id = ? AND ${PROFILE_COMPLETE_SQL}`)
+    .prepare(`SELECT id, birth_date FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND ${PROFILE_COMPLETE_SQL}`)
     .all(businessId);
   return rows.filter((m) => isBirthdayTodayInMerchantTz(m.birth_date, now, timeZone)).map((m) => m.id);
 }
@@ -178,7 +184,7 @@ export function resolveMemberIdsForCampaignSegment(businessId, segment, business
     case "inactive90": {
       const days = { inactive14: 14, inactive30: 30, inactive60: 60, inactive90: 90 }[segment];
       const rows = db
-        .prepare(`SELECT id FROM members WHERE business_id = ? AND ${sqlInactiveMembersSinceDays(days)}`)
+        .prepare(`SELECT id FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND ${sqlInactiveMembersSinceDays(days)}`)
         .all(businessId);
       return rows.map((r) => r.id);
     }

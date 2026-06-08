@@ -9,7 +9,10 @@ import {
   getMemberIdsPointsNear,
   getMemberIdsRewardReady,
 } from "../lib/member-campaign-segments.js";
-import { sqlInactiveMembersSinceDays } from "./member-segment-sql.js";
+import { sqlExcludeTechnicalMembers, sqlInactiveMembersSinceDays } from "./member-segment-sql.js";
+
+/** Membres clients réels (hors invités QR @guest.invalid et aperçu Wallet). */
+const REAL_MEMBERS_SQL = sqlExcludeTechnicalMembers();
 
 const db = getDb();
 
@@ -59,8 +62,8 @@ export function getDashboardStats(businessId, period = "this_month") {
   const isHistoricalMonth = bounds.month != null && bounds.month < currentMonthKey;
   const membersCount =
     bounds.month != null
-      ? db.prepare("SELECT COUNT(*) as n FROM members WHERE business_id = ? AND strftime('%Y-%m', created_at) <= ?").get(businessId, bounds.month)
-      : db.prepare("SELECT COUNT(*) as n FROM members WHERE business_id = ?").get(businessId);
+      ? db.prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND strftime('%Y-%m', created_at) <= ?`).get(businessId, bounds.month)
+      : db.prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL}`).get(businessId);
   const pointsInPeriod =
     bounds.month != null
       ? db.prepare(
@@ -79,22 +82,22 @@ export function getDashboardStats(businessId, period = "this_month") {
         ).get(businessId);
   const newMembers7d = isHistoricalMonth
     ? { n: 0 }
-    : db.prepare("SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= datetime('now', '-7 days')").get(businessId);
+    : db.prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND created_at >= datetime('now', '-7 days')`).get(businessId);
   const newMembers30d = isHistoricalMonth
     ? { n: 0 }
-    : db.prepare("SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= datetime('now', '-30 days')").get(businessId);
+    : db.prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND created_at >= datetime('now', '-30 days')`).get(businessId);
   const inactive30d = isHistoricalMonth
     ? { n: 0 }
-    : db.prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND last_visit_at IS NOT NULL AND last_visit_at < datetime('now', '-30 days')`).get(businessId);
+    : db.prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND last_visit_at IS NOT NULL AND last_visit_at < datetime('now', '-30 days')`).get(businessId);
   const inactive90d = isHistoricalMonth
     ? { n: 0 }
-    : db.prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND last_visit_at IS NOT NULL AND last_visit_at < datetime('now', '-90 days')`).get(businessId);
+    : db.prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND last_visit_at IS NOT NULL AND last_visit_at < datetime('now', '-90 days')`).get(businessId);
   const points50Count = isHistoricalMonth
     ? { n: 0 }
-    : db.prepare("SELECT COUNT(*) as n FROM members WHERE business_id = ? AND points >= 50").get(businessId);
+    : db.prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND points >= 50`).get(businessId);
   const pointsAvg = isHistoricalMonth
     ? { avg: 0 }
-    : db.prepare("SELECT COALESCE(ROUND(AVG(points), 0), 0) as avg FROM members WHERE business_id = ?").get(businessId);
+    : db.prepare(`SELECT COALESCE(ROUND(AVG(points), 0), 0) as avg FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL}`).get(businessId);
 
   /**
    * Panier moyen = moyenne des `metadata.amount_eur` sur les crédits points **avec montant € saisi**.
@@ -158,11 +161,11 @@ export function getDashboardStats(businessId, period = "this_month") {
     bounds.month != null
       ? db
           .prepare(
-            `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND strftime('%Y-%m', created_at) = ?`,
+            `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND strftime('%Y-%m', created_at) = ?`,
           )
           .get(businessId, bounds.month)
       : db
-          .prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= ${bounds.since}`)
+          .prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND created_at >= ${bounds.since}`)
           .get(businessId);
 
   const visitsInPeriod =
@@ -530,7 +533,7 @@ export function getDashboardEvolution(businessId, weeks = 6) {
       `SELECT COUNT(*) as n FROM transactions WHERE business_id = ? AND created_at >= ${start} AND created_at < ${end}`
     ).get(businessId);
     const members = db.prepare(
-      `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at < ${end}`
+      `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND created_at < ${end}`
     ).get(businessId);
     rows.push({
       weekIndex: i,
@@ -608,7 +611,7 @@ export function getDashboardEvolutionForMonth(businessId, yyyymm) {
 
     const newInMonth = db
       .prepare(
-        `SELECT COUNT(*) as n FROM members WHERE business_id = ?
+        `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL}
          AND date(created_at) >= date(?) AND date(created_at) <= date(?)`,
       )
       .get(businessId, monthStart, queryEndDate);
@@ -660,7 +663,7 @@ export function getDashboardEvolutionForMonth(businessId, yyyymm) {
 
     const membersTotal = db
       .prepare(
-        `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND date(created_at) <= date(?)`,
+        `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND date(created_at) <= date(?)`,
       )
       .get(businessId, queryEndDate);
 
@@ -682,26 +685,26 @@ export function getDashboardEvolutionForMonth(businessId, yyyymm) {
 export function getCampaignSegmentCounts(businessId) {
   const business = getBusinessById(businessId);
   const inactive14 = db.prepare(
-    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${sqlInactiveMembersSinceDays(14)}`
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND ${sqlInactiveMembersSinceDays(14)}`
   ).get(businessId);
   const inactive60 = db.prepare(
-    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND last_visit_at IS NOT NULL AND last_visit_at < datetime('now', '-60 days')`
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND last_visit_at IS NOT NULL AND last_visit_at < datetime('now', '-60 days')`
   ).get(businessId);
   const new7 = db.prepare(
-    "SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= datetime('now', '-7 days')"
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND created_at >= datetime('now', '-7 days')`
   ).get(businessId);
   const welcomeNew = db.prepare(
-    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= datetime('now', '-14 days') AND last_visit_at IS NULL`
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND created_at >= datetime('now', '-14 days') AND last_visit_at IS NULL`
   ).get(businessId);
   const pointsNear50Count = business ? getMemberIdsPointsNear(businessId, business).length : 0;
   const inactive30d = db.prepare(
-    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND last_visit_at IS NOT NULL AND last_visit_at < datetime('now', '-30 days')`
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND last_visit_at IS NOT NULL AND last_visit_at < datetime('now', '-30 days')`
   ).get(businessId);
   const inactive90d = db.prepare(
-    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND last_visit_at IS NOT NULL AND last_visit_at < datetime('now', '-90 days')`
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND last_visit_at IS NOT NULL AND last_visit_at < datetime('now', '-90 days')`
   ).get(businessId);
   const new30d = db.prepare(
-    "SELECT COUNT(*) as n FROM members WHERE business_id = ? AND created_at >= datetime('now', '-30 days')"
+    `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND ${REAL_MEMBERS_SQL} AND created_at >= datetime('now', '-30 days')`
   ).get(businessId);
   const points50CountN = business ? getMemberIdsRewardReady(businessId, business).length : 0;
   let recurrentInPeriod = { n: 0 };

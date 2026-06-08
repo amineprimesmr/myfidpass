@@ -3,6 +3,9 @@
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
+import { sqlExcludeTechnicalMembers } from "./member-segment-sql.js";
+
+const REAL_MEMBERS_SQL = sqlExcludeTechnicalMembers("m.email");
 
 const db = getDb();
 
@@ -284,10 +287,12 @@ export function getNotificationCampaignInsightsForBusiness(businessId, { limit =
     }
     const recipientsRow = db
       .prepare(
-        `SELECT COUNT(DISTINCT member_id) AS n FROM notification_log
-         WHERE business_id = ? AND batch_id = ? AND status = 'sent'
-           AND member_id IS NOT NULL
-           AND IFNULL(type,'') != 'merchant_receipt'`,
+        `SELECT COUNT(DISTINCT nl.member_id) AS n FROM notification_log nl
+         INNER JOIN members m ON m.id = nl.member_id AND m.business_id = nl.business_id
+         WHERE nl.business_id = ? AND nl.batch_id = ? AND nl.status = 'sent'
+           AND nl.member_id IS NOT NULL
+           AND IFNULL(nl.type,'') != 'merchant_receipt'
+           AND ${REAL_MEMBERS_SQL}`,
       )
       .get(businessId, b.id);
     const recipients = recipientsRow?.n ?? 0;

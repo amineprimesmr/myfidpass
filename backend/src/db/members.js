@@ -3,10 +3,10 @@
  */
 import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
-import { sqlInactiveMembersSinceDays } from "./member-segment-sql.js";
+import { sqlExcludeTechnicalMembers, sqlInactiveMembersSinceDays } from "./member-segment-sql.js";
 import { resolveMemberIdsForCampaignSegment } from "../lib/member-campaign-segments.js";
 
-export { sqlInactiveMembersSinceDays } from "./member-segment-sql.js";
+export { sqlExcludeTechnicalMembers, sqlInactiveMembersSinceDays } from "./member-segment-sql.js";
 import { nowUtcSqlWithMs } from "./datetime-sql.js";
 import { computeStampRolloverState, normalizeStampBalance } from "../lib/stamps-cycle-math.js";
 
@@ -130,7 +130,9 @@ export function purgeTransactionsForBusiness(businessId) {
 /** Nombre de membres avec carte pour ce commerce (hors aperçu Wallet commerçant si exclu ailleurs). */
 export function countMembersForBusiness(businessId) {
   if (!businessId) return 0;
-  const row = db.prepare("SELECT COUNT(*) AS n FROM members WHERE business_id = ?").get(businessId);
+  const row = db
+    .prepare(`SELECT COUNT(*) AS n FROM members WHERE business_id = ? AND ${sqlExcludeTechnicalMembers()}`)
+    .get(businessId);
   return Number(row?.n) || 0;
 }
 
@@ -142,7 +144,7 @@ export function touchMemberLastVisit(memberId) {
 export function getMembersForBusiness(businessId, { search = "", limit = 50, offset = 0, filter = null, sort = "last_visit" } = {}) {
   const q = search.trim() ? "%" + search.trim().replace(/%/g, "") + "%" : null;
   const orderBy = MEMBER_ORDER[sort] || MEMBER_ORDER.last_visit;
-  let where = "business_id = ?";
+  let where = `business_id = ? AND ${sqlExcludeTechnicalMembers()}`;
   const params = [businessId];
   if (q) {
     where += " AND (name LIKE ? OR email LIKE ?)";
@@ -174,7 +176,7 @@ export function getMembersForBusiness(businessId, { search = "", limit = 50, off
 
 /** Retourne les IDs des membres correspondant au segment (pour campagnes ciblées). */
 export function getMemberIdsBySegment(businessId, segment) {
-  let where = "business_id = ?";
+  let where = `business_id = ? AND ${sqlExcludeTechnicalMembers()}`;
   const params = [businessId];
   switch (segment) {
     case "inactive14":
@@ -226,6 +228,19 @@ const GUEST_EMAIL_SUFFIX = "@guest.invalid";
 
 export function isGuestPlaceholderEmail(email) {
   return typeof email === "string" && email.toLowerCase().endsWith(GUEST_EMAIL_SUFFIX);
+}
+
+/** Aperçu Wallet commerçant (`wallet-apercu.{slug}@example.com`) — pas un client réel. */
+export function isWalletPreviewEmail(email) {
+  const e = String(email || "")
+    .trim()
+    .toLowerCase();
+  return e.startsWith("wallet-apercu.") && e.endsWith("@example.com");
+}
+
+/** Invité QR ou aperçu Wallet : exclure des listes, stats et campagnes commerçant. */
+export function isTechnicalMemberEmail(email) {
+  return isGuestPlaceholderEmail(email) || isWalletPreviewEmail(email);
 }
 
 /**

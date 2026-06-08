@@ -10,6 +10,7 @@ import {
   getBusinessById,
   getMemberForBusiness,
   getMembersForBusiness,
+  isTechnicalMemberEmail,
   logNotification,
   createNotificationBatch,
   updateNotificationBatchSummary,
@@ -56,13 +57,16 @@ function buildNotificationIconUrl(apiBase, slug, businessRow, batchId) {
 
 function targetedGoogleWalletMembers(businessId, memberIds) {
   if (memberIds !== null && memberIds.length === 0) return [];
+  let rows;
   if (Array.isArray(memberIds) && memberIds.length > 0) {
-    return memberIds
+    rows = memberIds
       .map((memberId) => getMemberForBusiness(memberId, businessId))
       .filter(Boolean);
+  } else {
+    const { members } = getMembersForBusiness(businessId, { limit: 100000, offset: 0, sort: "created_desc" });
+    rows = members;
   }
-  const { members } = getMembersForBusiness(businessId, { limit: 100000, offset: 0, sort: "created_desc" });
-  return members;
+  return rows.filter((m) => !isTechnicalMemberEmail(m.email));
 }
 
 async function mapWithConcurrency(items, limit, mapper) {
@@ -137,17 +141,28 @@ export async function deliverCustomerBroadcast({
         : getPassKitPushTokensForBusiness(business.id);
   const googleWalletMembers = targetedGoogleWalletMembers(business.id, memberIds);
 
+  const isDeliverableMember = (memberId) => {
+    const mid = String(memberId ?? "").trim();
+    if (!mid) return false;
+    const row = getMemberForBusiness(mid, business.id);
+    if (!row) return false;
+    return !isTechnicalMemberEmail(row.email);
+  };
+
+  const webSubscriptionsRawFiltered = webSubscriptionsRaw.filter((w) => isDeliverableMember(w.member_id));
+  const passKitTokensRawFiltered = passKitTokensRaw.filter((r) => isDeliverableMember(r.serial_number));
+
   /** Filet de sécurité si le SQL d’exclusion Web Push a raté (UUID, casse, etc.). */
   const passKitMemberKeys = new Set(
-    passKitTokensRaw.map((r) => String(r.serial_number ?? "").trim().toLowerCase()).filter(Boolean)
+    passKitTokensRawFiltered.map((r) => String(r.serial_number ?? "").trim().toLowerCase()).filter(Boolean)
   );
-  const webSubscriptions = webSubscriptionsRaw.filter((w) => {
+  const webSubscriptions = webSubscriptionsRawFiltered.filter((w) => {
     const mid = String(w.member_id ?? "").trim().toLowerCase();
     return !passKitMemberKeys.has(mid);
   });
 
   const pushTokenSeen = new Set();
-  const passKitTokens = passKitTokensRaw.filter((r) => {
+  const passKitTokens = passKitTokensRawFiltered.filter((r) => {
     const t = String(r.push_token ?? "").trim();
     if (!t || pushTokenSeen.has(t)) return false;
     pushTokenSeen.add(t);

@@ -3,6 +3,15 @@
  */
 
 /**
+ * Exclut les comptes techniques : invités QR (@guest.invalid) et aperçu Wallet commerçant.
+ * @param {string} [emailCol='email']
+ */
+export function sqlExcludeTechnicalMembers(emailCol = "email") {
+  const e = `LOWER(TRIM(${emailCol}))`;
+  return `${e} NOT LIKE '%@guest.invalid' AND ${e} NOT LIKE 'wallet-apercu.%@example.com'`;
+}
+
+/**
  * Clients réellement inactifs depuis N jours : au moins une visite enregistrée,
  * puis plus de passage depuis N jours. Exclut les nouveaux inscrits sans visite magasin.
  */
