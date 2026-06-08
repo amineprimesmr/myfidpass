@@ -543,18 +543,29 @@ export function getDashboardEvolution(businessId, weeks = 6) {
 
 const MEMBERS_CHART_POINT_COUNT = 7;
 
-/** 7 jours répartis uniformément du 1er au dernier jour écoulé du mois (évite une courbe plate en cours de mois). */
+/**
+ * Jalons jour du mois pour la courbe Membres.
+ * - Mois en cours avec peu de jours écoulés : un point par jour (1…J) pour coller aux vraies inscriptions.
+ * - Mois long / historique : 7 jalons uniques incluant jour 1 et dernier jour, sans trou (ex. pas de 1,2,3,5…).
+ */
 function memberChartMilestoneDays(y, m, daysInMonth) {
   const now = new Date();
   const isCurrentMonth = y === now.getFullYear() && m === now.getMonth() + 1;
   const endDay = isCurrentMonth ? Math.min(now.getDate(), daysInMonth) : daysInMonth;
-  if (endDay <= 1) return Array(MEMBERS_CHART_POINT_COUNT).fill(1);
-  const out = [];
-  for (let i = 0; i < MEMBERS_CHART_POINT_COUNT; i++) {
-    const d = Math.round(1 + ((endDay - 1) * i) / (MEMBERS_CHART_POINT_COUNT - 1));
-    out.push(Math.min(Math.max(1, d), endDay));
+  if (endDay <= 1) return [1];
+
+  const maxDailyPoints = 15;
+  if (endDay <= maxDailyPoints) {
+    return Array.from({ length: endDay }, (_, i) => i + 1);
   }
-  return out;
+
+  const days = new Set([1, endDay]);
+  for (let i = 1; i < MEMBERS_CHART_POINT_COUNT - 1; i++) {
+    const t = i / (MEMBERS_CHART_POINT_COUNT - 1);
+    const d = 1 + Math.round(t * (endDay - 1));
+    days.add(Math.min(Math.max(1, d), endDay));
+  }
+  return [...days].sort((a, b) => a - b);
 }
 
 /**
