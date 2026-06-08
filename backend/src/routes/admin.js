@@ -37,6 +37,7 @@ import { getDb } from "../db/connection.js";
 import { sendMail, isEmailConfigured } from "../email.js";
 import { getQueueStats, requeueDeadJob } from "../lib/notification-job-queue.js";
 import { getFlyerQueueStats } from "../lib/flyer-generation-jobs.js";
+import { simulateMerchantEntitlementForUser } from "../lib/simulate-merchant-entitlement.js";
 
 const db = getDb();
 const ADMIN_DELETE_CONFIRM = "SUPPRIMER";
@@ -169,6 +170,25 @@ router.post("/bootstrap", bootstrapLimiter, (req, res) => {
 });
 
 router.use(requireAuth, requirePlatformAdmin, adminLimiter);
+
+/**
+ * POST /api/admin/simulate-merchant-entitlement
+ * Bouton TEST paywall iOS (admin) — quota multi-commerce sans Stripe / App Store.
+ * Body: { allowed_businesses?: 1-5, user_id?: string }
+ */
+router.post("/simulate-merchant-entitlement", (req, res) => {
+  const requestedSlots = Math.floor(Number(req.body?.allowed_businesses ?? req.body?.allowedBusinesses) || 0);
+  const slots = requestedSlots >= 1 && requestedSlots <= 5 ? requestedSlots : 5;
+  let targetUserId = String(req.body?.user_id ?? req.body?.userId ?? req.user.id).trim();
+  if (!targetUserId) {
+    return res.status(400).json({ error: "Compte cible introuvable" });
+  }
+  const target = getUserById(targetUserId);
+  if (!target) {
+    return res.status(404).json({ error: "Utilisateur introuvable" });
+  }
+  return res.json(simulateMerchantEntitlementForUser(targetUserId, slots));
+});
 
 router.get("/overview", (_req, res) => {
   try {
