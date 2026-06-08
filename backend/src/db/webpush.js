@@ -12,16 +12,78 @@ const db = getDb();
 let notificationLogExtendedCache = null;
 
 function notificationLogHasExtendedColumns() {
-  if (notificationLogExtendedCache !== null) return notificationLogExtendedCache;
+  // Ne pas figer `false` au boot : si `batch_id` est ajouté par migration après le 1er import,
+  // les envois doivent basculer sur l’INSERT étendu (sinon `recipients_distinct` reste à 0).
+  if (notificationLogExtendedCache === true) return true;
   try {
-    notificationLogExtendedCache = db
+    const has = db
       .prepare("PRAGMA table_info(notification_log)")
       .all()
       .some((c) => c.name === "batch_id");
+    if (has) notificationLogExtendedCache = true;
+    return has;
   } catch {
-    notificationLogExtendedCache = false;
+    return false;
   }
-  return notificationLogExtendedCache;
+}
+
+function readSummarySentTotal(summary) {
+  if (!summary || typeof summary !== "object") return null;
+  if (typeof summary.sent === "number" && Number.isFinite(summary.sent)) return summary.sent;
+  if (typeof summary.sent_total === "number" && Number.isFinite(summary.sent_total)) return summary.sent_total;
+  const pk = Number(summary.sentPassKit ?? summary.sent_pass_kit ?? 0) || 0;
+  const wp = Number(summary.sentWebPush ?? summary.sent_web_push ?? 0) || 0;
+  const gw = Number(summary.sentGoogleWallet ?? summary.sent_google_wallet ?? 0) || 0;
+  const sum = pk + wp + gw;
+  return sum > 0 ? sum : null;
+}
+
+/** Membre « réel » pour les stats : e-mail absent OK, invités techniques exclus. */
+const REAL_MEMBER_FOR_STATS_SQL = `(
+  TRIM(IFNULL(m.email, '')) = ''
+  OR ${REAL_MEMBERS_SQL}
+)`;
+
+function countDistinctRecipientsForBatch(businessId, batchId) {
+  if (!businessId || !batchId) return 0;
+  const baseWhere = `nl.business_id = ? AND nl.batch_id = ?
+    AND nl.member_id IS NOT NULL AND TRIM(CAST(nl.member_id AS TEXT)) != ''
+    AND (nl.status IS NULL OR nl.status = 'sent')
+    AND IFNULL(nl.type, '') != 'merchant_receipt'`;
+
+  let strict = 0;
+  try {
+    strict =
+      db
+        .prepare(
+          `SELECT COUNT(DISTINCT LOWER(TRIM(CAST(nl.member_id AS TEXT)))) AS n
+           FROM notification_log nl
+           INNER JOIN members m
+             ON m.business_id = nl.business_id
+            AND LOWER(TRIM(CAST(m.id AS TEXT))) = LOWER(TRIM(CAST(nl.member_id AS TEXT)))
+           WHERE ${baseWhere}
+             AND ${REAL_MEMBER_FOR_STATS_SQL}`,
+        )
+        .get(businessId, batchId)?.n ?? 0;
+  } catch (_e) {
+    strict = 0;
+  }
+
+  if (strict > 0) return strict;
+
+  try {
+    return (
+      db
+        .prepare(
+          `SELECT COUNT(DISTINCT LOWER(TRIM(CAST(nl.member_id AS TEXT)))) AS n
+           FROM notification_log nl
+           WHERE ${baseWhere}`,
+        )
+        .get(businessId, batchId)?.n ?? 0
+    );
+  } catch (_e) {
+    return 0;
+  }
 }
 
 /** Aligné sur `passes.js` — exclure les enregistrements de test du dédoublonnage. */
@@ -313,17 +375,14 @@ export function getNotificationCampaignInsightsForBusiness(businessId, { limit =
     } catch (_e) {
       /* */
     }
-    const recipientsRow = db
-      .prepare(
-        `SELECT COUNT(DISTINCT nl.member_id) AS n FROM notification_log nl
-         INNER JOIN members m ON m.id = nl.member_id AND m.business_id = nl.business_id
-         WHERE nl.business_id = ? AND nl.batch_id = ? AND nl.status = 'sent'
-           AND nl.member_id IS NOT NULL
-           AND IFNULL(nl.type,'') != 'merchant_receipt'
-           AND ${REAL_MEMBERS_SQL}`,
-      )
-      .get(businessId, b.id);
-    const recipients = recipientsRow?.n ?? 0;
+    const recipientsFromLog = countDistinctRecipientsForBatch(businessId, b.id);
+    const sentTotal = readSummarySentTotal(summary);
+    const recipients =
+      recipientsFromLog > 0
+        ? recipientsFromLog
+        : sentTotal != null && sentTotal > 0
+          ? sentTotal
+          : 0;
     let returnedWithin48h = 0;
     try {
       const rev = db
@@ -345,12 +404,11 @@ export function getNotificationCampaignInsightsForBusiness(businessId, { limit =
     } catch (_e) {
       returnedWithin48h = 0;
     }
-    const sentTotal = summary.sent;
     out.push({
       batch_id: b.id,
       trigger_name: b.trigger_name,
       created_at: b.created_at,
-      sent_total: typeof sentTotal === "number" ? sentTotal : null,
+      sent_total: sentTotal,
       recipients_distinct: recipients,
       returned_within_48h: returnedWithin48h,
       notification_title: notificationTitle,

@@ -665,6 +665,7 @@ export function runMigrations(db) {
   if (!nlCols.includes("error_detail")) {
     safeRun(db, () => db.exec("ALTER TABLE notification_log ADD COLUMN error_detail TEXT"));
   }
+  safeRun(db, () => db.exec("UPDATE notification_log SET status = 'sent' WHERE status IS NULL"));
   safeRun(db, () =>
     db.exec(
       "CREATE INDEX IF NOT EXISTS idx_notification_log_cooldown ON notification_log(business_id, member_id, created_at) WHERE counts_for_member_cooldown = 1 AND member_id IS NOT NULL"
