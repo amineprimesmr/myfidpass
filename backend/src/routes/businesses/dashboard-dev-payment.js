@@ -6,6 +6,7 @@
 import { Router } from "express";
 import { checkDashboardIdentity } from "./shared.js";
 import { getBusinessBySlug } from "../../db.js";
+import { isUserAdmin } from "../../db/users.js";
 import {
   createOrUpdateSubscription,
   getDefaultAllowedBusinessesFromLegacyPlan,
@@ -21,7 +22,7 @@ const DEV_SUB_ID = "dev_simulated";
 import { isProductionEnvironment } from "../../lib/production-env.js";
 
 router.use((req, res, next) => {
-  if (isProductionEnvironment()) {
+  if (isProductionEnvironment() && !isUserAdmin(req.user)) {
     return res.status(404).json({ error: "Not found" });
   }
   next();
@@ -55,6 +56,13 @@ router.post("/", (req, res) => {
   if (!ctx) return;
 
   const planId = "starter";
+  const requestedSlots = Math.floor(Number(req.body?.allowed_businesses ?? req.body?.allowedBusinesses) || 0);
+  const allowedBusinesses =
+    requestedSlots >= 1 && requestedSlots <= 5
+      ? requestedSlots
+      : isUserAdmin(req.user)
+        ? 5
+        : getDefaultAllowedBusinessesFromLegacyPlan(planId);
   createOrUpdateSubscription({
     userId: ctx.userId,
     stripeCustomerId: "cus_dev_simulated",
@@ -65,7 +73,7 @@ router.post("/", (req, res) => {
   });
   upsertMerchantEntitlement({
     userId: ctx.userId,
-    allowedBusinesses: getDefaultAllowedBusinessesFromLegacyPlan(planId),
+    allowedBusinesses,
     billingProvider: "stripe",
     status: "active",
     source: "dev_simulate",
