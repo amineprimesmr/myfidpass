@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   MERCHANT_SCAN_BENCH_PASSES,
   MERCHANT_SCAN_BENCH_POINTS,
+  MERCHANT_SCAN_BENCH_MAX_BUSINESSES,
   hasMerchantScanBenchOperationalBypass,
 } from "./merchant-scan-bench-access.js";
 
@@ -24,5 +25,9 @@ describe("hasMerchantScanBenchOperationalBypass", () => {
       }),
     ).toBe(false);
     expect(hasMerchantScanBenchOperationalBypass(null)).toBe(false);
+  });
+
+  it("exports max businesses for bench tier", () => {
+    expect(MERCHANT_SCAN_BENCH_MAX_BUSINESSES).toBe(5);
   });
 });

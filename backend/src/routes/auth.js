@@ -67,6 +67,7 @@ import { validate, schemas } from "../lib/validate.js";
 import { fetchGooglePlaceBusinessEnrichment } from "../lib/google-place-business-enrichment.js";
 import { refreshGooglePlacesSnapshotFromPlaceId } from "../services/social-metrics-service.js";
 import { cancelPaidSubscriptionsBeforeAccountDeletion } from "../lib/account-deletion-billing.js";
+import { userHasMerchantScanBenchAccess } from "../lib/merchant-scan-bench-access.js";
 
 const router = Router();
 
@@ -175,9 +176,12 @@ function authSubscriptionPayload(userId) {
       };
     }
   }
-  const paying = hasPaidMerchantSubscription(userId);
+  const benchAccess = userHasMerchantScanBenchAccess(userId);
+  const paying = hasPaidMerchantSubscription(userId) || benchAccess;
   return {
-    subscription: subPayload,
+    subscription: benchAccess && !hasPaidMerchantSubscription(userId)
+      ? { status: "active", plan_id: "pro" }
+      : subPayload,
     has_active_subscription: paying,
     has_paid_merchant_subscription: paying,
     entitlements,

@@ -5,6 +5,10 @@ import { randomUUID } from "crypto";
 import { getDb } from "./connection.js";
 import { getUserById } from "./users.js";
 import { isProductionEnvironment } from "../lib/production-env.js";
+import {
+  MERCHANT_SCAN_BENCH_MAX_BUSINESSES,
+  userHasMerchantScanBenchAccess,
+} from "../lib/merchant-scan-bench-access.js";
 
 export { isProductionEnvironment } from "../lib/production-env.js";
 
@@ -20,9 +24,10 @@ export function getMerchantTrialEndsAtIso(_userId) {
   return null;
 }
 
-/** Accès opérationnel (scan, points, campagnes, etc.) : abonnement payant uniquement. */
+/** Accès opérationnel (scan, points, campagnes, etc.) : abonnement payant ou bench 102/102. */
 export function hasOperationalMerchantAccess(userId) {
   if (!userId) return false;
+  if (userHasMerchantScanBenchAccess(userId)) return true;
   return hasPaidMerchantSubscription(userId);
 }
 
@@ -195,6 +200,15 @@ export function resolveEffectiveAllowedBusinesses(userId) {
 
 export function getMerchantBusinessEntitlements(userId) {
   const usedBusinesses = getBusinessCountByUserId(userId);
+  if (userHasMerchantScanBenchAccess(userId)) {
+    const allowedBusinesses = MERCHANT_SCAN_BENCH_MAX_BUSINESSES;
+    return {
+      allowed_businesses: allowedBusinesses,
+      used_businesses: usedBusinesses,
+      can_create_business: usedBusinesses < allowedBusinesses,
+      billing_provider: "bench",
+    };
+  }
   const allowedBusinesses = resolveEffectiveAllowedBusinesses(userId);
   if (usedBusinesses > allowedBusinesses) {
     console.warn("[entitlements] quota_incoherence", { userId, usedBusinesses, allowedBusinesses });
@@ -349,6 +363,9 @@ export function canCreateBusiness(userId) {
   const count = getBusinessCountByUserId(userId);
   // Premier commerce autorisé sans abonnement (inscription app / onboarding, aligné besoin revue produit).
   if (count === 0) return true;
+  if (userHasMerchantScanBenchAccess(userId)) {
+    return count < MERCHANT_SCAN_BENCH_MAX_BUSINESSES;
+  }
   if (!hasOperationalMerchantAccess(userId)) return false;
   const allowed = resolveEffectiveAllowedBusinesses(userId);
   return count < allowed;
