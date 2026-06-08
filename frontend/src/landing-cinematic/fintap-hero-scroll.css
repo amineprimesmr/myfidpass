@@ -397,25 +397,20 @@
 
   .fintap-hero-iphone__actions {
     position: absolute;
-    right: clamp(1.25rem, 4vw, 3rem);
-    top: 36%;
+    right: clamp(1rem, 4vw, 3rem);
+    top: 46%;
     margin: 0;
-    max-width: 22rem;
+    max-width: 460px;
     padding: 0;
-    width: min(36vw, 22rem);
-    justify-content: center;
-    align-items: center;
-    flex-wrap: nowrap;
-    transform: translateY(calc(-6% + 18px)) scale(0.985);
-  }
-
-  .fintap-hero-iphone__actions.is-visible {
-    transform: translateY(-6%) scale(1);
+    width: min(42vw, 460px);
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-wrap: wrap;
   }
 
   .fintap-hero-iphone__actions-title {
-    text-align: center !important;
-    align-self: center !important;
+    text-align: left !important;
+    align-self: flex-start !important;
     font-size: clamp(2.1rem, 3.5vw, 3rem);
   }
 

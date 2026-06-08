@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { FinTapLiquidSlider } from "./FinTapLiquidSlider.jsx";
+import { FinTapRevenueEngagementStrip } from "./FinTapRevenueEngagementStrip.jsx";
 import { FinTapRevenueRoiChart } from "./FinTapRevenueRoiChart.jsx";
 import { ScrollReveal } from "./ScrollReveal.jsx";
 import {
@@ -90,8 +91,9 @@ export function FinTapRevenueSimulatorSection() {
                   Revenu mensuel additionnel potentiel
                 </span>
                 <p className="fintap-revenue-simulator__headline-value">
-                  <strong>{formatEuro(results.first30DaysRevenue)}</strong> générés
+                  <strong>+{formatEuro(results.first30DaysRevenue)}</strong> de CA
                 </p>
+                <FinTapRevenueEngagementStrip estimates={results.engagementEstimates} />
               </div>
               <div className="fintap-revenue-simulator__roas" aria-label={`ROAS x${results.roiMultiple}`}>
                 <span className="fintap-revenue-simulator__roas-label">ROAS</span>
@@ -139,30 +141,9 @@ export function FinTapRevenueSimulatorSection() {
               </a>
             </div>
 
-            <div className="fintap-revenue-simulator__estimation">
-              <p className="fintap-revenue-simulator__disclaimer">
-                {buildRevenueSimulatorDisclaimer(results)}
-              </p>
-              <div
-                className="fintap-revenue-simulator__engagement-grid"
-                aria-label="Estimation visibilité : avis Google et réseaux sociaux"
-              >
-                {results.engagementEstimates.map((item) => (
-                  <div key={item.id} className="fintap-revenue-simulator__engagement-card">
-                    <span className="fintap-revenue-simulator__engagement-icon" aria-hidden="true">
-                      <img src={item.icon} alt="" width={22} height={22} decoding="async" />
-                    </span>
-                    <div className="fintap-revenue-simulator__engagement-copy">
-                      <span className="fintap-revenue-simulator__engagement-label">{item.label}</span>
-                      <strong className="fintap-revenue-simulator__engagement-value">
-                        +{formatCompactNumber(item.value)}
-                        <span className="fintap-revenue-simulator__engagement-period">{item.period}</span>
-                      </strong>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <p className="fintap-revenue-simulator__disclaimer">
+              {buildRevenueSimulatorDisclaimer(results)}
+            </p>
           </div>
         </div>
       </ScrollReveal>

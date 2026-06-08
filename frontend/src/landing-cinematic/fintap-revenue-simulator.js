@@ -68,11 +68,16 @@ export function buildEngagementEstimates(input) {
   const enrolled = Math.max(0, input.enrolledMembers);
   const active = Math.max(1, input.activeMembers);
 
-  const values = {
-    google: Math.max(1, Math.round(active * googleReviewsPerActiveMember)),
-    instagram: Math.max(1, Math.round(enrolled * instagramFollowsPerEnrolledMember)),
-    tiktok: Math.max(1, Math.round(enrolled * tiktokFollowsPerEnrolledMember)),
-  };
+  let google = Math.max(1, Math.round(active * googleReviewsPerActiveMember));
+  let instagram = Math.max(1, Math.round(enrolled * instagramFollowsPerEnrolledMember));
+  let tiktok = Math.max(1, Math.round(enrolled * tiktokFollowsPerEnrolledMember));
+
+  // Avis Google toujours au-dessus des follows réseaux (règle produit).
+  if (google <= instagram) google = instagram + 1;
+  if (google <= tiktok) google = tiktok + 1;
+  if (instagram < tiktok) instagram = tiktok;
+
+  const values = { google, instagram, tiktok };
 
   return REVENUE_SIMULATOR_ENGAGEMENT_CHANNELS.map((channel) => ({
     ...channel,
@@ -176,7 +181,8 @@ export function buildRevenueSimulatorDisclaimer(results) {
     })}/client actif vs ${formatEuro(results.costPerActiveMember, {
       maximumFractionDigits: 2,
     })}/client. ` +
-    `Basé sur ${results.activeMembers} clients actifs pour ${formatCompactNumber(
+    `Moyenne des résultats observés chez les +130 commerces équipés avec Myfidpass, ` +
+    `ajustée à ${results.activeMembers} clients actifs pour ${formatCompactNumber(
       results.dailyVisitors
     )} visiteurs/jour.`
   );

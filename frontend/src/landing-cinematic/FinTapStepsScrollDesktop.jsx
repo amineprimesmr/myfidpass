@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { FINTAP_STEPS } from "./fintap-steps-data.js";
+import { FINTAP_STEPS, FINTAP_STEPS_HEADING, FINTAP_STEPS_INTRO } from "./fintap-steps-data.js";
 import { StepVisualByIndex } from "./FinTapStepsScrollVisuals.jsx";
 import { ScrollReveal } from "./ScrollReveal.jsx";
 
@@ -157,14 +157,11 @@ export function FinTapStepsScrollDesktop({ measureRef }) {
             <div className="fintap-steps-scroll__left">
               <ScrollReveal variant="slide-left">
                 <h2 id="fintap-steps-heading" className="fintap-steps-scroll__h2">
-                  Lancez-vous en 3 étapes simples.
+                  {FINTAP_STEPS_HEADING}
                 </h2>
               </ScrollReveal>
               <ScrollReveal variant="slide-left" delay={0.1}>
-                <p className="fintap-steps-scroll__intro">
-                  Du commerce à la carte Wallet : tout est pensé pour vous faire gagner du temps et garder vos clients
-                  engagés.
-                </p>
+                <p className="fintap-steps-scroll__intro">{FINTAP_STEPS_INTRO}</p>
               </ScrollReveal>
             </div>
           </div>

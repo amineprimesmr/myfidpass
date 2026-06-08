@@ -204,7 +204,24 @@ export function getDashboardStats(businessId, period = "this_month") {
       : null;
   const activeN = activeInPeriod?.n ?? 0;
   const visitsN = visitsInPeriod?.n ?? 0;
-  const avgVisitsPerActiveMember = activeN > 0 ? Math.round((visitsN / activeN) * 100) / 100 : null;
+  /** Membres ayant au moins un passage / achat (`points_add`) — dénominateur cohérent (moyenne ≥ 1). */
+  const membersWithPurchaseInPeriod =
+    bounds.month != null
+      ? db
+          .prepare(
+            `SELECT COUNT(DISTINCT member_id) as n FROM transactions WHERE business_id = ? AND type = 'points_add' AND strftime('%Y-%m', created_at) = ?`,
+          )
+          .get(businessId, bounds.month)
+      : db
+          .prepare(
+            `SELECT COUNT(DISTINCT member_id) as n FROM transactions WHERE business_id = ? AND type = 'points_add' AND created_at >= ${bounds.since}`,
+          )
+          .get(businessId);
+  const purchaseMembersN = membersWithPurchaseInPeriod?.n ?? 0;
+  const avgVisitsPerActiveMember =
+    visitsN > 0 && purchaseMembersN > 0
+      ? Math.round((visitsN / purchaseMembersN) * 100) / 100
+      : null;
 
   /** Missions avis Google validées côté client (claim `google_review`) — même logique que les follows réseaux, pas le total GBP. */
   let googleReviewsNewInPeriod = 0;

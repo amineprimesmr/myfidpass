@@ -57,9 +57,12 @@ describe("computeRevenueSimulation", () => {
       "tiktok",
     ]);
     const byId = Object.fromEntries(result.engagementEstimates.map((e) => [e.id, e.value]));
-    expect(byId.google).toBeGreaterThanOrEqual(4);
-    expect(byId.instagram).toBeGreaterThan(byId.google);
-    expect(byId.tiktok).toBeGreaterThanOrEqual(6);
+    expect(byId.google).toBeGreaterThanOrEqual(190);
+    expect(byId.instagram).toBeGreaterThanOrEqual(85);
+    expect(byId.tiktok).toBeGreaterThanOrEqual(60);
+    expect(byId.google).toBeGreaterThan(byId.instagram);
+    expect(byId.google).toBeGreaterThan(byId.tiktok);
+    expect(byId.instagram).toBeGreaterThanOrEqual(byId.tiktok);
 
     const low = computeRevenueSimulation({ dailyVisitors: 10, avgBasket: 15 });
     const high = computeRevenueSimulation({ dailyVisitors: 100, avgBasket: 15 });
@@ -95,6 +98,20 @@ describe("buildEngagementEstimates", () => {
       expect(item.icon).toMatch(/\/assets\/logos\//);
     });
   });
+
+  it("garde toujours plus d'avis Google que de follows réseaux", () => {
+    const scenarios = [
+      { enrolledMembers: 42, activeMembers: 24 },
+      { enrolledMembers: 168, activeMembers: 97 },
+      { enrolledMembers: 840, activeMembers: 487 },
+    ];
+    scenarios.forEach((input) => {
+      const items = buildEngagementEstimates(input);
+      const byId = Object.fromEntries(items.map((e) => [e.id, e.value]));
+      expect(byId.google).toBeGreaterThan(byId.instagram);
+      expect(byId.google).toBeGreaterThan(byId.tiktok);
+    });
+  });
 });
 
 describe("buildRevenueSimulatorDisclaimer", () => {
@@ -106,6 +123,7 @@ describe("buildRevenueSimulatorDisclaimer", () => {
     const text = buildRevenueSimulatorDisclaimer(results);
     expect(text).toContain("Estimation :");
     expect(text).toContain("/client actif");
+    expect(text).toContain("+130 commerces équipés");
     expect(text).toContain("visiteurs/jour");
     expect(text).not.toContain("indicative");
     expect(text).not.toContain("abonnement réparti");

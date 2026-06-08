@@ -16,13 +16,13 @@ export const REVENUE_SIMULATOR_ASSUMPTIONS = {
   /** Plafond : le gain ne dépasse pas ce % du CA mensuel estimé. */
   maxIncrementalShareOfRevenue: 0.06,
   /**
-   * Missions avis & réseaux — taux mensuels conservateurs (membres inscrits / actifs).
-   * Avis Google : membres actifs ayant visité + mission post-visite.
-   * Instagram / TikTok : nouveaux inscrits qui complètent la mission follow.
+   * Missions avis & réseaux — taux mensuels (membres inscrits / actifs).
+   * Avis Google : mission post-visite (taux le plus élevé — toujours > follows).
+   * Instagram / TikTok : missions follow (conversion plus faible).
    */
-  googleReviewsPerActiveMember: 0.05,
-  instagramFollowsPerEnrolledMember: 0.065,
-  tiktokFollowsPerEnrolledMember: 0.04,
+  googleReviewsPerActiveMember: 2,
+  instagramFollowsPerEnrolledMember: 0.52,
+  tiktokFollowsPerEnrolledMember: 0.38,
 };
 
 /** Canaux affichés dans le bloc estimation (icônes /assets/logos). */

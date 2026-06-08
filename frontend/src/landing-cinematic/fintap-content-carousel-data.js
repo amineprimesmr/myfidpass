@@ -3,7 +3,7 @@
  * Fichiers : frontend/public/assets/image-caroussel/content-{1..N}.jpg (~520px).
  * Garder cette liste alignée avec les fichiers réellement présents dans le dossier.
  */
-const FINTAP_CONTENT_CAROUSEL_VERSION = 4;
+const FINTAP_CONTENT_CAROUSEL_VERSION = 5;
 
 export const FINTAP_CONTENT_CAROUSEL_IMAGES = [
   `/assets/image-caroussel/content-1.jpg?v=${FINTAP_CONTENT_CAROUSEL_VERSION}`,
@@ -14,6 +14,7 @@ export const FINTAP_CONTENT_CAROUSEL_IMAGES = [
   `/assets/image-caroussel/content-6.jpg?v=${FINTAP_CONTENT_CAROUSEL_VERSION}`,
   `/assets/image-caroussel/content-7.jpg?v=${FINTAP_CONTENT_CAROUSEL_VERSION}`,
   `/assets/image-caroussel/content-8.jpg?v=${FINTAP_CONTENT_CAROUSEL_VERSION}`,
+  `/assets/image-caroussel/content9.png?v=${FINTAP_CONTENT_CAROUSEL_VERSION}`,
 ];
 
 export const FINTAP_CONTENT_CAROUSEL_COUNT = FINTAP_CONTENT_CAROUSEL_IMAGES.length;

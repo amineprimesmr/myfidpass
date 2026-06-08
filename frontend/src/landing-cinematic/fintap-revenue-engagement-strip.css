@@ -1,0 +1,139 @@
+/* Bandeau engagement — cartes glass sous le headline CA */
+
+.fintap-revenue-engagement-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  width: 100%;
+  max-width: 36rem;
+  margin-top: 0.85rem;
+}
+
+.fintap-revenue-engagement-strip__card {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.6rem 0.65rem;
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.11);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 4px 16px rgba(5, 40, 90, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .fintap-revenue-engagement-strip__card:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.28);
+    transform: translateY(-1px);
+  }
+}
+
+.fintap-revenue-engagement-strip__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 0.62rem;
+  background: #fff;
+  box-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.04);
+}
+
+.fintap-revenue-engagement-strip__icon img {
+  display: block;
+  width: 1.2rem;
+  height: 1.2rem;
+  object-fit: contain;
+}
+
+.fintap-revenue-engagement-strip__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.fintap-revenue-engagement-strip__label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.74);
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fintap-revenue-engagement-strip__value {
+  display: flex;
+  align-items: baseline;
+  gap: 0.1rem;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.fintap-revenue-engagement-strip__period {
+  font-size: 0.68em;
+  font-weight: 650;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+@media (max-width: 719px) {
+  .fintap-revenue-engagement-strip {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    max-width: none;
+    margin-right: calc(-1 * clamp(1rem, 4vw, 1.5rem));
+    padding-right: clamp(1rem, 4vw, 1.5rem);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .fintap-revenue-engagement-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .fintap-revenue-engagement-strip__card {
+    flex: 0 0 min(9.5rem, 42vw);
+    scroll-snap-align: start;
+  }
+}
+
+@media (max-width: 380px) {
+  .fintap-revenue-engagement-strip__card {
+    flex-basis: min(8.75rem, 78vw);
+    padding: 0.55rem 0.58rem;
+  }
+
+  .fintap-revenue-engagement-strip__icon {
+    width: 1.95rem;
+    height: 1.95rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fintap-revenue-engagement-strip__card {
+    transition: none;
+  }
+
+  .fintap-revenue-engagement-strip__card:hover {
+    transform: none;
+  }
+}
