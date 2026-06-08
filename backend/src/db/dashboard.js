@@ -541,8 +541,26 @@ export function getDashboardEvolution(businessId, weeks = 6) {
   return rows;
 }
 
+const MEMBERS_CHART_POINT_COUNT = 7;
+
+/** 7 jours répartis uniformément du 1er au dernier jour écoulé du mois (évite une courbe plate en cours de mois). */
+function memberChartMilestoneDays(y, m, daysInMonth) {
+  const now = new Date();
+  const isCurrentMonth = y === now.getFullYear() && m === now.getMonth() + 1;
+  const endDay = isCurrentMonth ? Math.min(now.getDate(), daysInMonth) : daysInMonth;
+  if (endDay <= 1) return Array(MEMBERS_CHART_POINT_COUNT).fill(1);
+  const out = [];
+  for (let i = 0; i < MEMBERS_CHART_POINT_COUNT; i++) {
+    const d = Math.round(1 + ((endDay - 1) * i) / (MEMBERS_CHART_POINT_COUNT - 1));
+    out.push(Math.min(Math.max(1, d), endDay));
+  }
+  return out;
+}
+
 /**
- * Évolution sur un mois civil (YYYY-MM) : 4 segments pour les graphiques (style « par quinzaine »).
+ * Évolution sur un mois civil (YYYY-MM) : 7 jalons répartis sur le mois écoulé pour la courbe Membres.
+ * `new_members_in_month` = cumul d’inscriptions du 1er au jour J (courbe qui monte avec le mois).
+ * `operations_count` = passages sur l’intervalle entre deux jalons (fréquence / barres).
  */
 export function getDashboardEvolutionForMonth(businessId, yyyymm) {
   if (!MONTH_KEY_RE.test(yyyymm)) return [];
@@ -551,28 +569,51 @@ export function getDashboardEvolutionForMonth(businessId, yyyymm) {
   const m = Number(mStr);
   if (!Number.isFinite(y) || !Number.isFinite(m) || m < 1 || m > 12) return [];
   const daysInMonth = new Date(y, m, 0).getDate();
-  const nBuckets = 4;
-  const bucketSize = Math.ceil(daysInMonth / nBuckets);
   const pad = (d) => String(d).padStart(2, "0");
+  const monthStart = `${yStr}-${mStr}-01`;
+
+  const milestones = memberChartMilestoneDays(y, m, daysInMonth);
   const rows = [];
-  for (let b = 0; b < nBuckets; b++) {
-    const dayStart = b * bucketSize + 1;
-    const dayEnd = Math.min((b + 1) * bucketSize, daysInMonth);
-    const startDate = `${yStr}-${mStr}-${pad(dayStart)}`;
-    const endDate = `${yStr}-${mStr}-${pad(dayEnd)}`;
-    const op = db
+  for (let b = 0; b < milestones.length; b++) {
+    const queryDay = milestones[b];
+    const prevQueryDay = b === 0 ? 0 : milestones[b - 1];
+    const intervalStartDay = prevQueryDay + 1;
+    const intervalEndDay = queryDay;
+    const intervalStart =
+      intervalStartDay <= intervalEndDay
+        ? `${yStr}-${mStr}-${pad(intervalStartDay)}`
+        : `${yStr}-${mStr}-${pad(queryDay)}`;
+    const queryEndDate = `${yStr}-${mStr}-${pad(queryDay)}`;
+
+    const op =
+      intervalStartDay <= intervalEndDay
+        ? db
+            .prepare(
+              `SELECT COUNT(*) as n FROM transactions WHERE business_id = ?
+               AND date(created_at) >= date(?) AND date(created_at) <= date(?)`,
+            )
+            .get(businessId, intervalStart, queryEndDate)
+        : { n: 0 };
+
+    const newInMonth = db
       .prepare(
-        `SELECT COUNT(*) as n FROM transactions WHERE business_id = ?
+        `SELECT COUNT(*) as n FROM members WHERE business_id = ?
          AND date(created_at) >= date(?) AND date(created_at) <= date(?)`,
       )
-      .get(businessId, startDate, endDate);
-    const members = db
-      .prepare(`SELECT COUNT(*) as n FROM members WHERE business_id = ? AND date(created_at) <= date(?)`)
-      .get(businessId, endDate);
+      .get(businessId, monthStart, queryEndDate);
+
+    const membersTotal = db
+      .prepare(
+        `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND date(created_at) <= date(?)`,
+      )
+      .get(businessId, queryEndDate);
+
     rows.push({
       weekIndex: b,
+      dayOfMonth: queryDay,
       operationsCount: op?.n ?? 0,
-      membersCount: members?.n ?? 0,
+      membersCount: membersTotal?.n ?? 0,
+      newMembersInMonth: newInMonth?.n ?? 0,
     });
   }
   return rows;

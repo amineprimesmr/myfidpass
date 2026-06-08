@@ -98,8 +98,28 @@ router.get("/autocomplete", optionalAuth, async (req, res) => {
   }
 });
 
+async function fetchGoogleMapsReviewsUri(placeId) {
+  try {
+    const r = await fetch(
+      `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`,
+      {
+        headers: {
+          "X-Goog-Api-Key": GOOGLE_PLACES_API_KEY,
+          "X-Goog-FieldMask": "googleMapsLinks",
+        },
+      },
+    );
+    if (!r.ok) return null;
+    const data = await r.json();
+    const uri = data?.googleMapsLinks?.reviewsUri;
+    return typeof uri === "string" && uri.trim() ? uri.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Détails légers d’un lieu (nom + adresse) pour préremplir l’UI quand on n’a que le place_id.
+ * Détails légers d’un lieu (nom + adresse + lien Maps avis) pour préremplir l’UI.
  * GET /api/places/details?place_id=...
  */
 router.get("/details", async (req, res) => {
@@ -117,10 +137,12 @@ router.get("/details", async (req, res) => {
     if (data.status !== "OK" || !data.result) {
       return res.status(404).json({ error: "Lieu introuvable", code: data.status });
     }
+    const googleMapsReviewsUri = await fetchGoogleMapsReviewsUri(placeId);
     return res.json({
       place_id: placeId,
       name: data.result.name || "",
       formatted_address: data.result.formatted_address || "",
+      google_maps_reviews_uri: googleMapsReviewsUri || undefined,
     });
   } catch (err) {
     console.error("[places/details]", err);
