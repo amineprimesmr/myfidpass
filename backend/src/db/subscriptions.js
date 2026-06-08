@@ -204,7 +204,7 @@ export function getMerchantBusinessEntitlements(userId) {
   return {
     allowed_businesses: allowedBusinesses,
     used_businesses: usedBusinesses,
-    can_create_business: usedBusinesses < allowedBusinesses,
+    can_create_business: canCreateBusiness(userId),
     billing_provider: provider,
   };
 }
@@ -308,13 +308,11 @@ export function hasDevSimulatedActiveSubscription(userId) {
   return st === "active" || st === "trialing" || st === "past_due";
 }
 
-/** Abonnement encaissé (Stripe, App Store ou simulation dev active en local uniquement). */
+/** Abonnement encaissé (Stripe, App Store ou simulation admin TEST paywall). */
 export function hasPaidMerchantSubscription(userId) {
   const paidViaStore =
     hasStripeBackedActiveSubscription(userId) || hasAppleBackedActiveSubscription(userId);
-  if (isProductionEnvironment()) {
-    return paidViaStore;
-  }
+  // En prod aussi : `dev_simulated` n’est créé que via routes admin / dashboard admin-gated.
   return paidViaStore || hasDevSimulatedActiveSubscription(userId);
 }
 
