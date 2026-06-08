@@ -20,9 +20,12 @@ import { isProductionEnvironment } from "../../lib/production-env.js";
 
 router.use((req, res, next) => {
   if (!isProductionEnvironment()) return next();
-  const dbUser = req.user?.id ? getUserById(req.user.id) : null;
+  if (!req.user?.id) {
+    return res.status(401).json({ error: "Authentification requise", code: "auth_required" });
+  }
+  const dbUser = getUserById(req.user.id);
   if (isUserAdmin(dbUser)) return next();
-  return res.status(404).json({ error: "Not found" });
+  return res.status(403).json({ error: "Réservé aux comptes admin plateforme en production", code: "admin_only" });
 });
 
 function ensureOwner(req, res) {
