@@ -28,6 +28,7 @@ import { deleteMemberForBusiness, deleteAllMembersForBusiness } from "../../db/m
 import { getRoulettePublicSegments } from "../../db/games.js";
 import { getMatchPredictionConfig } from "../../db/match-predictions.js";
 import { resolveBusinessProgramType } from "../../db/businesses.js";
+import { syncBenchMerchantEntitlementAfterBusinessUpdate } from "../../lib/merchant-scan-bench-access.js";
 import { applyProgramTypeSwitchSideEffects } from "../../lib/program-type-switch.js";
 import {
   resetAllMemberBalancesForBusiness,
@@ -875,6 +876,12 @@ router.patch("/settings", async (req, res) => {
     updates.stamp_emoji !== undefined ||
     updates.stamp_icon_base64 !== undefined;
   updateBusiness(business.id, updates);
+  if (
+    updates.scan_max_passes_per_member_per_day !== undefined ||
+    updates.scan_max_points_per_transaction !== undefined
+  ) {
+    syncBenchMerchantEntitlementAfterBusinessUpdate(business.id);
+  }
   if (programTypeSwitch.switched) {
     resetAllMemberBalancesForBusiness(business.id, {
       fromType: programTypeSwitch.prevType,
