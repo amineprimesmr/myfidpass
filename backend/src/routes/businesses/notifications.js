@@ -16,6 +16,7 @@ import {
   getCampaignSegmentCounts,
   getNotificationBatchesForBusiness,
   getNotificationLogRecentForBusiness,
+  getNotificationCampaignInsightsForBusiness,
 } from "../../db.js";
 import { passKitWaveGapMsForDiagnostics } from "../../passkit-push-waves.js";
 import { deliverCustomerBroadcast } from "../../notifications/dispatch.js";
@@ -330,7 +331,10 @@ router.get("/stats", (req, res) => {
       }
     : null;
 
+  const notificationCampaigns = getNotificationCampaignInsightsForBusiness(business.id, { limit: 24 });
+
   res.json({
+    notification_campaigns: notificationCampaigns,
     passkit_wave_gap_ms: passKitWaveGapMsForDiagnostics(),
     subscriptionsCount,
     membersCount: membersCount ?? 0,

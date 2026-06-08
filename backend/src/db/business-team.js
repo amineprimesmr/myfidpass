@@ -300,6 +300,17 @@ export function isOnlyTeamUser(userId) {
   return !!t;
 }
 
+/** Compte sans commerce possédé ni accès équipe actif (souvent laissé après suppression d’un programme). */
+export function isOrphanMerchantUser(userId) {
+  if (!userId) return false;
+  const owns = db.prepare("SELECT 1 FROM businesses WHERE user_id = ? LIMIT 1").get(userId);
+  if (owns) return false;
+  const team = db
+    .prepare("SELECT 1 FROM business_team_members WHERE user_id = ? AND status = 'active' LIMIT 1")
+    .get(userId);
+  return !team;
+}
+
 /**
  * Rôle d’espace commerçant pour l’app (`workspace_role`) : compte possédant un commerce = owner, sinon rôle d’équipe.
  */

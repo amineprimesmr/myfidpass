@@ -275,15 +275,43 @@ export function filterMemberIdsExcludingTriggerThisCalendarYear(businessId, memb
  * @param {{ limit?: number }} [opts]
  * @returns {Array<{ batch_id: string; trigger_name: string; created_at: string; sent_total: number | null; recipients_distinct: number; returned_within_48h: number }>}
  */
-export function getNotificationCampaignInsightsForBusiness(businessId, { limit = 12 } = {}) {
+function batchMonthKey(createdAt) {
+  if (!createdAt || typeof createdAt !== "string") return null;
+  const trimmed = createdAt.trim();
+  if (trimmed.length >= 7) return trimmed.slice(0, 7);
+  return null;
+}
+
+export function getNotificationCampaignInsightsForBusiness(businessId, { limit = 12, monthKey = null } = {}) {
   const batches = getNotificationBatchesForBusiness(businessId, { limit });
   const out = [];
   for (const b of batches) {
+    if (monthKey && batchMonthKey(b.created_at) !== monthKey) continue;
     let summary = {};
     try {
       summary = JSON.parse(b.summary_json || "{}");
     } catch {
       summary = {};
+    }
+    let notificationTitle = null;
+    let message = null;
+    try {
+      const sample = db
+        .prepare(
+          `SELECT title, body FROM notification_log
+           WHERE business_id = ? AND batch_id = ? AND status = 'sent'
+             AND IFNULL(type,'') != 'merchant_receipt'
+           ORDER BY created_at ASC LIMIT 1`,
+        )
+        .get(businessId, b.id);
+      if (sample) {
+        const t = String(sample.title || "").trim();
+        const body = String(sample.body || "").trim();
+        if (t) notificationTitle = t;
+        if (body) message = body;
+      }
+    } catch (_e) {
+      /* */
     }
     const recipientsRow = db
       .prepare(
@@ -325,6 +353,8 @@ export function getNotificationCampaignInsightsForBusiness(businessId, { limit =
       sent_total: typeof sentTotal === "number" ? sentTotal : null,
       recipients_distinct: recipients,
       returned_within_48h: returnedWithin48h,
+      notification_title: notificationTitle,
+      message,
     });
   }
   return out;

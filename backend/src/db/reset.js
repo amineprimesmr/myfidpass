@@ -5,6 +5,8 @@ import { existsSync, readdirSync, rmSync } from "fs";
 import { join } from "path";
 import { getDb } from "./connection.js";
 import { getBusinessesByUserId } from "./businesses.js";
+import { isOrphanMerchantUser } from "./business-team.js";
+import { getUserById, isUserAdmin } from "./users.js";
 import { assetsDir } from "../pass/constants.js";
 
 /** Logos / passes sur disque pour un commerce précis (hors lignes SQLite). */
@@ -170,6 +172,33 @@ export function deleteUserAccount(userId) {
   });
 
   return tx();
+}
+
+/**
+ * Supprime les comptes commerçants orphelins (sans commerce ni accès équipe actif).
+ * @returns {string[]} ids supprimés
+ */
+export function purgeOrphanMerchantUserAccounts() {
+  const rows = db
+    .prepare(
+      `SELECT id FROM users u
+       WHERE COALESCE(u.is_admin, 0) = 0
+         AND NOT EXISTS (SELECT 1 FROM businesses b WHERE b.user_id = u.id)
+         AND NOT EXISTS (
+           SELECT 1 FROM business_team_members m
+           WHERE m.user_id = u.id AND m.status = 'active'
+         )`,
+    )
+    .all();
+  const deletedIds = [];
+  for (const row of rows) {
+    const userId = String(row.id || "").trim();
+    if (!userId || !isOrphanMerchantUser(userId)) continue;
+    const user = getUserById(userId);
+    if (!user || isUserAdmin(user)) continue;
+    if (deleteUserAccount(userId)) deletedIds.push(userId);
+  }
+  return deletedIds;
 }
 
 export function resetAllData() {

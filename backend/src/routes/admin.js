@@ -13,10 +13,20 @@ import {
   listUsersForAdmin,
   isUserAdmin,
 } from "../db/users.js";
-import { getBusinessById, getBusinessForAdminById, listAllBusinessesForAdmin } from "../db/businesses.js";
+import {
+  getBusinessById,
+  getBusinessForAdminById,
+  getBusinessesByUserId,
+  listAllBusinessesForAdmin,
+} from "../db/businesses.js";
+import { isOrphanMerchantUser } from "../db/business-team.js";
 import { provisionMerchantAccountByAdmin } from "../lib/admin-provision-merchant.js";
 import { insertAdminEvent } from "../db/admin-events.js";
-import { deleteBusinessCompletely, deleteUserAccount } from "../db/reset.js";
+import {
+  deleteBusinessCompletely,
+  deleteUserAccount,
+  purgeOrphanMerchantUserAccounts,
+} from "../db/reset.js";
 import {
   cancelBusinessSubscriptionBeforeDeletion,
   cancelPaidSubscriptionsBeforeAccountDeletion,
@@ -29,6 +39,7 @@ import { getQueueStats, requeueDeadJob } from "../lib/notification-job-queue.js"
 import { getFlyerQueueStats } from "../lib/flyer-generation-jobs.js";
 
 const db = getDb();
+const ADMIN_DELETE_CONFIRM = "SUPPRIMER";
 
 function adminApiBase() {
   return (process.env.PUBLIC_API_URL || process.env.API_URL || "https://api.myfidpass.fr").replace(/\/$/, "");
@@ -163,17 +174,94 @@ router.get("/overview", (_req, res) => {
   try {
     const usersCount = db.prepare("SELECT COUNT(*) as c FROM users").get()?.c ?? 0;
     const businessesCount = db.prepare("SELECT COUNT(*) as c FROM businesses").get()?.c ?? 0;
+    const merchantOwnersCount =
+      db.prepare("SELECT COUNT(DISTINCT user_id) as c FROM businesses").get()?.c ?? 0;
+    const teamMemberAccountsCount =
+      db.prepare(
+        `SELECT COUNT(DISTINCT m.user_id) as c
+         FROM business_team_members m
+         WHERE m.status = 'active'
+           AND NOT EXISTS (SELECT 1 FROM businesses b WHERE b.user_id = m.user_id)`,
+      ).get()?.c ?? 0;
+    const platformAdminAccountsCount =
+      db.prepare("SELECT COUNT(*) as c FROM users WHERE is_admin = 1").get()?.c ?? 0;
+    const orphanAccountsCount =
+      db.prepare(
+        `SELECT COUNT(*) as c FROM users u
+         WHERE COALESCE(u.is_admin, 0) = 0
+           AND NOT EXISTS (SELECT 1 FROM businesses b WHERE b.user_id = u.id)
+           AND NOT EXISTS (
+             SELECT 1 FROM business_team_members m
+             WHERE m.user_id = u.id AND m.status = 'active'
+           )`,
+      ).get()?.c ?? 0;
     const activeSubscriptions = db.prepare(
       `SELECT COUNT(*) as c FROM subscriptions WHERE lower(trim(status)) IN ('active','trialing','past_due')`,
     ).get()?.c ?? 0;
     res.json({
       users_count: usersCount,
       businesses_count: businessesCount,
+      merchant_owners_count: merchantOwnersCount,
+      team_member_accounts_count: teamMemberAccountsCount,
+      platform_admin_accounts_count: platformAdminAccountsCount,
+      orphan_accounts_count: orphanAccountsCount,
       active_subscriptions_count: activeSubscriptions,
     });
   } catch (e) {
     console.error("[admin] overview:", e);
     res.status(500).json({ error: "Impossible de charger les statistiques." });
+  }
+});
+
+/**
+ * POST /api/admin/maintenance/purge-orphan-accounts
+ * Body: { "confirm": "SUPPRIMER" } — comptes sans commerce ni équipe active (hors admins).
+ */
+router.post("/maintenance/purge-orphan-accounts", async (req, res) => {
+  const confirm = String(req.body?.confirm ?? "").trim();
+  if (confirm !== ADMIN_DELETE_CONFIRM) {
+    return res.status(400).json({
+      error: 'Confirmation requise : body { "confirm": "SUPPRIMER" }.',
+      code: "confirm_required",
+    });
+  }
+  try {
+    const candidateIds = db
+      .prepare(
+        `SELECT id FROM users u
+         WHERE COALESCE(u.is_admin, 0) = 0
+           AND NOT EXISTS (SELECT 1 FROM businesses b WHERE b.user_id = u.id)
+           AND NOT EXISTS (
+             SELECT 1 FROM business_team_members m
+             WHERE m.user_id = u.id AND m.status = 'active'
+           )`,
+      )
+      .all()
+      .map((r) => String(r.id || "").trim())
+      .filter(Boolean);
+    let stripeCanceled = 0;
+    let hadAppleIap = false;
+    for (const uid of candidateIds) {
+      const billing = await cancelPaidSubscriptionsBeforeAccountDeletion(uid);
+      stripeCanceled += billing.stripeCanceled;
+      hadAppleIap = hadAppleIap || billing.hadAppleIap;
+    }
+    const deletedUserIds = purgeOrphanMerchantUserAccounts();
+    for (const uid of deletedUserIds) invalidateAuthUserCache(uid);
+    console.info("[admin] purge-orphan-accounts", {
+      deletedUserIds,
+      byAdminId: req.user?.id,
+    });
+    return res.json({
+      ok: true,
+      deleted_user_ids: deletedUserIds,
+      deleted_count: deletedUserIds.length,
+      stripe_subscriptions_canceled: stripeCanceled,
+      apple_subscription_remains_on_apple_id: hadAppleIap,
+    });
+  } catch (e) {
+    console.error("[admin] purge-orphan-accounts:", e);
+    return res.status(500).json({ error: "Erreur lors du nettoyage des comptes orphelins." });
   }
 });
 
@@ -344,7 +432,6 @@ router.get("/queues", (_req, res) => {
  * POST /api/admin/notifications/jobs/:id/requeue — relance un job campagne mort (DLQ).
  * Body vide. Utilisé par le support pour relancer une campagne échouée 4×.
  */
-const ADMIN_DELETE_CONFIRM = "SUPPRIMER";
 
 /**
  * DELETE /api/admin/businesses/:businessId
@@ -362,23 +449,59 @@ router.delete("/businesses/:businessId", async (req, res) => {
   if (!businessId) return res.status(400).json({ error: "Commerce introuvable." });
   const business = getBusinessById(businessId);
   if (!business) return res.status(404).json({ error: "Commerce introuvable.", code: "business_not_found" });
+  const ownerId = String(business.user_id || "").trim();
+  const teamUserIds = db
+    .prepare("SELECT DISTINCT user_id FROM business_team_members WHERE business_id = ?")
+    .all(business.id)
+    .map((r) => String(r.user_id || "").trim())
+    .filter(Boolean);
   try {
     const billing = await cancelBusinessSubscriptionBeforeDeletion(business.user_id, business.id);
     const deleted = deleteBusinessCompletely(business.id);
     if (!deleted) {
       return res.status(404).json({ error: "Commerce déjà supprimé.", code: "business_already_deleted" });
     }
+
+    const deletedUserIds = [];
+    const accountsToDelete = new Set();
+    if (ownerId) {
+      const owner = getUserById(ownerId);
+      if (owner && !isUserAdmin(owner) && getBusinessesByUserId(ownerId).length === 0) {
+        accountsToDelete.add(ownerId);
+      }
+    }
+    for (const uid of teamUserIds) {
+      if (uid === ownerId) continue;
+      const u = getUserById(uid);
+      if (!u || isUserAdmin(u)) continue;
+      if (isOrphanMerchantUser(uid)) accountsToDelete.add(uid);
+    }
+
+    let stripeAccountsCanceled = billing.stripeCanceled;
+    let hadAppleIap = billing.hadAppleIap;
+    for (const uid of accountsToDelete) {
+      const accountBilling = await cancelPaidSubscriptionsBeforeAccountDeletion(uid);
+      stripeAccountsCanceled += accountBilling.stripeCanceled;
+      hadAppleIap = hadAppleIap || accountBilling.hadAppleIap;
+      if (deleteUserAccount(uid)) {
+        invalidateAuthUserCache(uid);
+        deletedUserIds.push(uid);
+      }
+    }
+
     console.info("[admin] delete-business", {
       businessId: business.id,
       slug: business.slug,
       byAdminId: req.user?.id,
+      deletedUserIds,
     });
     return res.json({
       ok: true,
       deleted_business_id: business.id,
       slug: business.slug,
-      stripe_subscriptions_canceled: billing.stripeCanceled,
-      apple_subscription_remains_on_apple_id: billing.hadAppleIap,
+      deleted_user_ids: deletedUserIds,
+      stripe_subscriptions_canceled: stripeAccountsCanceled,
+      apple_subscription_remains_on_apple_id: hadAppleIap,
     });
   } catch (e) {
     console.error("[admin] delete-business:", e);

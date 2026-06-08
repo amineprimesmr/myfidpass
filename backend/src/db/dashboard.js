@@ -254,11 +254,10 @@ export function getDashboardStats(businessId, period = "this_month") {
 
   let notificationCampaigns = [];
   try {
-    const allCampaigns = getNotificationCampaignInsightsForBusiness(businessId, { limit: 12 });
-    notificationCampaigns =
-      bounds.month != null
-        ? allCampaigns.filter((c) => c.created_at && c.created_at.slice(0, 7) === bounds.month)
-        : allCampaigns;
+    notificationCampaigns = getNotificationCampaignInsightsForBusiness(businessId, {
+      limit: 24,
+      monthKey: bounds.month ?? null,
+    });
   } catch (_e) {
     notificationCampaigns = [];
   }
