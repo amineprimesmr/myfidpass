@@ -613,6 +613,29 @@ export function getDashboardEvolutionForMonth(businessId, yyyymm) {
       )
       .get(businessId, monthStart, queryEndDate);
 
+    const amountEurSqlFilter = `type = 'points_add' AND metadata IS NOT NULL
+      AND json_extract(metadata, '$.amount_eur') IS NOT NULL
+      AND CAST(json_extract(metadata, '$.amount_eur') AS REAL) > 0`;
+    let avgBasketEurInMonth = null;
+    try {
+      const basketRow = db
+        .prepare(
+          `SELECT COALESCE(SUM(CAST(json_extract(metadata, '$.amount_eur') AS REAL)), 0) as total,
+                  COUNT(*) as n
+           FROM transactions
+           WHERE business_id = ? AND date(created_at) >= date(?) AND date(created_at) <= date(?)
+           AND ${amountEurSqlFilter}`,
+        )
+        .get(businessId, monthStart, queryEndDate);
+      const n = basketRow?.n ?? 0;
+      const total = basketRow?.total ?? 0;
+      if (n > 0 && total > 0) {
+        avgBasketEurInMonth = Math.round((total / n) * 100) / 100;
+      }
+    } catch (_e) {
+      /* json_extract */
+    }
+
     const membersTotal = db
       .prepare(
         `SELECT COUNT(*) as n FROM members WHERE business_id = ? AND date(created_at) <= date(?)`,
@@ -625,6 +648,7 @@ export function getDashboardEvolutionForMonth(businessId, yyyymm) {
       operationsCount: op?.n ?? 0,
       membersCount: membersTotal?.n ?? 0,
       newMembersInMonth: newInMonth?.n ?? 0,
+      avg_basket_eur_in_month: avgBasketEurInMonth,
     });
   }
   return rows;
