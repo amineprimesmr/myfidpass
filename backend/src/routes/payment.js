@@ -19,6 +19,7 @@ import {
   cancelNonStripeBackedSubscriptionRow,
   hasPaidMerchantSubscription,
   getMerchantEntitlementByUserId,
+  getMerchantBusinessEntitlements,
   resolveEffectiveAllowedBusinesses,
   getDefaultAllowedBusinessesFromLegacyPlan,
 } from "../db.js";
@@ -1231,13 +1232,22 @@ async function syncSubscriptionFromStripeObject(stripeSub, fallbackUserId) {
   }
 
   const slotsMeta = working.metadata?.merchant_slots;
+  const existingEnt = getMerchantEntitlementByUserId(userId);
+  const priorSlots = existingEnt
+    ? Math.min(5, Math.max(1, parseInt(String(existingEnt.allowed_businesses), 10) || 1))
+    : 1;
+  let slots = priorSlots;
   if (slotsMeta != null && String(slotsMeta).trim() !== "") {
-    const slots = Math.min(5, Math.max(1, parseInt(String(slotsMeta), 10) || 1));
+    slots = Math.min(5, Math.max(1, parseInt(String(slotsMeta), 10) || 1));
+  } else if (isStripeSubscriptionStatusPaying(status) && (!existingEnt || String(existingEnt.status || "").toLowerCase() !== "active")) {
+    slots = Math.min(5, Math.max(1, getDefaultAllowedBusinessesFromLegacyPlan(planId)));
+  }
+  if (isStripeSubscriptionStatusPaying(status)) {
     upsertMerchantEntitlement({
       userId,
       allowedBusinesses: slots,
       billingProvider: "stripe",
-      status: isStripeSubscriptionStatusPaying(status) ? "active" : "inactive",
+      status: "active",
       source: "stripe_unified_subscription",
     });
   }
@@ -1458,6 +1468,7 @@ router.post("/apple/sync-transaction", requireAuth, async (req, res) => {
       signedTransactionInfo: signed,
       transactionId,
     });
+    const entitlements = getMerchantBusinessEntitlements(req.user.id);
     return res.json({
       ok: true,
       source: result.source || (isAppStoreServerApiConfigured() ? "app_store_server_api" : "storekit_jws"),
@@ -1465,6 +1476,10 @@ router.post("/apple/sync-transaction", requireAuth, async (req, res) => {
       has_active_subscription: result.has_active_subscription,
       has_paid_merchant_subscription: result.has_paid_merchant_subscription,
       original_transaction_id: result.original_transaction_id,
+      entitlements,
+      allowed_businesses: entitlements.allowed_businesses,
+      used_businesses: entitlements.used_businesses,
+      can_create_business: entitlements.can_create_business,
     });
   } catch (e) {
     return appleSyncErrorResponse(e, res);

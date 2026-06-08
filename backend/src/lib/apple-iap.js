@@ -8,6 +8,7 @@ import {
   upsertMerchantEntitlement,
   getSubscriptionByUserId,
   getMerchantEntitlementByUserId,
+  getMerchantBusinessEntitlements,
   getSubscriptionByStripeSubscriptionId,
   resetMerchantEntitlementAfterLegacyIapRemoval,
 } from "../db/subscriptions.js";
@@ -305,12 +306,17 @@ export async function applyAppleTransactionToUser(userId, payload) {
     deactivateAppleEntitlementForUser(userId);
   }
 
+  const entitlements = getMerchantBusinessEntitlements(userId);
   return {
     subscription: sub,
     has_active_subscription: paying,
     has_paid_merchant_subscription: paying,
     subscription_status: status,
     original_transaction_id: originalId,
+    entitlements,
+    allowed_businesses: entitlements.allowed_businesses,
+    used_businesses: entitlements.used_businesses,
+    can_create_business: entitlements.can_create_business,
   };
 }
 
