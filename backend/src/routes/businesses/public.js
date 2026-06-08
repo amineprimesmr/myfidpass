@@ -6,13 +6,13 @@ import { Router } from "express";
 import {
   getBusinessGames,
   getEngagementRewards,
-  getMemberForBusiness,
   getRoulettePublicSegments,
   resolveBusinessProgramType,
   shouldSkipTicketConsumptionForLocalBrowser,
   shouldSkipTicketConsumptionForLocalDev,
   spinGameForMember,
 } from "../../db.js";
+import { getMemberForBusinessOrGroup } from "../../lib/loyalty-group-resolve.js";
 import { buildIpHash, buildDeviceHash } from "../../services/engagement-proof.js";
 import { parseFlyerPrefsCustomLogoDataUrl } from "../../lib/resolve-flyer-prefs-custom-logo.js";
 import { getApiBase, getIdempotencyKey } from "./shared.js";
@@ -153,7 +153,7 @@ function spinsHandler(req, res) {
     const business = req.business;
     const memberId = String(req.body?.memberId || "").trim();
     if (!memberId) return res.status(400).json({ error: "memberId requis" });
-    const member = getMemberForBusiness(memberId, business.id);
+    const member = getMemberForBusinessOrGroup(memberId, business);
     if (!member) return res.status(404).json({ error: "Membre introuvable" });
     const idempotencyKey = getIdempotencyKey(req);
     const clientIpHash = buildIpHash(req);

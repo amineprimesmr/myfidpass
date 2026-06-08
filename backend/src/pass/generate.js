@@ -308,7 +308,8 @@ export async function generatePass(member, business = null, options = {}) {
   }
 
   const webServiceURL = process.env.PASSKIT_WEB_SERVICE_URL || process.env.API_URL;
-  const authToken = getPassAuthenticationToken(member.id);
+  const passSerial = member.loyalty_group_member_id || member.id;
+  const authToken = getPassAuthenticationToken(passSerial);
   const notifTitle = (options.notification_title_override ?? business?.notification_title_override)?.trim() || organizationName;
   const changeMsg = (options.notification_change_message ?? business?.notification_change_message)?.trim() || "%@";
   const rawBroadcast =
@@ -339,7 +340,7 @@ export async function generatePass(member, business = null, options = {}) {
     description: format === "tampons"
       ? `Tampons · ${organizationName}`
       : `Fidélité · ${member.points} pts`,
-    serialNumber: member.id,
+    serialNumber: passSerial,
     ...customColors,
   };
   if (webServiceURL && business) {
@@ -418,7 +419,7 @@ export async function generatePass(member, business = null, options = {}) {
   /* Message de campagne : uniquement au **verso** (`lastMessage`), pas sur la face (demande produit). */
 
   const barcodePayload = {
-    message: member.id,
+    message: passSerial,
     format: "PKBarcodeFormatQR",
     messageEncoding: "iso-8859-1",
   };

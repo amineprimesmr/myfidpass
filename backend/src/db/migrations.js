@@ -1877,4 +1877,47 @@ export function runMigrations(db) {
     });
     markMigrationApplied(db, 47, "notification_campaign_recipient_backfill");
   }
+
+  // v48 : réseaux de fidélité partagés (multi-adresses, une carte client)
+  const m48 = db.prepare("SELECT 1 FROM schema_migrations WHERE version = 48").get();
+  if (!m48) {
+    safeRun(db, () => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS loyalty_groups (
+          id TEXT PRIMARY KEY,
+          owner_user_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          created_at TEXT NOT NULL,
+          updated_at TEXT
+        );
+        CREATE TABLE IF NOT EXISTS loyalty_group_members (
+          id TEXT PRIMARY KEY,
+          loyalty_group_id TEXT NOT NULL,
+          email TEXT,
+          name TEXT,
+          points INTEGER NOT NULL DEFAULT 0,
+          phone TEXT,
+          city TEXT,
+          birth_date TEXT,
+          created_at TEXT NOT NULL,
+          last_visit_at TEXT,
+          FOREIGN KEY (loyalty_group_id) REFERENCES loyalty_groups(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_loyalty_groups_owner ON loyalty_groups(owner_user_id);
+        CREATE INDEX IF NOT EXISTS idx_lgm_group ON loyalty_group_members(loyalty_group_id);
+        CREATE INDEX IF NOT EXISTS idx_lgm_group_email ON loyalty_group_members(loyalty_group_id, email);
+      `);
+      const bizCols = db.prepare("PRAGMA table_info(businesses)").all().map((c) => c.name);
+      if (!bizCols.includes("loyalty_group_id")) {
+        db.exec("ALTER TABLE businesses ADD COLUMN loyalty_group_id TEXT REFERENCES loyalty_groups(id)");
+      }
+      const memCols = db.prepare("PRAGMA table_info(members)").all().map((c) => c.name);
+      if (!memCols.includes("loyalty_group_member_id")) {
+        db.exec("ALTER TABLE members ADD COLUMN loyalty_group_member_id TEXT");
+      }
+      db.exec("CREATE INDEX IF NOT EXISTS idx_businesses_loyalty_group ON businesses(loyalty_group_id)");
+      db.exec("CREATE INDEX IF NOT EXISTS idx_members_loyalty_group_member ON members(loyalty_group_member_id)");
+    });
+    markMigrationApplied(db, 48, "loyalty_groups_shared_fidelity");
+  }
 }

@@ -54,6 +54,7 @@ import paymentRouter, { paymentWebhookHandler, applePaymentWebhookHandler } from
 import paymentClaimRouter from "./routes/payment-claim.js";
 import webhooksGbpPubsubRouter from "./routes/webhooks-gbp-pubsub.js";
 import adminRouter from "./routes/admin.js";
+import loyaltyGroupsRouter from "./routes/loyalty-groups.js";
 import passesRouter from "./routes/passes.js";
 import passkitWebserviceRouter from "./routes/passkit-webservice.js";
 import webPushRouter from "./routes/web-push.js";
@@ -406,6 +407,7 @@ app.use("/api/oauth", oauthGoogleBusinessRouter);
 app.use("/api/oauth", oauthTiktokRouter);
 app.use("/api/members", membersRouter);
 app.use("/api/businesses", businessesRouter);
+app.use("/api/loyalty-groups", loyaltyGroupsRouter);
 app.use("/api/payment", paymentClaimRouter);
 app.use("/api/payment", paymentRouter);
 app.use("/api/webhooks", webhooksGbpPubsubRouter);

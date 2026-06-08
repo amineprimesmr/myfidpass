@@ -8,6 +8,7 @@ import { GoogleAuth } from "google-auth-library";
 import { getMembersForBusiness } from "./db/members.js";
 import { stampNextRewardFaceLabelAndValue } from "./pass/stamp-next-reward-face.js";
 import { normalizeStampBalance } from "./lib/stamps-cycle-math.js";
+import { canonicalMemberBarcode, getEffectiveMemberPoints } from "./db/loyalty-groups.js";
 
 const GOOGLE_SAVE_BASE = "https://pay.google.com/gp/v/save";
 const DEFAULT_CLASS_SUFFIX = "myfidpass_loyalty";
@@ -70,7 +71,7 @@ function getLegacyObjectId(issuerId, member) {
 
 function getBusinessObjectId(issuerId, member, business) {
   const businessSuffix = safeSuffix(business?.slug || business?.id || "business").slice(0, 48);
-  const memberSuffix = safeSuffix(member.id).slice(0, 96);
+  const memberSuffix = safeSuffix(canonicalMemberBarcode(member) || member.id).slice(0, 96);
   return `${issuerId}.business_${businessSuffix}_${memberSuffix}`;
 }
 
@@ -300,10 +301,12 @@ function buildLoyaltyObject(objectId, classId, member, business, apiBase = null)
   const accountName = (member.name || member.email || "Client").slice(0, 20);
   const accountId = (member.email || member.id).slice(0, 20);
   const stampMax = Math.max(1, Math.floor(Number(business?.required_stamps) || 10));
+  const effectivePoints = getEffectiveMemberPoints(member);
+  const barcodeId = canonicalMemberBarcode(member) || member.id;
   const stampBalanceForHero =
     programType === "stamps"
-      ? normalizeStampBalance(member.points, stampMax)
-      : Math.max(0, Math.floor(Number(member.points) || 0));
+      ? normalizeStampBalance(effectivePoints, stampMax)
+      : effectivePoints;
   const heroUrl = publicHeroImageUrlForBusiness(apiBase, business, stampBalanceForHero);
   const rewardsBody = fullRewardsListForBusiness(business, programType);
   const backTerms = String(business?.back_terms || "").trim();
@@ -347,8 +350,8 @@ function buildLoyaltyObject(objectId, classId, member, business, apiBase = null)
     accountId,
     barcode: {
       type: "QR_CODE",
-      value: member.id,
-      alternateText: member.id,
+      value: barcodeId,
+      alternateText: barcodeId,
     },
     ...(heroUrl ? { heroImage: googleImage(heroUrl, `Carte ${displayNameForBusiness(business)}`) } : {}),
     textModulesData: textModules,

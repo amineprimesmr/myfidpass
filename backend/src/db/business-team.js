@@ -32,7 +32,7 @@ export function getTeamBusinessesForUserId(userId) {
   if (!userId) return [];
   return db
     .prepare(
-      `SELECT b.id, b.name, b.slug, b.organization_name, b.created_at, b.dashboard_token
+      `SELECT b.id, b.name, b.slug, b.organization_name, b.created_at, b.dashboard_token, b.loyalty_group_id
        FROM business_team_members m
        JOIN businesses b ON b.id = m.business_id
        WHERE m.user_id = ? AND m.status = 'active'

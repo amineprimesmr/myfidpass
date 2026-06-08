@@ -9,16 +9,80 @@ import { resolveMemberIdsForCampaignSegment } from "../lib/member-campaign-segme
 export { sqlExcludeTechnicalMembers, sqlInactiveMembersSinceDays } from "./member-segment-sql.js";
 import { nowUtcSqlWithMs } from "./datetime-sql.js";
 import { computeStampRolloverState, normalizeStampBalance } from "../lib/stamps-cycle-math.js";
+import { getBusinessById } from "./businesses.js";
+import {
+  addPointsToLoyaltyGroupMember,
+  createLoyaltyGroupMember,
+  deductLoyaltyGroupMemberPoints,
+  ensureLocalMemberForGroupMember,
+  getLoyaltyGroupMember,
+  getLoyaltyGroupMemberByEmail,
+  linkMemberToGroupMember,
+  setLoyaltyGroupMemberPoints,
+  syncGroupBalanceToLocalMembers,
+} from "./loyalty-groups.js";
 
 const db = getDb();
 
 const MEMBER_ORDER = { last_visit: "COALESCE(last_visit_at, '') DESC", points: "points DESC", name: "name ASC", created: "created_at DESC" };
 
-export function createMember({ id, businessId, email, name, points = 0 }) {
+export function createMember({ id, businessId, email, name, points = 0, loyaltyGroupMemberId = null }) {
   const mid = id || randomUUID();
   const pts = Number.isFinite(Number(points)) && Number(points) >= 0 ? Number(points) : 0;
-  db.prepare("INSERT INTO members (id, business_id, email, name, points) VALUES (?, ?, ?, ?, ?)").run(mid, businessId, email, name, pts);
+  const memCols = db.prepare("PRAGMA table_info(members)").all().map((c) => c.name);
+  if (memCols.includes("loyalty_group_member_id")) {
+    db.prepare(
+      `INSERT INTO members (id, business_id, email, name, points, loyalty_group_member_id) VALUES (?, ?, ?, ?, ?, ?)`,
+    ).run(mid, businessId, email, name, pts, loyaltyGroupMemberId);
+  } else {
+    db.prepare("INSERT INTO members (id, business_id, email, name, points) VALUES (?, ?, ?, ?, ?)").run(
+      mid,
+      businessId,
+      email,
+      name,
+      pts,
+    );
+  }
   return getMember(mid);
+}
+
+/**
+ * Création membre avec rattachement réseau fidélité si le commerce en fait partie.
+ */
+export function createMemberForBusiness({ id, businessId, email, name, points = 0 }) {
+  const business = getBusinessById(businessId);
+  const normEmail = email ? String(email).trim().toLowerCase() : null;
+  const normName = name ? String(name).trim() : null;
+  if (!business?.loyalty_group_id || !normEmail) {
+    return createMember({ id, businessId, email: normEmail, name: normName, points });
+  }
+
+  let groupMember = getLoyaltyGroupMemberByEmail(business.loyalty_group_id, normEmail);
+  if (!groupMember) {
+    groupMember = createLoyaltyGroupMember({
+      groupId: business.loyalty_group_id,
+      email: normEmail,
+      name: normName,
+      points: 0,
+    });
+  }
+
+  const existingLocal = getMemberByEmailForBusiness(businessId, normEmail);
+  if (existingLocal) {
+    linkMemberToGroupMember(existingLocal.id, groupMember.id);
+    return getMember(existingLocal.id);
+  }
+
+  const local = createMember({
+    id,
+    businessId,
+    email: normEmail,
+    name: normName || groupMember.name,
+    points: groupMember.points,
+    loyaltyGroupMemberId: groupMember.id,
+  });
+  syncGroupBalanceToLocalMembers(groupMember.id);
+  return getMember(local.id);
 }
 
 export function getMember(id) {
@@ -43,7 +107,11 @@ export function updateMember(memberId, { name, points, phone, city, birth_date: 
   if (!m) return null;
   if (name !== undefined) db.prepare("UPDATE members SET name = ? WHERE id = ?").run(String(name).trim(), memberId);
   if (Number.isFinite(Number(points)) && Number(points) >= 0) {
-    db.prepare("UPDATE members SET points = ?, last_visit_at = ? WHERE id = ?").run(Number(points), nowUtcSqlWithMs(), memberId);
+    if (m.loyalty_group_member_id) {
+      setLoyaltyGroupMemberPoints(m.loyalty_group_member_id, Number(points));
+    } else {
+      db.prepare("UPDATE members SET points = ?, last_visit_at = ? WHERE id = ?").run(Number(points), nowUtcSqlWithMs(), memberId);
+    }
   }
   if (phone !== undefined) db.prepare("UPDATE members SET phone = ? WHERE id = ?").run(phone == null ? null : String(phone).trim(), memberId);
   if (city !== undefined) db.prepare("UPDATE members SET city = ? WHERE id = ?").run(city == null ? null : String(city).trim(), memberId);
@@ -54,6 +122,12 @@ export function updateMember(memberId, { name, points, phone, city, birth_date: 
 }
 
 export function addPoints(id, points) {
+  const m = getMember(id);
+  if (!m) return null;
+  if (m.loyalty_group_member_id) {
+    addPointsToLoyaltyGroupMember(m.loyalty_group_member_id, points);
+    return getMember(id);
+  }
   const now = nowUtcSqlWithMs();
   db.prepare("UPDATE members SET points = points + ?, last_visit_at = ? WHERE id = ?").run(points, now, id);
   return getMember(id);
@@ -68,13 +142,20 @@ export { normalizeStampBalance, computeStampRolloverState } from "../lib/stamps-
 export function addStampsWithCycleRollover(memberId, delta, cycleSize) {
   const m0 = getMember(memberId);
   if (!m0) return { member: null, rawAdded: 0, cycleCompletions: 0 };
-  const { newBalance, cycleCompletions, rawAdded } = computeStampRolloverState(m0.points, delta, cycleSize);
+  const effectivePts = m0.loyalty_group_member_id
+    ? (getLoyaltyGroupMember(m0.loyalty_group_member_id)?.points ?? m0.points)
+    : m0.points;
+  const { newBalance, cycleCompletions, rawAdded } = computeStampRolloverState(effectivePts, delta, cycleSize);
   if (rawAdded <= 0) return { member: m0, rawAdded: 0, cycleCompletions: 0 };
-  db.prepare("UPDATE members SET points = ?, last_visit_at = ? WHERE id = ?").run(
-    newBalance,
-    nowUtcSqlWithMs(),
-    memberId,
-  );
+  if (m0.loyalty_group_member_id) {
+    setLoyaltyGroupMemberPoints(m0.loyalty_group_member_id, newBalance);
+  } else {
+    db.prepare("UPDATE members SET points = ?, last_visit_at = ? WHERE id = ?").run(
+      newBalance,
+      nowUtcSqlWithMs(),
+      memberId,
+    );
+  }
   return { member: getMember(memberId), rawAdded, cycleCompletions };
 }
 
@@ -99,6 +180,11 @@ export function addStampsCapped(memberId, delta, maxStamps) {
 export function deductPoints(id, pointsToDeduct) {
   const amount = Math.max(0, Math.floor(Number(pointsToDeduct) || 0));
   if (amount <= 0) return getMember(id);
+  const m = getMember(id);
+  if (m?.loyalty_group_member_id) {
+    deductLoyaltyGroupMemberPoints(m.loyalty_group_member_id, amount);
+    return getMember(id);
+  }
   db.prepare("UPDATE members SET points = MAX(0, points - ?), last_visit_at = ? WHERE id = ?").run(amount, nowUtcSqlWithMs(), id);
   return getMember(id);
 }

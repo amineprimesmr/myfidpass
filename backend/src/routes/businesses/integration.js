@@ -4,7 +4,6 @@
  */
 import { Router } from "express";
 import {
-  getMemberForBusiness,
   addPoints,
   addStampsWithCycleRollover,
   createTransaction,
@@ -32,6 +31,7 @@ import {
   isReceiptValidationRequiredForRequest,
   verifyReceiptTokenForScan,
 } from "../../lib/receipt-validation-jwt.js";
+import { getMemberForBusinessOrGroup } from "../../lib/loyalty-group-resolve.js";
 
 const router = Router();
 
@@ -150,7 +150,7 @@ router.get("/lookup", (req, res) => {
   const raw = (req.query.barcode || "").trim();
   if (!raw) return res.status(400).json({ error: "Paramètre barcode requis" });
   const parsed = parseMerchantScanCode(raw);
-  const member = getMemberForBusiness(parsed.memberId, business.id);
+  const member = getMemberForBusinessOrGroup(parsed.memberId, business);
   if (!member) {
     return res.status(404).json({
       error: "Code non reconnu pour ce commerce. Scannez le QR affiché sur la carte dans le Wallet du client (pas le lien « Ajouter à Wallet »).",
@@ -188,7 +188,7 @@ router.post("/reward-redeem", async (req, res) => {
     return res.status(400).json({ error: "Champ barcode requis", code: "BARCODE_MISSING" });
   }
   const parsed = parseMerchantScanCode(raw);
-  const member = getMemberForBusiness(parsed.memberId, business.id);
+  const member = getMemberForBusinessOrGroup(parsed.memberId, business);
   if (!member) {
     return res.status(404).json({
       error: "Code non reconnu. Utilisez le QR « Utiliser la récompense » affiché par le client.",
@@ -261,7 +261,7 @@ router.post("/scan", async (req, res) => {
     return res.status(400).json({ error: "Champ barcode requis", code: "BARCODE_MISSING" });
   }
   const parsed = parseMerchantScanCode(raw);
-  const member = getMemberForBusiness(parsed.memberId, business.id);
+  const member = getMemberForBusinessOrGroup(parsed.memberId, business);
   if (!member) {
     return res.status(404).json({
       error: "Code non reconnu pour ce commerce. Scannez le QR de la carte dans le Wallet du client.",

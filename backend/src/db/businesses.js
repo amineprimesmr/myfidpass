@@ -39,7 +39,7 @@ export function getBusinessBySlug(slug) {
 
 export function getBusinessesByUserId(userId) {
   return db.prepare(
-    "SELECT id, name, slug, organization_name, created_at, dashboard_token FROM businesses WHERE user_id = ? ORDER BY created_at DESC"
+    "SELECT id, name, slug, organization_name, created_at, dashboard_token, loyalty_group_id FROM businesses WHERE user_id = ? ORDER BY created_at DESC"
   ).all(userId);
 }
 

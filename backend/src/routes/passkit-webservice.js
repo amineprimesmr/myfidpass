@@ -22,9 +22,15 @@ import { scheduleCampaignEventJobsForMember } from "../lib/campaign-event-jobs.j
 import { getPassAuthenticationToken } from "../pass.js";
 import { generatePass } from "../pass.js";
 import { grantWelcomeBonusIfEligible } from "../db/welcome-bonus.js";
+import { resolveMemberBySerial } from "../lib/loyalty-group-resolve.js";
+import { getEffectiveMemberPoints } from "../db/loyalty-groups.js";
 import { clearWalletTierUnlockPending } from "../lib/wallet-reward-tier-notify.js";
 
 const router = Router();
+
+function memberFromPassSerial(serialNumber) {
+  return resolveMemberBySerial(serialNumber)?.member ?? null;
+}
 
 /**
  * Rate limit sur l'enregistrement de devices PassKit.
@@ -101,7 +107,8 @@ function handleDeviceRegistration(req, res) {
     console.warn("[PassKit] Enregistrement refusé: token invalide ou manquant pour serialNumber", serialNumber?.slice(0, 8) + "...");
     return res.status(401).json({ error: "Unauthorized" });
   }
-  const member = getMember(serialNumber);
+  const resolved = resolveMemberBySerial(serialNumber);
+  const member = resolved?.member;
   if (!member) {
     console.warn("[PassKit] Enregistrement refusé: membre introuvable", serialNumber?.slice(0, 8) + "...");
     return res.status(404).json({ error: "Pass not found" });
@@ -119,10 +126,10 @@ function handleDeviceRegistration(req, res) {
       try {
         const fullBusiness = getBusinessById(member.business_id);
         if (fullBusiness) {
-          scheduleCampaignEventJobsForMember({ business: fullBusiness, memberId: serialNumber });
+          scheduleCampaignEventJobsForMember({ business: fullBusiness, memberId: member.id });
           // Bonus d'inscription : accordé une seule fois à la première registration Wallet.
           try {
-            const granted = grantWelcomeBonusIfEligible(fullBusiness, serialNumber);
+            const granted = grantWelcomeBonusIfEligible(fullBusiness, member.id);
             if (granted) {
               logger.info(
                 { memberId: serialNumber, businessId: member.business_id, granted },
@@ -220,10 +227,12 @@ const getPassHandler = async (req, res) => {
     if (!verifyToken(serialNumber, token)) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    const member = getMember(serialNumber);
+    const resolved = resolveMemberBySerial(serialNumber);
+    const member = resolved?.member;
     if (!member) {
       return res.status(404).json({ error: "Pass not found" });
     }
+    const memberForPass = { ...member, points: getEffectiveMemberPoints(member) };
     const businessRow = getBusinessById(member.business_id);
     if (!businessRow) {
       return res.status(404).json({ error: "Business not found" });
@@ -252,7 +261,7 @@ const getPassHandler = async (req, res) => {
     // (signature X.509) + traitement d'image (sharp resize) qui peuvent bloquer indéfiniment sur
     // une image lourde ou un pic CPU. Sans timeout, Railway coupe à 30s avec un 504 côté iPhone.
     const buffer = await Promise.race([
-      generatePass(member, business, opts),
+      generatePass(memberForPass, business, opts),
       new Promise((_, reject) =>
         setTimeout(
           () => reject(new Error(`generatePass timeout après ${GENERATE_PASS_TIMEOUT_MS}ms — image trop lourde ou CPU surchargé`)),
@@ -289,7 +298,7 @@ router.head("/passes/:passTypeId/:serialNumber", (req, res) => {
   const { serialNumber } = req.params;
   const token = parseApplePassAuth(req);
   if (!verifyToken(serialNumber, token)) return res.status(401).end();
-  const member = getMember(serialNumber);
+  const member = memberFromPassSerial(serialNumber);
   if (!member) return res.status(404).end();
   const business = getBusinessById(member.business_id);
   const lastModified = getPassLastModified(member, business);
@@ -301,7 +310,7 @@ router.head(["/v1/passes/:passTypeId/:serialNumber", "/v1/passes/:passTypeId/:se
   const { serialNumber } = req.params;
   const token = parseApplePassAuth(req);
   if (!verifyToken(serialNumber, token)) return res.status(401).end();
-  const member = getMember(serialNumber);
+  const member = memberFromPassSerial(serialNumber);
   if (!member) return res.status(404).end();
   const business = getBusinessById(member.business_id);
   const lastModified = getPassLastModified(member, business);
@@ -313,7 +322,7 @@ router.head(["/api/v1/passes/:passTypeId/:serialNumber", "/api/v1/passes/:passTy
   const { serialNumber } = req.params;
   const token = parseApplePassAuth(req);
   if (!verifyToken(serialNumber, token)) return res.status(401).end();
-  const member = getMember(serialNumber);
+  const member = memberFromPassSerial(serialNumber);
   if (!member) return res.status(404).end();
   const business = getBusinessById(member.business_id);
   const lastModified = getPassLastModified(member, business);
@@ -325,7 +334,7 @@ router.head(["/api/v1/v1/passes/:passTypeId/:serialNumber", "/api/v1/v1/passes/:
   const { serialNumber } = req.params;
   const token = parseApplePassAuth(req);
   if (!verifyToken(serialNumber, token)) return res.status(401).end();
-  const member = getMember(serialNumber);
+  const member = memberFromPassSerial(serialNumber);
   if (!member) return res.status(404).end();
   const business = getBusinessById(member.business_id);
   const lastModified = getPassLastModified(member, business);

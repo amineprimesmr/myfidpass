@@ -38,5 +38,6 @@ export * from "./app-runtime-flags.js";
 export * from "./social-metrics.js";
 export * from "./social-oauth.js";
 export * from "./business-team.js";
+export * from "./loyalty-groups.js";
 export * from "./receipt-delivery-claims.js";
 export * from "./match-predictions.js";

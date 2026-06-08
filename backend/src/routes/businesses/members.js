@@ -5,8 +5,10 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { randomUUID } from "crypto";
 import { executeMemberRewardRedeem } from "../../lib/member-reward-redeem.js";
+import { getMemberForBusinessOrGroup } from "../../lib/loyalty-group-resolve.js";
 import {
   createMember,
+  createMemberForBusiness,
   getMemberForBusiness,
   getMemberByEmailForBusiness,
   updateMember,
@@ -112,7 +114,7 @@ router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res
     if (!isGuestPlaceholderEmail(existing.email)) {
       welcome_bonus_granted = grantWelcomeBonusIfEligible(business, existing.id, { source: "web_signup" });
     }
-    const fresh = getMemberForBusiness(existing.id, business.id) || existing;
+    const fresh = getMemberForBusinessOrGroup(existing.id, business) || existing;
     return res.status(200).json({
       memberId: fresh.id,
       member: {
@@ -127,7 +129,7 @@ router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res
   }
 
   try {
-    const member = createMember({
+    const member = createMemberForBusiness({
       id: randomUUID(),
       businessId: business.id,
       email: normEmail,
@@ -138,7 +140,7 @@ router.post("/", membersCreateLimiter, validate(schemas.createMember), (req, res
     if (!isGuestPlaceholderEmail(normEmail)) {
       welcome_bonus_granted = grantWelcomeBonusIfEligible(business, member.id, { source: "web_signup" });
     }
-    const fresh = getMemberForBusiness(member.id, business.id) || member;
+    const fresh = getMemberForBusinessOrGroup(member.id, business) || member;
 
     try {
       scheduleCampaignEventJobsForMember({ business, memberId: member.id });
@@ -236,7 +238,7 @@ router.post("/import", (req, res) => {
 // ——— GET /:memberId/tickets ———
 router.get("/:memberId/tickets", (req, res) => {
   const business = req.business;
-  const member = getMemberForBusiness(req.params.memberId, business.id);
+  const member = getMemberForBusinessOrGroup(req.params.memberId, business);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
   const wallet = getMemberTicketWallet(business.id, member.id);
   const history = getMemberTicketHistory(business.id, member.id, 20);
@@ -253,7 +255,7 @@ router.get("/:memberId/tickets", (req, res) => {
 // ——— POST /:memberId/tickets/convert ———
 router.post("/:memberId/tickets/convert", (req, res) => {
   const business = req.business;
-  const member = getMemberForBusiness(req.params.memberId, business.id);
+  const member = getMemberForBusinessOrGroup(req.params.memberId, business);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
   const pointsToConvert = Number(req.body?.points_to_convert ?? req.body?.pointsToConvert);
   const idempotencyKey = getIdempotencyKey(req);
@@ -274,7 +276,7 @@ router.post("/:memberId/tickets/convert", (req, res) => {
 // ——— GET /:memberId/rewards ———
 router.get("/:memberId/rewards", (req, res) => {
   const business = req.business;
-  const member = getMemberForBusiness(req.params.memberId, business.id);
+  const member = getMemberForBusinessOrGroup(req.params.memberId, business);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
   const rewards = getMemberRewards(business.id, member.id, 30);
   return res.json({ rewards });
@@ -284,7 +286,7 @@ router.get("/:memberId/rewards", (req, res) => {
 router.post("/:memberId/rewards/:grantId/claim", (req, res) => {
   const business = req.business;
   if (!ensureOperationalSubscription(req, res, business)) return;
-  const member = getMemberForBusiness(req.params.memberId, business.id);
+  const member = getMemberForBusinessOrGroup(req.params.memberId, business);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
   const claimed = markRewardGrantClaimed(business.id, member.id, req.params.grantId);
   if (!claimed) return res.status(404).json({ error: "Récompense introuvable ou déjà utilisée" });
@@ -294,7 +296,7 @@ router.post("/:memberId/rewards/:grantId/claim", (req, res) => {
 // ——— GET /:memberId ———
 router.get("/:memberId", (req, res) => {
   const business = req.business;
-  const member = getMemberForBusiness(req.params.memberId, business.id);
+  const member = getMemberForBusinessOrGroup(req.params.memberId, business);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
 
   res.json({
@@ -328,7 +330,7 @@ router.post("/:memberId/points/remove", async (req, res) => {
   const business = req.business;
   if (!ensureOperationalSubscription(req, res, business)) return;
 
-  const member = getMemberForBusiness(req.params.memberId, business.id);
+  const member = getMemberForBusinessOrGroup(req.params.memberId, business);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
 
   const n = Math.floor(Number(req.body?.points));
@@ -370,7 +372,7 @@ router.post("/:memberId/points", async (req, res) => {
   const business = req.business;
   if (!ensureOperationalSubscription(req, res, business)) return;
 
-  const member = getMemberForBusiness(req.params.memberId, business.id);
+  const member = getMemberForBusinessOrGroup(req.params.memberId, business);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
 
   // ── Idempotence : si la même Idempotency-Key a déjà été traitée, on retourne
@@ -380,7 +382,7 @@ router.post("/:memberId/points", async (req, res) => {
     const existing = getTransactionByIdempotencyKey(business.id, idempotencyKey);
     if (existing) {
       // Double envoi détecté : réponse 200 idempotente (pas de double crédit)
-      const currentMember = getMemberForBusiness(req.params.memberId, business.id);
+      const currentMember = getMemberForBusinessOrGroup(req.params.memberId, business);
       return res.json({
         id: currentMember.id,
         points: currentMember.points,
@@ -508,7 +510,7 @@ router.post("/:memberId/points", async (req, res) => {
 router.post("/:memberId/redeem", async (req, res) => {
   const business = req.business;
   if (!ensureOperationalSubscription(req, res, business)) return;
-  const member = getMemberForBusiness(req.params.memberId, business.id);
+  const member = getMemberForBusinessOrGroup(req.params.memberId, business);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
 
   const body = req.body || {};
@@ -605,7 +607,7 @@ router.post("/:memberId/redeem", async (req, res) => {
 // ——— GET /:memberId/pass ———
 router.get("/:memberId/pass", async (req, res) => {
   const business = req.business;
-  const member = getMemberForBusiness(req.params.memberId, business.id);
+  const member = getMemberForBusinessOrGroup(req.params.memberId, business);
   if (!member) return res.status(404).json({ error: "Membre introuvable" });
 
   const biz = mergeBusinessAssetsForPass(business);
@@ -674,7 +676,7 @@ router.get("/:memberId/google-wallet-url", async (req, res) => {
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
     const business = mergeBusinessAssetsForPass(req.business);
-    const member = getMemberForBusiness(req.params.memberId, business.id);
+    const member = getMemberForBusinessOrGroup(req.params.memberId, business);
     if (!member) return res.status(404).json({ error: "Membre introuvable" });
 
     const frontendOrigin = req.get("Origin") || req.get("Referer")?.replace(/\/[^/]*$/, "") || process.env.FRONTEND_URL;
