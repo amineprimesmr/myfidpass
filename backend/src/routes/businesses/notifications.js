@@ -347,7 +347,7 @@ function enqueueCampaignForBusiness(req, business, slug, { title, body, segment 
       ok: false,
       code: "no_real_clients",
       message:
-        "Aucun vrai client n’a encore ajouté la carte pour ce commerce. Utilise « Tester sur mon téléphone » pour valider, puis partage le lien de ta carte à tes clients.",
+        "Aucun vrai client n’a encore ajouté la carte pour ce commerce. Partage le lien de ta carte pour que tes clients l’ajoutent à Apple Wallet.",
       total_devices: 0,
       deliverable_devices: 0,
       preview_devices: previewDevices,

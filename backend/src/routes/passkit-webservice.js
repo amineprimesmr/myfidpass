@@ -14,6 +14,7 @@ import {
   getPushTokensForMember,
   unregisterPassDevice,
   getUpdatedPassSerialNumbersForDevice,
+  parsePassKitUpdateTag,
   mergeBusinessAssetsForPass,
 } from "../db.js";
 import { resolveBusinessProgramType } from "../db/businesses.js";
@@ -173,6 +174,11 @@ function handleGetRegistrations(req, res) {
     // Retourner 200 avec tableau vide ferait mettre à jour le passesUpdatedSince de l'iPhone
     // au "now()" renvoyé, décalant la baseline et pouvant manquer les notifications suivantes.
     if (serialNumbers.length === 0) {
+      const sinceTs = passesUpdatedSince ? parsePassKitUpdateTag(String(passesUpdatedSince)) : 0;
+      console.warn(
+        "[PassKit] GET registrations → 204 (aucun pass > passesUpdatedSince)",
+        { deviceId: deviceId?.slice?.(0, 12), passesUpdatedSince, sinceTs },
+      );
       return res.status(204).send();
     }
       res.json({ serialNumbers, lastUpdated });

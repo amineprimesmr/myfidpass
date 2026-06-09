@@ -84,7 +84,7 @@ export function getBusinessNotificationReadiness(business, opts = {}) {
     // Reste "ready" pour autoriser l'auto-test, mais signale clairement l'absence de vrais clients.
     previewOnly = true;
     deliveryHint =
-      "Aperçu seulement : seule ta carte test est enregistrée. Utilise « Tester sur mon téléphone » pour valider, puis partage le lien de ta carte pour toucher de vrais clients.";
+      "Aperçu seulement : seule ta carte test est enregistrée. Partage le lien de ta carte pour que de vrais clients l’ajoutent à Apple Wallet.";
   }
 
   return {

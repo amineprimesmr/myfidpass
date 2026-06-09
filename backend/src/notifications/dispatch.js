@@ -316,34 +316,35 @@ export async function deliverCustomerBroadcast({
         }
       }
     }
-    // Le `changeMessage` écran verrouillé n'est plus gaté sur ce log : `setLastBroadcastMessage`
-    // ci-dessus a posé `last_broadcast_at`, et `generate.js` (recentCampaignBroadcast <15 min)
-    // attache la bannière au refetch PassKit indépendamment du log. On peut donc journaliser
-    // `status:'sent'` UNIQUEMENT après succès APNs (livraison fiable) — voir REFONTE-REGLES.md.
-    const waveResults = await sendPassKitPushWaves(passKitTokens, { collapseId: broadcastCollapseId });
+    // Journaliser AVANT l’APNs : le refetch PassKit (souvent < 1 s) lit `memberHasDeliveredCampaignNotification`
+    // pour attacher `changeMessage`. Sans ce log optimiste, seule la 1ʳᵉ campagne affiche une bannière
+    // fiable ; les suivantes dépendent d’une course avec `recentCampaignBroadcast` (< 15 min).
     const passKitLogSeen = new Set();
+    for (const row of passKitTokens) {
+      const logMemberId = resolveMemberIdForPassSerial(row.serial_number, business.id);
+      const logKey = `${logMemberId}:${row.push_token ?? ""}`;
+      if (!logMemberId || passKitLogSeen.has(logKey)) continue;
+      passKitLogSeen.add(logKey);
+      logNotification({
+        businessId: business.id,
+        memberId: logMemberId,
+        title: payloadTitle,
+        body: bodyMessage,
+        type: logTypePasskit,
+        batchId,
+        channel: "passkit",
+        triggerName,
+        countsForMemberCooldown: 1,
+        status: "sent",
+      });
+    }
+    const waveResults = await sendPassKitPushWaves(passKitTokens, { collapseId: broadcastCollapseId });
     for (const { row, result } of waveResults) {
       const logMemberId = resolveMemberIdForPassSerial(row.serial_number, business.id);
       if (result.sent) {
         sentPassKit++;
         const mid = String(logMemberId ?? row.serial_number ?? "").trim().toLowerCase();
         if (mid) touchedMemberIds.add(mid);
-        const logKey = `${logMemberId}:${row.push_token ?? ""}`;
-        if (logMemberId && !passKitLogSeen.has(logKey)) {
-          passKitLogSeen.add(logKey);
-          logNotification({
-            businessId: business.id,
-            memberId: logMemberId,
-            title: payloadTitle,
-            body: bodyMessage,
-            type: logTypePasskit,
-            batchId,
-            channel: "passkit",
-            triggerName,
-            countsForMemberCooldown: 1,
-            status: "sent",
-          });
-        }
       } else if (result.error) {
         errors.push({ type: "passkit", memberId: logMemberId ?? row.serial_number, error: result.error });
         logNotification({

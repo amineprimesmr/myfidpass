@@ -71,6 +71,13 @@ export function buildBroadcastUniquenessSuffix(rawBroadcast, lastBroadcastAt, br
   const b = 1 + ((Math.floor(seq / 31) | 0) % 17);
   out += "\u200C".repeat(a) + "\u200D".repeat(b);
 
+  // Sélecteur de variation sur le dernier caractère visible : iOS peut ignorer les seuls
+  // caractères de largeur nulle pour décider si changeMessage doit s’afficher — la 1ʳᵉ notif
+  // passe puis les suivantes (même texte) restent silencieuses sans ce marqueur.
+  if (seq > 0) {
+    out += String.fromCharCode(0xfe00 + (seq % 16));
+  }
+
   return out;
 }
 

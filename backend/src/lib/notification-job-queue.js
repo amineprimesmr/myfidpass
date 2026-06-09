@@ -403,6 +403,17 @@ async function runJob(job) {
         `Échec livraison : 0/${candidateCount} notification(s) envoyée(s) malgré des canaux disponibles`,
       );
     }
+    if (sent === 0 && candidateCount === 0) {
+      logger.warn(
+        {
+          jobId: job.id,
+          businessId: job.business_id,
+          slug: job.slug,
+          triggerName: job.trigger_name,
+        },
+        "[notif-job-queue] job terminé avec sent=0 et candidateCount=0 (tokens PassKit supprimés ou filtre technique ?)",
+      );
+    }
     markJobDone(job.id, result.batchId ?? null);
     logger.info(
       {

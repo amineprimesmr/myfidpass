@@ -8,7 +8,7 @@
  *
  * PASSKIT_WAVE_GAP_MS — ms entre salve 1 et 2 (défaut 0 = une seule salve). Ex. 400 pour l’ancien double envoi.
  */
-import { sendPassKitUpdate } from "./apns.js";
+import { sendPassKitUpdate, resetPassKitHttp2Session } from "./apns.js";
 
 /** Par défaut une seule salve (évite doubles notifications Wallet). Mettre PASSKIT_WAVE_GAP_MS=400 pour l’ancien comportement. */
 const PASSKIT_WAVE_GAP_MS = Math.min(30_000, Math.max(0, Number(process.env.PASSKIT_WAVE_GAP_MS ?? 0)));
@@ -46,6 +46,10 @@ async function sendPassKitChunked(rows, opts = {}) {
 export async function sendPassKitPushWaves(passKitRows, opts = {}) {
   const rows = (passKitRows || []).filter((r) => r.push_token);
   if (rows.length === 0) return [];
+
+  // Session HTTP/2 fraîche par campagne : après un 1er push OK, une connexion APNs réutilisée peut
+  // refuser le 2ᵉ (GOAWAY / timeout) → toutes les campagnes suivantes échouent côté serveur.
+  resetPassKitHttp2Session();
 
   const runWave = (waveOpts) => sendPassKitChunked(rows, waveOpts);
 

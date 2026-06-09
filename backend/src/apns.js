@@ -242,6 +242,17 @@ function isConnectionLevelError(err) {
   );
 }
 
+/** Ferme la session HTTP/2 PassKit réutilisée (nouvelle connexion au prochain envoi). */
+export function resetPassKitHttp2Session() {
+  if (passkitSession && !passkitSession.destroyed) {
+    try {
+      passkitSession.close();
+    } catch (_) {}
+  }
+  passkitSession = null;
+  passkitSessionKey = null;
+}
+
 function getPasskitHttp2Session(creds) {
   const host = apnsHost();
   const key = `${host}:${creds.passTypeId}`;
