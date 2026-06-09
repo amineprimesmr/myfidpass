@@ -102,6 +102,26 @@ export function getMemberByEmailForBusiness(businessId, email) {
   return db.prepare("SELECT * FROM members WHERE business_id = ? AND LOWER(TRIM(email)) = ?").get(businessId, norm) || null;
 }
 
+/**
+ * Carte d'aperçu Wallet du commerçant (`wallet-apercu.{slug}@example.com`).
+ * Le slug est assaini côté app, donc on cherche par motif plutôt que de reconstruire l'email.
+ * @returns {object|null}
+ */
+export function getWalletPreviewMemberForBusiness(businessId) {
+  if (!businessId) return null;
+  return (
+    db
+      .prepare(
+        `SELECT * FROM members
+         WHERE business_id = ?
+           AND LOWER(TRIM(email)) LIKE 'wallet-apercu.%@example.com'
+         ORDER BY created_at DESC
+         LIMIT 1`,
+      )
+      .get(businessId) || null
+  );
+}
+
 export function updateMember(memberId, { name, points, phone, city, birth_date: birthDate }) {
   const m = getMember(memberId);
   if (!m) return null;

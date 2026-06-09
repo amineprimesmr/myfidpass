@@ -58,7 +58,7 @@ function buildNotificationIconUrl(apiBase, slug, businessRow, batchId) {
   return `${path}?v=${encodeURIComponent(v)}`;
 }
 
-function targetedGoogleWalletMembers(businessId, memberIds) {
+function targetedGoogleWalletMembers(businessId, memberIds, { allowTechnicalMembers = false } = {}) {
   if (memberIds !== null && memberIds.length === 0) return [];
   let rows;
   if (Array.isArray(memberIds) && memberIds.length > 0) {
@@ -69,6 +69,7 @@ function targetedGoogleWalletMembers(businessId, memberIds) {
     const { members } = getMembersForBusiness(businessId, { limit: 100000, offset: 0, sort: "created_desc" });
     rows = members;
   }
+  if (allowTechnicalMembers) return rows;
   return rows.filter((m) => !isTechnicalMemberEmail(m.email));
 }
 
@@ -99,6 +100,7 @@ async function mapWithConcurrency(items, limit, mapper) {
  * @param {string} [p.logTypePasskit]
  * @param {string|null} [p.merchantUserId] — accusé APNs commerçant
  * @param {boolean} [p.sendMerchantReceipt]
+ * @param {boolean} [p.allowTechnicalMembers] — auto-test : autorise la carte d'aperçu (`wallet-apercu.*`)
  */
 export async function deliverCustomerBroadcast({
   business,
@@ -112,6 +114,7 @@ export async function deliverCustomerBroadcast({
   merchantUserId = null,
   sendMerchantReceipt = true,
   touchMemberLastVisit = true,
+  allowTechnicalMembers = false,
 }) {
   if (!businessHasCustomNotificationIcon(business)) {
     logger.warn(
@@ -143,13 +146,15 @@ export async function deliverCustomerBroadcast({
       : memberIds !== null && memberIds.length === 0
         ? []
         : getPassKitPushTokensForBusiness(business.id);
-  const googleWalletMembers = targetedGoogleWalletMembers(business.id, memberIds);
+  const googleWalletMembers = targetedGoogleWalletMembers(business.id, memberIds, { allowTechnicalMembers });
 
   const isDeliverableMember = (memberOrSerial) => {
     const mid = String(memberOrSerial ?? "").trim();
     if (!mid) return false;
     const row = getMemberForBusinessOrGroup(mid, business) ?? getMemberForBusiness(mid, business.id);
     if (!row) return false;
+    // Auto-test commerçant : on cible volontairement la carte d'aperçu technique.
+    if (allowTechnicalMembers) return true;
     return !isTechnicalMemberEmail(row.email);
   };
 
@@ -311,33 +316,34 @@ export async function deliverCustomerBroadcast({
         }
       }
     }
-    // Journaliser avant l’APNs : le refetch PassKit lit `memberHasDeliveredCampaignNotification`.
-    const passKitLogSeen = new Set();
-    for (const row of passKitTokens) {
-      const logMemberId = resolveMemberIdForPassSerial(row.serial_number, business.id);
-      const logKey = `${logMemberId}:${row.push_token ?? ""}`;
-      if (!logMemberId || passKitLogSeen.has(logKey)) continue;
-      passKitLogSeen.add(logKey);
-      logNotification({
-        businessId: business.id,
-        memberId: logMemberId,
-        title: payloadTitle,
-        body: bodyMessage,
-        type: logTypePasskit,
-        batchId,
-        channel: "passkit",
-        triggerName,
-        countsForMemberCooldown: 1,
-        status: "sent",
-      });
-    }
+    // Le `changeMessage` écran verrouillé n'est plus gaté sur ce log : `setLastBroadcastMessage`
+    // ci-dessus a posé `last_broadcast_at`, et `generate.js` (recentCampaignBroadcast <15 min)
+    // attache la bannière au refetch PassKit indépendamment du log. On peut donc journaliser
+    // `status:'sent'` UNIQUEMENT après succès APNs (livraison fiable) — voir REFONTE-REGLES.md.
     const waveResults = await sendPassKitPushWaves(passKitTokens, { collapseId: broadcastCollapseId });
+    const passKitLogSeen = new Set();
     for (const { row, result } of waveResults) {
       const logMemberId = resolveMemberIdForPassSerial(row.serial_number, business.id);
       if (result.sent) {
         sentPassKit++;
         const mid = String(logMemberId ?? row.serial_number ?? "").trim().toLowerCase();
         if (mid) touchedMemberIds.add(mid);
+        const logKey = `${logMemberId}:${row.push_token ?? ""}`;
+        if (logMemberId && !passKitLogSeen.has(logKey)) {
+          passKitLogSeen.add(logKey);
+          logNotification({
+            businessId: business.id,
+            memberId: logMemberId,
+            title: payloadTitle,
+            body: bodyMessage,
+            type: logTypePasskit,
+            batchId,
+            channel: "passkit",
+            triggerName,
+            countsForMemberCooldown: 1,
+            status: "sent",
+          });
+        }
       } else if (result.error) {
         errors.push({ type: "passkit", memberId: logMemberId ?? row.serial_number, error: result.error });
         logNotification({

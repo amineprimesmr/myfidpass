@@ -17,9 +17,12 @@ import {
   getNotificationBatchesForBusiness,
   getNotificationLogRecentForBusiness,
   getNotificationCampaignInsightsForBusiness,
+  getWalletPreviewMemberForBusiness,
+  getPushTokensForMember,
 } from "../../db.js";
 import { passKitWaveGapMsForDiagnostics } from "../../passkit-push-waves.js";
 import { deliverCustomerBroadcast } from "../../notifications/dispatch.js";
+import { classifyDeliveryDevices } from "../../lib/notification-deliverability.js";
 import { getMerchantApnsUnavailableReason } from "../../apns.js";
 import {
   assertOperationalSubscription,
@@ -39,8 +42,14 @@ import {
 } from "../../lib/notification-icon-gate.js";
 import { getBusinessNotificationReadiness } from "../../lib/notification-readiness.js";
 
-/** Compte réel des canaux livrables (Web Push + PassKit) — sans gonfler avec tous les membres Google Wallet. */
-function countNotificationDeliveryTargets(businessId, memberIds) {
+/**
+ * Compte réel des canaux livrables (Web Push + PassKit) — sans gonfler avec tous les membres Google Wallet.
+ * `deliverableDevices` exclut les comptes techniques (aperçu/invités) EXACTEMENT comme `dispatch.js`,
+ * pour que readiness/POST send n'annoncent plus un succès alors que la campagne ne touche personne.
+ * @param {import("../../db/businesses.js").BusinessRow} business
+ */
+function countNotificationDeliveryTargets(business, memberIds) {
+  const businessId = business.id;
   const webSubscriptions =
     memberIds !== null && memberIds.length > 0
       ? getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(businessId, memberIds)
@@ -53,10 +62,13 @@ function countNotificationDeliveryTargets(businessId, memberIds) {
       : memberIds !== null && memberIds.length === 0
         ? []
         : getPassKitPushTokensForBusiness(businessId);
+  const breakdown = classifyDeliveryDevices(business, { passKitTokens, webSubscriptions });
   return {
     webSubscriptions,
     passKitTokens,
-    totalDevices: webSubscriptions.length + passKitTokens.length,
+    totalDevices: breakdown.totalDevices,
+    deliverableDevices: breakdown.deliverableDevices,
+    previewDevices: breakdown.previewDevices,
   };
 }
 
@@ -97,6 +109,7 @@ export async function deliverDashboardBroadcast(
     merchantUserId = null,
     sendMerchantReceipt = true,
     touchMemberLastVisit = true,
+    allowTechnicalMembers = false,
   } = options || {};
   return deliverCustomerBroadcast({
     business,
@@ -110,6 +123,85 @@ export async function deliverDashboardBroadcast(
     merchantUserId,
     sendMerchantReceipt,
     touchMemberLastVisit,
+    allowTechnicalMembers,
+  });
+}
+
+/**
+ * Auto-test : envoie la notification UNIQUEMENT sur la carte d'aperçu Wallet du commerçant
+ * (`wallet-apercu.{slug}@example.com`), en bypassant le filtre technique de dispatch.
+ * Applique la pleine sémantique campagne (setLastBroadcastMessage + changeMessage) → vraie bannière.
+ */
+async function handleSelfTestBroadcast(req, res, business, { title, body }) {
+  const slug = req.params.slug ?? business.slug;
+  const readiness = getBusinessNotificationReadiness(business);
+  if (!readiness.subscription_ok) {
+    return res.status(403).json({ ok: false, code: "subscription_required", message: readiness.block_message });
+  }
+  if (!readiness.has_notification_icon) {
+    return res.status(422).json({
+      ...notificationIconRequiredHttpBody(),
+      message:
+        "Ajoute d’abord une icône de notification (onglet Notifications) : sans elle, la bannière écran verrouillé n’apparaît pas, même en test.",
+    });
+  }
+
+  const previewMember = getWalletPreviewMemberForBusiness(business.id);
+  if (!previewMember?.id) {
+    return res.status(200).json({
+      ok: true,
+      accepted: false,
+      self_test: true,
+      code: "no_preview_card",
+      sent: 0,
+      message:
+        "Aucune carte d’aperçu trouvée. Ouvre « Ma carte » puis « Aperçu Wallet » pour ajouter ta carte test à Apple Wallet, et réessaie.",
+    });
+  }
+
+  const tokens = getPushTokensForMember(previewMember.id);
+  if (!tokens || tokens.length === 0) {
+    return res.status(200).json({
+      ok: true,
+      accepted: false,
+      self_test: true,
+      code: "no_preview_device",
+      sent: 0,
+      message:
+        "Ta carte d’aperçu n’est pas encore enregistrée sur cet iPhone. Ajoute-la à Apple Wallet, attends ~30 s, puis relance le test.",
+    });
+  }
+
+  const apiBase = getApiBase(req);
+  const result = await deliverDashboardBroadcast(
+    business,
+    slug,
+    apiBase,
+    [previewMember.id],
+    title,
+    body,
+    "passkit_self_test",
+    {
+      triggerName: "campaign_self_test",
+      merchantUserId: req.user?.id ?? null,
+      sendMerchantReceipt: false,
+      touchMemberLastVisit: false,
+      allowTechnicalMembers: true,
+    },
+  );
+
+  const sentPassKit = result?.sentPassKit ?? 0;
+  return res.status(200).json({
+    ok: true,
+    accepted: sentPassKit > 0,
+    self_test: true,
+    code: sentPassKit > 0 ? "self_test_sent" : "self_test_failed",
+    sent: result?.sent ?? 0,
+    sent_pass_kit: sentPassKit,
+    message:
+      sentPassKit > 0
+        ? "Notification test envoyée sur ta carte Wallet. Verrouille ton écran ~10 s : la bannière doit apparaître."
+        : "Le push n’a pas pu partir vers ta carte d’aperçu (token Apple expiré ?). Supprime puis ré-ajoute la carte au Wallet, attends ~30 s et réessaie.",
   });
 }
 
@@ -130,7 +222,7 @@ export async function notifyHandler(req, res) {
   const apiBase = getApiBase(req);
   const slug = req.params.slug ?? business.slug;
 
-  const { totalDevices } = countNotificationDeliveryTargets(business.id, memberIds);
+  const { totalDevices } = countNotificationDeliveryTargets(business, memberIds);
   if (totalDevices === 0) {
     return res.status(200).json({
       ok: true,
@@ -244,14 +336,34 @@ function enqueueCampaignForBusiness(req, business, slug, { title, body, segment 
     segment && CAMPAIGN_SEGMENT_KEYS.includes(segment)
       ? getMemberIdsBySegment(business.id, segment)
       : null;
-  const { totalDevices } = countNotificationDeliveryTargets(business.id, memberIds);
-  if (totalDevices === 0) {
+  const { totalDevices, deliverableDevices, previewDevices } = countNotificationDeliveryTargets(
+    business,
+    memberIds,
+  );
+  // 0 vrai client mais une carte d'aperçu existe : ne plus simuler un succès silencieux.
+  if (deliverableDevices === 0 && previewDevices > 0) {
     return {
       slug,
       ok: false,
-      code: "no_devices",
+      code: "no_real_clients",
+      message:
+        "Aucun vrai client n’a encore ajouté la carte pour ce commerce. Utilise « Tester sur mon téléphone » pour valider, puis partage le lien de ta carte à tes clients.",
+      total_devices: 0,
+      deliverable_devices: 0,
+      preview_devices: previewDevices,
+      business_name: readiness.name,
+      members_count: readiness.members_count,
+    };
+  }
+  if (deliverableDevices === 0) {
+    return {
+      slug,
+      ok: false,
+      code: totalDevices > 0 ? "no_real_clients" : "no_devices",
       message: readiness.block_message,
       total_devices: 0,
+      deliverable_devices: 0,
+      preview_devices: previewDevices,
       business_name: readiness.name,
       members_count: readiness.members_count,
     };
@@ -281,9 +393,11 @@ function enqueueCampaignForBusiness(req, business, slug, { title, body, segment 
     ok: true,
     accepted: true,
     job_id: jobId,
-    total_devices: totalDevices,
+    total_devices: deliverableDevices,
+    deliverable_devices: deliverableDevices,
+    preview_devices: previewDevices,
     business_name: readiness.name,
-    message: `Envoi lancé vers ${totalDevices} appareil(s) pour ${readiness.name}.`,
+    message: `Envoi lancé vers ${deliverableDevices} client(s) pour ${readiness.name}.`,
   };
 }
 
@@ -302,6 +416,11 @@ router.post("/send", async (req, res) => {
   const body = (message || "").trim();
   if (!body) {
     return res.status(400).json({ error: "Le message est obligatoire" });
+  }
+
+  // Auto-test commerçant : livre uniquement sur SA carte d'aperçu Wallet (bypass filtre technique).
+  if (req.body?.test_self_only === true) {
+    return await handleSelfTestBroadcast(req, res, business, { title, body });
   }
 
   const targets = resolveCampaignTargets(req, business, businessSlugsRaw);
@@ -333,11 +452,15 @@ router.post("/send", async (req, res) => {
         message: firstBlock.message,
       });
     }
+    const blockCode = skipped.find((r) => r.code === "no_real_clients")
+      ? "no_real_clients"
+      : firstBlock?.code ?? null;
     return res.json({
       ok: true,
       accepted: false,
       async_delivery: false,
       multi: isMulti,
+      code: blockCode,
       sent: 0,
       total: 0,
       results,
