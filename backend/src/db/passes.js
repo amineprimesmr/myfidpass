@@ -121,26 +121,55 @@ export function deletePassRegistrationsByPushToken(pushToken) {
   return r.changes ?? 0;
 }
 
+/** Serial(s) PassKit possibles pour un membre (id local ou id réseau fidélité). */
+function passSerialNumbersForMemberLookup(serialNumber) {
+  const serial = String(serialNumber ?? "").trim();
+  if (!serial) return [];
+  const serials = new Set([serial]);
+  const row = db
+    .prepare(
+      `SELECT id, loyalty_group_member_id FROM members
+       WHERE id = ? OR loyalty_group_member_id = ? LIMIT 1`,
+    )
+    .get(serial, serial);
+  if (row?.id) serials.add(String(row.id).trim());
+  const groupId =
+    row?.loyalty_group_member_id != null ? String(row.loyalty_group_member_id).trim() : "";
+  if (groupId) serials.add(groupId);
+  return [...serials].filter(Boolean);
+}
+
 export function getPushTokensForMember(serialNumber) {
+  const serials = passSerialNumbersForMemberLookup(serialNumber);
+  if (serials.length === 0) return [];
+  const placeholders = serials.map(() => "?").join(", ");
   const rows = db.prepare(
     `SELECT push_token FROM pass_registrations
-     WHERE serial_number = ? AND push_token IS NOT NULL AND push_token != '' AND device_library_identifier != ?`
-  ).all(serialNumber, TEST_DEVICE_ID);
-  return rows.map((r) => r.push_token).filter(Boolean);
+     WHERE serial_number IN (${placeholders}) AND push_token IS NOT NULL AND push_token != ''
+       AND device_library_identifier != ?`,
+  ).all(...serials, TEST_DEVICE_ID);
+  const seen = new Set();
+  return rows
+    .map((r) => r.push_token)
+    .filter((t) => {
+      if (!t || seen.has(t)) return false;
+      seen.add(t);
+      return true;
+    });
 }
 
 /** Au moins un enregistrement PassKit réel (hors device de test) → iPhone a contacté le web service à l’ajout du pass. */
 export function memberHasAppleWalletRegistration(serialNumber) {
-  if (!serialNumber || typeof serialNumber !== "string") return false;
-  const id = serialNumber.trim();
-  if (!id) return false;
+  const serials = passSerialNumbersForMemberLookup(serialNumber);
+  if (serials.length === 0) return false;
+  const placeholders = serials.map(() => "?").join(", ");
   const row = db
     .prepare(
       `SELECT 1 AS ok FROM pass_registrations
-       WHERE serial_number = ? AND device_library_identifier != ?
+       WHERE serial_number IN (${placeholders}) AND device_library_identifier != ?
        LIMIT 1`,
     )
-    .get(id, TEST_DEVICE_ID);
+    .get(...serials, TEST_DEVICE_ID);
   return row != null && Number(row.ok) === 1;
 }
 

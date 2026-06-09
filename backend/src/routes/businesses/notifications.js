@@ -30,6 +30,27 @@ import {
   notificationIconRequiredHttpBody,
 } from "../../lib/notification-icon-gate.js";
 
+/** Compte réel des canaux livrables (Web Push + PassKit) — sans gonfler avec tous les membres Google Wallet. */
+function countNotificationDeliveryTargets(businessId, memberIds) {
+  const webSubscriptions =
+    memberIds !== null && memberIds.length > 0
+      ? getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(businessId, memberIds)
+      : memberIds !== null && memberIds.length === 0
+        ? []
+        : getWebPushSubscriptionsByBusinessExcludingPassKitOwners(businessId);
+  const passKitTokens =
+    memberIds !== null && memberIds.length > 0
+      ? getPassKitPushTokensForBusinessFiltered(businessId, memberIds)
+      : memberIds !== null && memberIds.length === 0
+        ? []
+        : getPassKitPushTokensForBusiness(businessId);
+  return {
+    webSubscriptions,
+    passKitTokens,
+    totalDevices: webSubscriptions.length + passKitTokens.length,
+  };
+}
+
 /** Segments autorisés pour POST .../notifications/send (campagne manuelle ou auto). */
 export const CAMPAIGN_SEGMENT_KEYS = [
   "inactive14",
@@ -100,21 +121,19 @@ export async function notifyHandler(req, res) {
   const apiBase = getApiBase(req);
   const slug = req.params.slug ?? business.slug;
 
-  const webSubscriptions =
-    memberIds !== null
-      ? getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(business.id, memberIds)
-      : getWebPushSubscriptionsByBusinessExcludingPassKitOwners(business.id);
-  const passKitTokens =
-    memberIds !== null
-      ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
-      : getPassKitPushTokensForBusiness(business.id);
-  const googleWalletCandidates =
-    memberIds !== null
-      ? memberIds.length
-      : (getMembersForBusiness(business.id, { limit: 1 })?.total ?? 0);
-  const totalDevices = webSubscriptions.length + passKitTokens.length + googleWalletCandidates;
+  const { totalDevices } = countNotificationDeliveryTargets(business.id, memberIds);
   if (totalDevices === 0) {
-    return res.status(200).json({ ok: true, sent: 0, sentWebPush: 0, sentPassKit: 0, sentGoogleWallet: 0, sentMerchantApp: 0, batch_id: null });
+    return res.status(200).json({
+      ok: true,
+      sent: 0,
+      sentWebPush: 0,
+      sentPassKit: 0,
+      sentGoogleWallet: 0,
+      sentMerchantApp: 0,
+      batch_id: null,
+      message:
+        "Aucun client ciblé. Les clients qui ajoutent la carte (Apple Wallet ou navigateur) pourront recevoir les notifications.",
+    });
   }
 
   syncNotificationTextsForCampaign(business.id, null, message);
@@ -181,19 +200,7 @@ router.post("/send", async (req, res) => {
       : null;
   const apiBase = getApiBase(req);
   const slug = req.params.slug ?? business.slug;
-  const webSubscriptions =
-    memberIds !== null
-      ? getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(business.id, memberIds)
-      : getWebPushSubscriptionsByBusinessExcludingPassKitOwners(business.id);
-  const passKitTokens =
-    memberIds !== null
-      ? getPassKitPushTokensForBusinessFiltered(business.id, memberIds)
-      : getPassKitPushTokensForBusiness(business.id);
-  const googleWalletCandidates =
-    memberIds !== null
-      ? memberIds.length
-      : (getMembersForBusiness(business.id, { limit: 1 })?.total ?? 0);
-  const totalDevices = webSubscriptions.length + passKitTokens.length + googleWalletCandidates;
+  const { totalDevices } = countNotificationDeliveryTargets(business.id, memberIds);
   if (totalDevices === 0) {
     return res.json({
       ok: true,

@@ -175,8 +175,9 @@ export function createNotificationJob({
  */
 function tryAcquireJob(id) {
   const now = new Date().toISOString();
+  const orphanThreshold = new Date(Date.now() - ORPHAN_THRESHOLD_MS).toISOString();
   // SQLite ne supporte pas RETURNING dans tous les builds — on fait UPDATE puis SELECT.
-  const result = db.prepare(`
+  let result = db.prepare(`
     UPDATE notification_jobs
     SET status = 'running', started_at = COALESCE(started_at, ?), last_heartbeat_at = ?,
         attempt_count = attempt_count + 1
@@ -184,6 +185,17 @@ function tryAcquireJob(id) {
       AND status IN ('pending', 'failed')
       AND (next_attempt_at IS NULL OR next_attempt_at <= ?)
   `).run(now, now, id, now);
+  if (result.changes === 1) return true;
+
+  // Reprise d’un job `running` orphelin (crash / redéploiement Railway entre 202 et fin d’envoi).
+  // On ne ré-incrémente pas attempt_count : la tentative en cours reprend où elle s’est arrêtée.
+  result = db.prepare(`
+    UPDATE notification_jobs
+    SET last_heartbeat_at = ?
+    WHERE id = ?
+      AND status = 'running'
+      AND COALESCE(last_heartbeat_at, started_at) < ?
+  `).run(now, id, orphanThreshold);
   return result.changes === 1;
 }
 
@@ -373,6 +385,13 @@ async function runJob(job) {
     });
 
     clearInterval(heartbeatInterval);
+    const sent = Number(result.sent ?? 0);
+    const candidateCount = Number(result.candidateCount ?? result.candidate_count ?? 0);
+    if (sent === 0 && candidateCount > 0) {
+      throw new Error(
+        `Échec livraison : 0/${candidateCount} notification(s) envoyée(s) malgré des canaux disponibles`,
+      );
+    }
     markJobDone(job.id, result.batchId ?? null);
     logger.info(
       {

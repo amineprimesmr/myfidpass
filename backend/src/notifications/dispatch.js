@@ -28,6 +28,7 @@ import { sendPassKitPushWaves } from "../passkit-push-waves.js";
 import {
   sendMerchantAppAlert,
   isLikelyInvalidMerchantPushTokenError,
+  isLikelyInvalidDeviceTokenApnsError,
 } from "../merchant-app-push.js";
 import { addGoogleWalletNotificationMessageForMember } from "../google-wallet.js";
 import { syncNotificationTextsForCampaign } from "../lib/sync-notification-texts-for-campaign.js";
@@ -126,6 +127,7 @@ export async function deliverCustomerBroadcast({
       failed: 0,
       errors: [],
       batchId: null,
+      candidateCount: 0,
     };
   }
 
@@ -171,7 +173,10 @@ export async function deliverCustomerBroadcast({
     return true;
   });
 
-  if (webSubscriptions.length === 0 && passKitTokens.length === 0 && googleWalletMembers.length === 0) {
+  const candidateCount =
+    webSubscriptions.length + passKitTokens.length + googleWalletMembers.length;
+
+  if (candidateCount === 0) {
     return {
       sent: 0,
       sentWebPush: 0,
@@ -181,6 +186,7 @@ export async function deliverCustomerBroadcast({
       failed: 0,
       errors: [],
       batchId: null,
+      candidateCount: 0,
     };
   }
 
@@ -442,6 +448,7 @@ export async function deliverCustomerBroadcast({
     failed: errors.length,
     errors: errors.length > 0 ? errors : undefined,
     batch_id: batchId,
+    candidateCount,
   };
 
   if (sendMerchantReceipt && merchantUserId) {
