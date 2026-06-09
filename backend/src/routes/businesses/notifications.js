@@ -34,7 +34,8 @@ import {
 import { getBusinessBySlug } from "../../db/businesses.js";
 import logger from "../../lib/logger.js";
 import { syncNotificationTextsForCampaign } from "../../lib/sync-notification-texts-for-campaign.js";
-import { enqueueNotificationJob } from "../../lib/notification-job-queue.js";
+import { enqueueNotificationJob, getNotificationJobById } from "../../lib/notification-job-queue.js";
+import { getNotificationBatchById } from "../../db/webpush.js";
 import {
   assertCustomNotificationIconForBroadcast,
   notificationIconRequiredHttpBody,
@@ -239,7 +240,7 @@ export async function notifyHandler(req, res) {
 
   syncNotificationTextsForCampaign(business.id, null, message);
 
-  const jobId = enqueueNotificationJob({
+  const { jobId, batchId } = enqueueNotificationJob({
     businessId: business.id,
     slug,
     apiBase,
@@ -249,6 +250,7 @@ export async function notifyHandler(req, res) {
     triggerName: "notify_clients",
     merchantUserId: req.user?.id ?? null,
     touchMemberLastVisit: false,
+    expectedDevices: totalDevices,
   });
 
   res.status(202).json({
@@ -261,7 +263,7 @@ export async function notifyHandler(req, res) {
     sentGoogleWallet: null,
     sentMerchantApp: null,
     job_id: jobId,
-    batch_id: null,
+    batch_id: batchId,
     total: totalDevices,
     message: `Envoi lancé vers ${totalDevices} appareil(s). La campagne continue sur le serveur (job_id: ${jobId}).`,
   });
@@ -376,7 +378,7 @@ function enqueueCampaignForBusiness(req, business, slug, { title, body, segment 
   const apiBase = getApiBase(req);
   syncNotificationTextsForCampaign(business.id, title, body);
   const isBehavioralSegment = segment && CAMPAIGN_SEGMENT_KEYS.includes(segment);
-  const jobId = enqueueNotificationJob({
+  const { jobId, batchId } = enqueueNotificationJob({
     businessId: business.id,
     slug,
     apiBase,
@@ -386,6 +388,7 @@ function enqueueCampaignForBusiness(req, business, slug, { title, body, segment 
     triggerName,
     merchantUserId: req.user?.id ?? null,
     touchMemberLastVisit: !isBehavioralSegment,
+    expectedDevices: deliverableDevices,
   });
 
   return {
@@ -393,6 +396,7 @@ function enqueueCampaignForBusiness(req, business, slug, { title, body, segment 
     ok: true,
     accepted: true,
     job_id: jobId,
+    batch_id: batchId,
     total_devices: deliverableDevices,
     deliverable_devices: deliverableDevices,
     preview_devices: previewDevices,
@@ -493,7 +497,7 @@ router.post("/send", async (req, res) => {
     sent_google_wallet: null,
     sent_merchant_app: null,
     job_id: launched.length === 1 ? launched[0].job_id : null,
-    batch_id: null,
+    batch_id: launched.length === 1 ? launched[0].batch_id : null,
     total: totalDevices,
     results,
     message: summaryParts.join(" "),
@@ -520,6 +524,53 @@ router.get("/campaign-segments", (req, res) => {
     points50: c.points50,
     recurrent: c.recurrent,
     birthdayToday: c.birthdayToday,
+  });
+});
+
+router.get("/jobs/:jobId", (req, res) => {
+  const business = req.business;
+  if (!ensureDashboardAccess(req, res, business)) return;
+  const jobId = String(req.params.jobId ?? "").trim();
+  if (!jobId) return res.status(400).json({ error: "job_id requis" });
+  const job = getNotificationJobById(jobId);
+  if (!job || job.business_id !== business.id) {
+    return res.status(404).json({ error: "Job introuvable" });
+  }
+  let summary = {};
+  if (job.batch_id) {
+    const batch = getNotificationBatchById(job.batch_id);
+    if (batch) {
+      try {
+        summary = JSON.parse(batch.summary_json || "{}");
+      } catch {
+        summary = {};
+      }
+    }
+  }
+  const deliveryStatus =
+    summary.delivery_status ??
+    (job.status === "done" ? "delivered" : job.status === "failed" || job.status === "dead" ? "failed" : "queued");
+  const sent = Number(summary.sent ?? summary.sent_total ?? 0) || 0;
+  const recipientsDistinct = Number(summary.recipients_distinct ?? summary.distinct_recipients ?? 0) || 0;
+  const expectedDevices = Number(summary.expected_devices ?? 0) || null;
+  res.json({
+    ok: true,
+    job_id: job.id,
+    job_status: job.status,
+    batch_id: job.batch_id ?? null,
+    delivery_status: deliveryStatus,
+    sent,
+    sent_total: sent,
+    recipients_distinct: recipientsDistinct,
+    expected_devices: expectedDevices,
+    sent_passkit: Number(summary.sentPassKit ?? summary.sent_passkit ?? 0) || null,
+    sent_web_push: Number(summary.sentWebPush ?? summary.sent_web_push ?? 0) || null,
+    failed: Number(summary.failed ?? 0) || null,
+    error: job.error ?? null,
+    created_at: job.created_at,
+    completed_at: job.completed_at ?? null,
+    notification_title: summary.notification_title ?? summary.title ?? job.title ?? null,
+    message: summary.message ?? summary.body ?? job.body ?? null,
   });
 });
 

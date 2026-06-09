@@ -47,7 +47,35 @@ function readSummaryRecipientsDistinct(summary) {
   return null;
 }
 
+function readSummaryDeliveryStatus(summary) {
+  if (!summary || typeof summary !== "object") return null;
+  const raw = summary.delivery_status ?? summary.deliveryStatus ?? summary.status;
+  return typeof raw === "string" && raw.trim() ? raw.trim().toLowerCase() : null;
+}
+
+function readSummaryExpectedDevices(summary) {
+  if (!summary || typeof summary !== "object") return null;
+  const v = Number(summary.expected_devices ?? summary.expectedDevices);
+  return Number.isFinite(v) && v > 0 ? Math.floor(v) : null;
+}
+
+function readSummaryText(summary, keys) {
+  if (!summary || typeof summary !== "object") return null;
+  for (const key of keys) {
+    const raw = summary[key];
+    if (typeof raw === "string") {
+      const t = raw.trim();
+      if (t) return t;
+    }
+  }
+  return null;
+}
+
 function resolveCampaignRecipientCount(businessId, batchId, summary) {
+  const deliveryStatus = readSummaryDeliveryStatus(summary);
+  if (deliveryStatus === "queued" || deliveryStatus === "sending" || deliveryStatus === "pending") {
+    return 0;
+  }
   const fromLog = countDistinctRecipientsForBatch(businessId, batchId);
   const fromSummaryRecipients = readSummaryRecipientsDistinct(summary);
   const sentTotal = readSummarySentTotal(summary);
@@ -252,6 +280,17 @@ export function updateNotificationBatchSummary(batchId, summary) {
   db.prepare("UPDATE notification_batches SET summary_json = ? WHERE id = ?").run(JSON.stringify(summary), batchId);
 }
 
+/** Lot unique par id (suivi job / polling app). */
+export function getNotificationBatchById(batchId) {
+  const hasTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='notification_batches'").get();
+  if (!hasTable || !batchId) return null;
+  return db
+    .prepare(
+      `SELECT id, business_id, trigger_name, created_at, summary_json FROM notification_batches WHERE id = ? LIMIT 1`,
+    )
+    .get(batchId);
+}
+
 /** Historique récent des lots pour un commerce (dashboard). */
 export function getNotificationBatchesForBusiness(businessId, { limit = 20 } = {}) {
   const hasTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='notification_batches'").get();
@@ -404,8 +443,12 @@ export function getNotificationCampaignInsightsForBusiness(businessId, { limit =
     } catch {
       summary = {};
     }
-    let notificationTitle = null;
-    let message = null;
+    let notificationTitle = readSummaryText(summary, [
+      "notification_title",
+      "title",
+      "push_title",
+    ]);
+    let message = readSummaryText(summary, ["message", "body", "push_body", "content"]);
     try {
       const sample = db
         .prepare(
@@ -427,6 +470,8 @@ export function getNotificationCampaignInsightsForBusiness(businessId, { limit =
     }
     const sentTotal = readSummarySentTotal(summary);
     const recipients = resolveCampaignRecipientCount(businessId, b.id, summary);
+    const deliveryStatus = readSummaryDeliveryStatus(summary);
+    const expectedDevices = readSummaryExpectedDevices(summary);
     let returnedWithin48h = 0;
     try {
       const rev = db
@@ -457,6 +502,10 @@ export function getNotificationCampaignInsightsForBusiness(businessId, { limit =
       returned_within_48h: returnedWithin48h,
       notification_title: notificationTitle,
       message,
+      delivery_status: deliveryStatus,
+      expected_devices: expectedDevices,
+      sent_passkit: Number(summary.sentPassKit ?? summary.sent_passkit ?? 0) || null,
+      sent_web_push: Number(summary.sentWebPush ?? summary.sent_web_push ?? 0) || null,
     });
   }
   return out;

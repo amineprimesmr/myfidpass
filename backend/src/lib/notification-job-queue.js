@@ -33,6 +33,7 @@ import { randomUUID } from "crypto";
 import { getDb } from "../db/connection.js";
 import { getBusinessById } from "../db/businesses.js";
 import { deliverCustomerBroadcast } from "../notifications/dispatch.js";
+import { createNotificationBatch } from "../db/webpush.js";
 import { notifyAdminsPlatformEvent } from "./admin-notify.js";
 import { businessHasCustomNotificationIcon } from "./notification-icon-gate.js";
 import logger from "./logger.js";
@@ -139,14 +140,15 @@ export function createNotificationJob({
   triggerName = "campaign_manual",
   merchantUserId = null,
   touchMemberLastVisit = true,
+  batchId = null,
 }) {
   const id = randomUUID();
   const now = new Date().toISOString();
   db.prepare(`
     INSERT INTO notification_jobs
       (id, business_id, slug, api_base, member_ids, title, body,
-       trigger_name, merchant_user_id, touch_member_last_visit, status, created_at, next_attempt_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+       trigger_name, merchant_user_id, touch_member_last_visit, status, created_at, next_attempt_at, batch_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)
   `).run(
     id,
     businessId,
@@ -160,8 +162,9 @@ export function createNotificationJob({
     touchMemberLastVisit ? 1 : 0,
     now,
     now,
+    batchId ?? null,
   );
-  logger.debug({ jobId: id, businessId, slug, triggerName }, "[notif-job-queue] job créé");
+  logger.debug({ jobId: id, businessId, slug, triggerName, batchId }, "[notif-job-queue] job créé");
   return id;
 }
 
@@ -256,8 +259,12 @@ function markJobFailedOrDead(id, attemptCount, errorMsg) {
 
 // ── Lecture ─────────────────────────────────────────────────────────────────
 
-function getJobById(id) {
+export function getNotificationJobById(id) {
   return db.prepare("SELECT * FROM notification_jobs WHERE id = ?").get(id);
+}
+
+function getJobById(id) {
+  return getNotificationJobById(id);
 }
 
 /**
@@ -393,6 +400,7 @@ async function runJob(job) {
       merchantUserId: job.merchant_user_id ?? null,
       sendMerchantReceipt: true,
       touchMemberLastVisit: job.touch_member_last_visit === 1,
+      existingBatchId: job.batch_id ?? null,
     });
 
     clearInterval(heartbeatInterval);
@@ -513,7 +521,39 @@ export function stopNotificationJobWorker() {
  * @returns {string} jobId — à inclure dans la réponse 202 pour que le client puisse tracker.
  */
 export function enqueueNotificationJob(params) {
-  const jobId = createNotificationJob(params);
+  const {
+    expectedDevices = null,
+    title = null,
+    body,
+    triggerName = "campaign_manual",
+    ...rest
+  } = params;
+
+  const batchId = createNotificationBatch({
+    businessId: rest.businessId,
+    triggerName,
+    summary: {
+      delivery_status: "queued",
+      status: "queued",
+      expected_devices: expectedDevices,
+      notification_title: title ?? null,
+      title: title ?? null,
+      message: body,
+      body,
+      sent: 0,
+      sent_total: 0,
+      recipients_distinct: 0,
+      distinct_recipients: 0,
+    },
+  });
+
+  const jobId = createNotificationJob({
+    ...rest,
+    title,
+    body,
+    triggerName,
+    batchId,
+  });
 
   // Chemin rapide : exécution dans la prochaine itération de la boucle d'événements.
   // Évite de bloquer la réponse HTTP tout en restant quasi-instantané.
@@ -529,7 +569,7 @@ export function enqueueNotificationJob(params) {
     }
   });
 
-  return jobId;
+  return { jobId, batchId };
 }
 
 /**

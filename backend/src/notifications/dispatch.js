@@ -115,6 +115,7 @@ export async function deliverCustomerBroadcast({
   sendMerchantReceipt = true,
   touchMemberLastVisit = true,
   allowTechnicalMembers = false,
+  existingBatchId = null,
 }) {
   if (!businessHasCustomNotificationIcon(business)) {
     logger.warn(
@@ -219,11 +220,32 @@ export async function deliverCustomerBroadcast({
   // écraser `notification_change_message` : voir `sync-notification-texts-for-campaign.js`.
   const businessAfterSync = syncNotificationTextsForCampaign(business.id, title, bodyMessage);
 
-  const batchId = createNotificationBatch({
-    businessId: business.id,
-    triggerName,
-    summary: { started_at: new Date().toISOString() },
-  });
+  let batchId = existingBatchId || null;
+  if (batchId) {
+    updateNotificationBatchSummary(batchId, {
+      delivery_status: "sending",
+      status: "sending",
+      started_at: new Date().toISOString(),
+      notification_title: title != null ? String(title).trim() || null : null,
+      title: title != null ? String(title).trim() || null : null,
+      message: bodyMessage,
+      body: bodyMessage,
+    });
+  } else {
+    batchId = createNotificationBatch({
+      businessId: business.id,
+      triggerName,
+      summary: {
+        delivery_status: "sending",
+        status: "sending",
+        started_at: new Date().toISOString(),
+        notification_title: title != null ? String(title).trim() || null : null,
+        title: title != null ? String(title).trim() || null : null,
+        message: bodyMessage,
+        body: bodyMessage,
+      },
+    });
+  }
 
   // Relire la ligne commerce : évite une ligne `req.business` ou un snapshot légèrement vieux si icône
   // vient d’être PATCH juste avant l’envoi ; les timestamps alimentent le `?v=` ci-dessous.
@@ -442,8 +464,17 @@ export async function deliverCustomerBroadcast({
   let sentMerchantApp = 0;
 
   const recipientsDistinct = touchedMemberIds.size;
+  const deliveryStatus =
+    sent === 0
+      ? candidateCount > 0
+        ? "failed"
+        : "no_targets"
+      : errors.length > 0
+        ? "partial"
+        : "delivered";
   const summary = {
     sent,
+    sent_total: sent,
     sentWebPush,
     sentPassKit,
     sentGoogleWallet,
@@ -456,6 +487,13 @@ export async function deliverCustomerBroadcast({
     errors: errors.length > 0 ? errors : undefined,
     batch_id: batchId,
     candidateCount,
+    delivery_status: deliveryStatus,
+    status: "completed",
+    completed_at: new Date().toISOString(),
+    notification_title: payloadTitle,
+    title: payloadTitle,
+    message: bodyMessage,
+    body: bodyMessage,
   };
 
   if (sendMerchantReceipt && merchantUserId) {
