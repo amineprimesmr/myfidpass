@@ -18,6 +18,7 @@ import {
 import { getBusinessAssetData } from "../db/business-assets.js";
 import { businessAllowsWalletCustomerAlerts } from "../lib/notification-icon-gate.js";
 import { memberHasDeliveredCampaignNotification } from "../db/webpush.js";
+import { parsePassKitUpdateTag } from "../db/passes.js";
 import { WALLET_TIER_UNLOCK_CHANGE_MESSAGE } from "../lib/points-reward-tiers.js";
 import { createStripBuffer, buildPassLocations, createDefaultIconBuffer } from "./images-strip.js";
 import { drawStampsOnStrip } from "./images-stamps.js";
@@ -468,7 +469,13 @@ export async function generatePass(member, business = null, options = {}) {
     business?.id && member?.id
       ? memberHasDeliveredCampaignNotification(business.id, member.id)
       : false;
-  if (rawBroadcast && walletAlerts && memberGotCampaign) {
+  /** Diffusion récente (< 15 min) : changeMessage même si le log campagne n’est pas encore visible (race refetch PassKit). */
+  const recentBroadcastMs = parsePassKitUpdateTag(business?.last_broadcast_at);
+  const recentCampaignBroadcast =
+    !!rawBroadcast &&
+    recentBroadcastMs > 0 &&
+    Date.now() - recentBroadcastMs < 15 * 60 * 1000;
+  if (rawBroadcast && walletAlerts && (memberGotCampaign || recentCampaignBroadcast)) {
     lastMessageBackField.changeMessage = normalizeChangeMessage(changeMsg, rawBroadcast);
   }
 

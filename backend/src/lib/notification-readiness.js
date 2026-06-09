@@ -84,6 +84,8 @@ export function getBusinessNotificationReadiness(business, opts = {}) {
     web_push_count: webSubscriptions.length,
     total_devices: totalDevices,
     members_count: membersCount ?? 0,
+    /** Comptes techniques exclus du décompte « clients » mais peuvent avoir un Wallet enregistré. */
+    members_count_excludes_technical: true,
     subscription_ok: subscriptionOk,
     ready,
     block_code: blockCode,

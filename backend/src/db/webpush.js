@@ -320,9 +320,13 @@ export function memberHasDeliveredCampaignNotification(businessId, memberId) {
       .map((v) => String(v ?? "").trim())
       .filter(Boolean),
   );
+  const mid = String(memberId).trim();
   const memberRow = db
-    .prepare("SELECT id, loyalty_group_member_id FROM members WHERE business_id = ? AND id = ? LIMIT 1")
-    .get(businessId, String(memberId).trim());
+    .prepare(
+      "SELECT id, loyalty_group_member_id FROM members WHERE business_id = ? AND (id = ? OR loyalty_group_member_id = ?) LIMIT 1",
+    )
+    .get(businessId, mid, mid);
+  if (memberRow?.id) ids.add(String(memberRow.id).trim());
   if (memberRow?.loyalty_group_member_id) {
     const gm = String(memberRow.loyalty_group_member_id).trim();
     if (gm) ids.add(gm);
