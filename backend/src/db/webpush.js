@@ -111,12 +111,27 @@ const PASSKIT_TEST_DEVICE_ID = "test-device-123";
  */
 function sqlExcludeMembersWithPassKit(alias = "w") {
   /* Comparaison normalisée : évite Web Push + Wallet pour le même membre si UUID diffère
-   * par casse / espaces (données historiques ou clients hors chemin standard). */
+   * par casse / espaces (données historiques ou clients hors chemin standard).
+   * Réseau fidélité : serial PassKit peut être `loyalty_group_member_id`. */
   return `NOT EXISTS (
     SELECT 1 FROM pass_registrations pr
-    INNER JOIN members m ON LOWER(TRIM(m.id)) = LOWER(TRIM(pr.serial_number))
+    INNER JOIN members m ON (
+      LOWER(TRIM(m.id)) = LOWER(TRIM(pr.serial_number))
+      OR (
+        m.loyalty_group_member_id IS NOT NULL
+        AND TRIM(m.loyalty_group_member_id) != ''
+        AND LOWER(TRIM(m.loyalty_group_member_id)) = LOWER(TRIM(pr.serial_number))
+      )
+    )
     WHERE m.business_id = ${alias}.business_id
-      AND LOWER(TRIM(CAST(pr.serial_number AS TEXT))) = LOWER(TRIM(CAST(${alias}.member_id AS TEXT)))
+      AND (
+        LOWER(TRIM(CAST(m.id AS TEXT))) = LOWER(TRIM(CAST(${alias}.member_id AS TEXT)))
+        OR (
+          m.loyalty_group_member_id IS NOT NULL
+          AND TRIM(m.loyalty_group_member_id) != ''
+          AND LOWER(TRIM(CAST(m.loyalty_group_member_id AS TEXT))) = LOWER(TRIM(CAST(${alias}.member_id AS TEXT)))
+        )
+      )
       AND pr.push_token IS NOT NULL AND TRIM(pr.push_token) != ''
       AND pr.device_library_identifier != '${PASSKIT_TEST_DEVICE_ID}'
   )`;
@@ -300,20 +315,34 @@ export function getWebPushSubscriptionsByBusinessFilteredExcludingPassKitOwners(
 /** Le membre a déjà reçu au moins une notification campagne (évite le verso Wallet « Message » sur nouvelle carte). */
 export function memberHasDeliveredCampaignNotification(businessId, memberId) {
   if (!businessId || !memberId) return false;
+  const ids = new Set(
+    [memberId]
+      .map((v) => String(v ?? "").trim())
+      .filter(Boolean),
+  );
+  const memberRow = db
+    .prepare("SELECT id, loyalty_group_member_id FROM members WHERE business_id = ? AND id = ? LIMIT 1")
+    .get(businessId, String(memberId).trim());
+  if (memberRow?.loyalty_group_member_id) {
+    const gm = String(memberRow.loyalty_group_member_id).trim();
+    if (gm) ids.add(gm);
+  }
+  const placeholders = [...ids].map(() => "?").join(",");
+  const args = [businessId, ...ids];
   const cols = db.prepare("PRAGMA table_info(notification_log)").all().map((c) => c.name);
   if (!cols.includes("status")) {
     const row = db
       .prepare(
-        `SELECT 1 FROM notification_log WHERE business_id = ? AND member_id = ? LIMIT 1`,
+        `SELECT 1 FROM notification_log WHERE business_id = ? AND member_id IN (${placeholders}) LIMIT 1`,
       )
-      .get(businessId, memberId);
+      .get(...args);
     return !!row;
   }
   const row = db
     .prepare(
-      `SELECT 1 FROM notification_log WHERE business_id = ? AND member_id = ? AND status = 'sent' LIMIT 1`,
+      `SELECT 1 FROM notification_log WHERE business_id = ? AND member_id IN (${placeholders}) AND status = 'sent' LIMIT 1`,
     )
-    .get(businessId, memberId);
+    .get(...args);
   return !!row;
 }
 

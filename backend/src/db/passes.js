@@ -7,6 +7,44 @@ import { getDb } from "./connection.js";
 const db = getDb();
 const TEST_DEVICE_ID = "test-device-123";
 
+/**
+ * PassKit `serial_number` = `members.id` ou `loyalty_group_member_id` (réseau multi-adresses).
+ * Sans ce JOIN, les campagnes manuelles ne trouvent aucun token Wallet après liaison réseau.
+ */
+export const PASS_SERIAL_MEMBER_JOIN_SQL = `(
+  m.id = pr.serial_number
+  OR (
+    m.loyalty_group_member_id IS NOT NULL
+    AND TRIM(m.loyalty_group_member_id) != ''
+    AND m.loyalty_group_member_id = pr.serial_number
+  )
+)`;
+
+/** Résout l’id membre local à journaliser depuis un serial PassKit. */
+export function resolveMemberIdForPassSerial(serialNumber, businessId) {
+  const serial = String(serialNumber ?? "").trim();
+  if (!serial || !businessId) return serial || null;
+  const direct = db
+    .prepare("SELECT id FROM members WHERE business_id = ? AND id = ? LIMIT 1")
+    .get(businessId, serial);
+  if (direct?.id) return direct.id;
+  const viaGroup = db
+    .prepare(
+      `SELECT id FROM members WHERE business_id = ? AND loyalty_group_member_id = ? LIMIT 1`,
+    )
+    .get(businessId, serial);
+  return viaGroup?.id ?? serial;
+}
+
+/** Filtre segment : serial PassKit peut être id local ou id groupe. */
+function passRowMatchesMemberFilter(row, memberIdSet, businessId) {
+  const serial = String(row?.serial_number ?? "").trim();
+  if (!serial) return false;
+  if (memberIdSet.has(serial)) return true;
+  const localId = resolveMemberIdForPassSerial(serial, businessId);
+  return localId ? memberIdSet.has(localId) : false;
+}
+
 export function registerPassDevice({ deviceLibraryIdentifier, passTypeIdentifier, serialNumber, pushToken }) {
   const now = new Date().toISOString();
   db.prepare(
@@ -110,7 +148,7 @@ export function getPassKitPushTokensForBusiness(businessId) {
   const rows = db.prepare(
     `SELECT pr.push_token, pr.serial_number
      FROM pass_registrations pr
-     INNER JOIN members m ON m.id = pr.serial_number
+     INNER JOIN members m ON ${PASS_SERIAL_MEMBER_JOIN_SQL}
      WHERE m.business_id = ? AND pr.push_token IS NOT NULL AND pr.push_token != ''
        AND pr.device_library_identifier != ?`
   ).all(businessId, TEST_DEVICE_ID);
@@ -120,7 +158,7 @@ export function getPassKitPushTokensForBusiness(businessId) {
 export function getPassKitRegistrationsCountForBusiness(businessId) {
   const row = db.prepare(
     `SELECT COUNT(*) AS n FROM pass_registrations pr
-     INNER JOIN members m ON m.id = pr.serial_number
+     INNER JOIN members m ON ${PASS_SERIAL_MEMBER_JOIN_SQL}
      WHERE m.business_id = ? AND pr.device_library_identifier != ?`
   ).get(businessId, TEST_DEVICE_ID);
   return row?.n ?? 0;
@@ -178,7 +216,7 @@ export function getUpdatedPassSerialNumbersForDevice(deviceId, passTypeId, passe
   const base = db.prepare(
     `SELECT pr.serial_number, m.last_visit_at, m.created_at, b.last_broadcast_at, b.notification_pass_layout_at, b.pass_last_modified_ms
      FROM pass_registrations pr
-     INNER JOIN members m ON m.id = pr.serial_number
+     INNER JOIN members m ON ${PASS_SERIAL_MEMBER_JOIN_SQL}
      INNER JOIN businesses b ON b.id = m.business_id
      WHERE pr.device_library_identifier = ? AND pr.pass_type_identifier = ?`
   ).all(deviceId, passTypeId);
@@ -209,14 +247,14 @@ export function getPassKitPushTokensForBusinessFiltered(businessId, memberIds = 
   const base = db.prepare(
     `SELECT pr.push_token, pr.serial_number
      FROM pass_registrations pr
-     INNER JOIN members m ON m.id = pr.serial_number
+     INNER JOIN members m ON ${PASS_SERIAL_MEMBER_JOIN_SQL}
      WHERE m.business_id = ? AND pr.push_token IS NOT NULL AND pr.push_token != ''
        AND pr.device_library_identifier != ?`
   );
   let rows = base.all(businessId, TEST_DEVICE_ID);
   if (memberIds && Array.isArray(memberIds) && memberIds.length > 0) {
     const set = new Set(memberIds);
-    rows = rows.filter((r) => set.has(r.serial_number));
+    rows = rows.filter((r) => passRowMatchesMemberFilter(r, set, businessId));
   }
   return rows;
 }

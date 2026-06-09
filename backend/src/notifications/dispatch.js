@@ -32,6 +32,8 @@ import {
 import { addGoogleWalletNotificationMessageForMember } from "../google-wallet.js";
 import { syncNotificationTextsForCampaign } from "../lib/sync-notification-texts-for-campaign.js";
 import { businessHasCustomNotificationIcon } from "../lib/notification-icon-gate.js";
+import { getMemberForBusinessOrGroup } from "../lib/loyalty-group-resolve.js";
+import { resolveMemberIdForPassSerial } from "../db/passes.js";
 import logger from "../lib/logger.js";
 
 /**
@@ -141,10 +143,10 @@ export async function deliverCustomerBroadcast({
         : getPassKitPushTokensForBusiness(business.id);
   const googleWalletMembers = targetedGoogleWalletMembers(business.id, memberIds);
 
-  const isDeliverableMember = (memberId) => {
-    const mid = String(memberId ?? "").trim();
+  const isDeliverableMember = (memberOrSerial) => {
+    const mid = String(memberOrSerial ?? "").trim();
     if (!mid) return false;
-    const row = getMemberForBusiness(mid, business.id);
+    const row = getMemberForBusinessOrGroup(mid, business) ?? getMemberForBusiness(mid, business.id);
     if (!row) return false;
     return !isTechnicalMemberEmail(row.email);
   };
@@ -296,35 +298,45 @@ export async function deliverCustomerBroadcast({
     if (touchMemberLastVisit) {
       const touchedMembers = new Set();
       for (const row of passKitTokens) {
-        if (row.serial_number && !touchedMembers.has(row.serial_number)) {
-          dbTouchMemberLastVisit(row.serial_number);
-          touchedMembers.add(row.serial_number);
+        const visitId = resolveMemberIdForPassSerial(row.serial_number, business.id);
+        if (visitId && !touchedMembers.has(visitId)) {
+          dbTouchMemberLastVisit(visitId);
+          touchedMembers.add(visitId);
         }
       }
     }
+    // Journaliser avant l’APNs : le refetch PassKit lit `memberHasDeliveredCampaignNotification`.
+    const passKitLogSeen = new Set();
+    for (const row of passKitTokens) {
+      const logMemberId = resolveMemberIdForPassSerial(row.serial_number, business.id);
+      const logKey = `${logMemberId}:${row.push_token ?? ""}`;
+      if (!logMemberId || passKitLogSeen.has(logKey)) continue;
+      passKitLogSeen.add(logKey);
+      logNotification({
+        businessId: business.id,
+        memberId: logMemberId,
+        title: payloadTitle,
+        body: bodyMessage,
+        type: logTypePasskit,
+        batchId,
+        channel: "passkit",
+        triggerName,
+        countsForMemberCooldown: 1,
+        status: "sent",
+      });
+    }
     const waveResults = await sendPassKitPushWaves(passKitTokens, { collapseId: broadcastCollapseId });
     for (const { row, result } of waveResults) {
+      const logMemberId = resolveMemberIdForPassSerial(row.serial_number, business.id);
       if (result.sent) {
         sentPassKit++;
-        const mid = String(row.serial_number ?? "").trim().toLowerCase();
+        const mid = String(logMemberId ?? row.serial_number ?? "").trim().toLowerCase();
         if (mid) touchedMemberIds.add(mid);
-        logNotification({
-          businessId: business.id,
-          memberId: row.serial_number,
-          title: payloadTitle,
-          body: bodyMessage,
-          type: logTypePasskit,
-          batchId,
-          channel: "passkit",
-          triggerName,
-          countsForMemberCooldown: 1,
-          status: "sent",
-        });
       } else if (result.error) {
-        errors.push({ type: "passkit", memberId: row.serial_number, error: result.error });
+        errors.push({ type: "passkit", memberId: logMemberId ?? row.serial_number, error: result.error });
         logNotification({
           businessId: business.id,
-          memberId: row.serial_number,
+          memberId: logMemberId ?? row.serial_number,
           title: payloadTitle,
           body: bodyMessage,
           type: logTypePasskit,
