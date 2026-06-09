@@ -21,14 +21,23 @@ import {
 import { passKitWaveGapMsForDiagnostics } from "../../passkit-push-waves.js";
 import { deliverCustomerBroadcast } from "../../notifications/dispatch.js";
 import { getMerchantApnsUnavailableReason } from "../../apns.js";
-import { assertOperationalSubscription, ensureDashboardAccess, blockStaffDashboardWrites, getApiBase } from "./shared.js";
+import {
+  assertOperationalSubscription,
+  ensureDashboardAccess,
+  blockStaffDashboardWrites,
+  getApiBase,
+  checkDashboardIdentity,
+} from "./shared.js";
+import { getBusinessBySlug } from "../../db/businesses.js";
 import logger from "../../lib/logger.js";
 import { syncNotificationTextsForCampaign } from "../../lib/sync-notification-texts-for-campaign.js";
 import { enqueueNotificationJob } from "../../lib/notification-job-queue.js";
 import {
   assertCustomNotificationIconForBroadcast,
   notificationIconRequiredHttpBody,
+  NOTIFICATION_ICON_REQUIRED_CODE,
 } from "../../lib/notification-icon-gate.js";
+import { getBusinessNotificationReadiness } from "../../lib/notification-readiness.js";
 
 /** Compte réel des canaux livrables (Web Push + PassKit) — sans gonfler avec tous les membres Google Wallet. */
 function countNotificationDeliveryTargets(businessId, memberIds) {
@@ -179,62 +188,82 @@ router.use((req, res, next) => {
   next();
 });
 
-router.post("/send", async (req, res) => {
-  try {
-  const business = req.business;
-  if (!ensureDashboardAccess(req, res, business)) return;
-  const { title, message, segment } = req.body || {};
-  if (!assertOperationalSubscription(req, res, business)) return;
-  const body = (message || "").trim();
-  if (!body) {
-    return res.status(400).json({ error: "Le message est obligatoire" });
+function normalizeBusinessSlugsList(raw) {
+  if (!Array.isArray(raw)) return [];
+  return [...new Set(raw.map((s) => String(s ?? "").trim()).filter(Boolean))];
+}
+
+function resolveCampaignTargets(req, business, requestedSlugs) {
+  const slugs = normalizeBusinessSlugsList(requestedSlugs);
+  if (slugs.length === 0) {
+    return [{ business, slug: business.slug, access: "ok" }];
   }
-  try {
-    assertCustomNotificationIconForBroadcast(business);
-  } catch (e) {
-    return res.status(e.statusCode || 422).json(notificationIconRequiredHttpBody());
+  const out = [];
+  for (const slug of slugs) {
+    const target = getBusinessBySlug(slug);
+    if (!target) {
+      out.push({ slug, access: "not_found" });
+      continue;
+    }
+    const access = checkDashboardIdentity(target, req);
+    if (access !== "ok") {
+      out.push({ slug: target.slug, access });
+      continue;
+    }
+    out.push({ business: target, slug: target.slug, access: "ok" });
   }
+  return out;
+}
+
+/**
+ * Envoie une campagne vers un commerce (job SQLite). Retourne un objet résultat par slug.
+ */
+function enqueueCampaignForBusiness(req, business, slug, { title, body, segment }) {
+  const readiness = getBusinessNotificationReadiness(business);
+  if (!readiness.subscription_ok) {
+    return {
+      slug,
+      ok: false,
+      code: "subscription_required",
+      message: readiness.block_message,
+      total_devices: 0,
+    };
+  }
+  if (!readiness.has_notification_icon) {
+    return {
+      slug,
+      ok: false,
+      code: NOTIFICATION_ICON_REQUIRED_CODE,
+      message: readiness.block_message,
+      total_devices: 0,
+      business_name: readiness.name,
+    };
+  }
+
   const memberIds =
     segment && CAMPAIGN_SEGMENT_KEYS.includes(segment)
       ? getMemberIdsBySegment(business.id, segment)
       : null;
-  const apiBase = getApiBase(req);
-  const slug = req.params.slug ?? business.slug;
   const { totalDevices } = countNotificationDeliveryTargets(business.id, memberIds);
   if (totalDevices === 0) {
-    return res.json({
-      ok: true,
-      sent: 0,
-      sentWebPush: 0,
-      sentPassKit: 0,
-      sentGoogleWallet: 0,
-      sentMerchantApp: 0,
-      batch_id: null,
-      message: "Aucun client ciblé. Les clients qui ajoutent la carte (Apple Wallet, Google Wallet ou navigateur) pourront recevoir les notifications.",
-    });
+    return {
+      slug,
+      ok: false,
+      code: "no_devices",
+      message: readiness.block_message,
+      total_devices: 0,
+      business_name: readiness.name,
+      members_count: readiness.members_count,
+    };
   }
 
   const triggerName =
     segment && CAMPAIGN_SEGMENT_KEYS.includes(segment)
       ? `campaign_segment_${segment}`
       : "campaign_manual";
-
-  // Synchronise les textes de notification AVANT de créer le job, pour que le pass
-  // refetché par les iPhones contienne déjà le bon changeMessage.
+  const apiBase = getApiBase(req);
   syncNotificationTextsForCampaign(business.id, title, body);
   const isBehavioralSegment = segment && CAMPAIGN_SEGMENT_KEYS.includes(segment);
-
-  /**
-   * Envoi persistant via la file de travaux SQLite.
-   *
-   * POURQUOI : `setImmediate()` seul perdait la campagne si Railway redémarrait le
-   * conteneur entre le 202 et l’exécution de la microtask (déploiement, OOM, crash).
-   * Désormais, le job est écrit en base AVANT le 202 ; même sans setImmediate,
-   * le worker de notification-job-queue.js le reprend au prochain démarrage.
-   *
-   * job_id retourné dans la réponse : le client peut l’utiliser pour tracker l’envoi
-   * via GET /notifications/batches (le batch_id sera mis à jour une fois l’envoi terminé).
-   */
   const jobId = enqueueNotificationJob({
     businessId: business.id,
     slug,
@@ -247,19 +276,104 @@ router.post("/send", async (req, res) => {
     touchMemberLastVisit: !isBehavioralSegment,
   });
 
+  return {
+    slug,
+    ok: true,
+    accepted: true,
+    job_id: jobId,
+    total_devices: totalDevices,
+    business_name: readiness.name,
+    message: `Envoi lancé vers ${totalDevices} appareil(s) pour ${readiness.name}.`,
+  };
+}
+
+router.get("/readiness", (req, res) => {
+  const business = req.business;
+  if (!ensureDashboardAccess(req, res, business)) return;
+  res.json({ ok: true, readiness: getBusinessNotificationReadiness(business) });
+});
+
+router.post("/send", async (req, res) => {
+  try {
+  const business = req.business;
+  if (!ensureDashboardAccess(req, res, business)) return;
+  const { title, message, segment, business_slugs: businessSlugsRaw } = req.body || {};
+  if (!assertOperationalSubscription(req, res, business)) return;
+  const body = (message || "").trim();
+  if (!body) {
+    return res.status(400).json({ error: "Le message est obligatoire" });
+  }
+
+  const targets = resolveCampaignTargets(req, business, businessSlugsRaw);
+  const accessible = targets.filter((t) => t.access === "ok" && t.business);
+  if (accessible.length === 0) {
+    const first = targets[0];
+    if (first?.access === "not_found") {
+      return res.status(404).json({ error: "Commerce introuvable", slug: first.slug });
+    }
+    return res.status(403).json({ error: "Accès refusé à un ou plusieurs commerces." });
+  }
+
+  const isMulti = normalizeBusinessSlugsList(businessSlugsRaw).length > 1;
+  const results = accessible.map((t) =>
+    enqueueCampaignForBusiness(req, t.business, t.slug, { title, body, segment }),
+  );
+
+  const launched = results.filter((r) => r.ok);
+  const skipped = results.filter((r) => !r.ok);
+  const totalDevices = launched.reduce((sum, r) => sum + (r.total_devices ?? 0), 0);
+
+  if (launched.length === 0) {
+    const firstBlock = skipped[0];
+    if (firstBlock?.code === NOTIFICATION_ICON_REQUIRED_CODE) {
+      return res.status(422).json({
+        ...notificationIconRequiredHttpBody(),
+        multi: isMulti,
+        results,
+        message: firstBlock.message,
+      });
+    }
+    return res.json({
+      ok: true,
+      accepted: false,
+      async_delivery: false,
+      multi: isMulti,
+      sent: 0,
+      total: 0,
+      results,
+      message:
+        skipped.map((r) => `${r.business_name ?? r.slug} : ${r.message}`).join("\n") ||
+        "Aucun commerce n’a pu être notifié.",
+    });
+  }
+
+  const summaryParts = [];
+  if (launched.length > 0) {
+    summaryParts.push(
+      `Envoi lancé vers ${launched.length} commerce(s) (${totalDevices} appareil(s) au total).`,
+    );
+  }
+  if (skipped.length > 0) {
+    summaryParts.push(
+      `${skipped.length} commerce(s) ignoré(s) : ${skipped.map((r) => r.business_name ?? r.slug).join(", ")}.`,
+    );
+  }
+
   res.status(202).json({
     ok: true,
     accepted: true,
     async_delivery: true,
+    multi: isMulti,
     sent: null,
     sent_web_push: null,
     sent_pass_kit: null,
     sent_google_wallet: null,
     sent_merchant_app: null,
-    job_id: jobId,
-    batch_id: null, // sera disponible dans /notifications/batches une fois terminé
+    job_id: launched.length === 1 ? launched[0].job_id : null,
+    batch_id: null,
     total: totalDevices,
-    message: `Envoi lancé vers ${totalDevices} appareil(s). Vous pouvez fermer l’écran : la campagne continue sur le serveur. Consultez l’historique des campagnes pour le résultat (job_id: ${jobId}).`,
+    results,
+    message: summaryParts.join(" "),
   });
   } catch (err) {
     logger.error({ err, businessId: req.business?.id }, "[notifications] POST /send error");

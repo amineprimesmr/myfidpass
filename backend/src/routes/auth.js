@@ -47,6 +47,8 @@ import {
   getFirstTeamBusinessOwnerId,
   isOnlyTeamUser,
 } from "../db/business-team.js";
+import { getBusinessById } from "../db/businesses.js";
+import { getBusinessNotificationReadiness } from "../lib/notification-readiness.js";
 import {
   upsertPhoneOtpChallenge,
   getPhoneOtpChallenge,
@@ -1108,6 +1110,24 @@ router.patch("/me", requireAuth, validate(schemas.authMePatch), (req, res) => {
 router.get("/me/businesses", requireAuth, (req, res) => {
   const businesses = getBusinessesForUserId(req.user.id);
   res.json({ businesses });
+});
+
+/**
+ * GET /api/auth/notification-readiness
+ * Diagnostic multi-commerce : icône notif + appareils joignables par commerce.
+ */
+router.get("/notification-readiness", requireAuth, (req, res) => {
+  try {
+    const businesses = getBusinessesForUserId(req.user.id);
+    const rows = businesses.map((b) => {
+      const full = getBusinessById(b.id) || b;
+      return getBusinessNotificationReadiness(full, { ownerUserId: full.user_id ?? req.user.id });
+    });
+    res.json({ ok: true, businesses: rows });
+  } catch (e) {
+    console.error("[auth] notification-readiness error:", e);
+    res.status(500).json({ error: "Impossible de charger le diagnostic notifications." });
+  }
 });
 
 /**
