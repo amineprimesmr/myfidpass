@@ -44,6 +44,9 @@ const db = getDb();
 /** Nombre max de tentatives avant d'abandonner un job (passe en `dead`). */
 const MAX_ATTEMPTS = 4;
 
+/** Attentes max sans icône notif (5 min entre chaque) avant DLQ. */
+const MAX_ICON_WAIT_ATTEMPTS = 12;
+
 /** Intervalle du worker de récupération (ms). */
 const WORKER_POLL_MS = 30_000;
 
@@ -350,15 +353,23 @@ async function runJob(job) {
     }
     if (!businessHasCustomNotificationIcon(business)) {
       clearInterval(heartbeatInterval);
+      if (currentAttempt >= MAX_ICON_WAIT_ATTEMPTS) {
+        markJobFailedOrDead(job.id, MAX_ATTEMPTS, "Icône de notification personnalisée absente — abandon après attente");
+        logger.warn(
+          { jobId: job.id, businessId: job.business_id, attempt: currentAttempt },
+          "[notif-job-queue] job abandonné — icône notification toujours absente"
+        );
+        return;
+      }
       const waitUntil = new Date(Date.now() + 5 * 60_000).toISOString();
       db.prepare(
         `UPDATE notification_jobs
          SET status = 'pending', started_at = NULL, last_heartbeat_at = NULL,
-             error = ?, next_attempt_at = ?, attempt_count = MAX(0, attempt_count - 1)
+             error = ?, next_attempt_at = ?
          WHERE id = ?`
-      ).run("Icône notification requise — en attente", waitUntil, job.id);
+      ).run(`Icône notification requise — en attente (${currentAttempt}/${MAX_ICON_WAIT_ATTEMPTS})`, waitUntil, job.id);
       logger.warn(
-        { jobId: job.id, businessId: job.business_id },
+        { jobId: job.id, businessId: job.business_id, attempt: currentAttempt },
         "[notif-job-queue] job en attente — icône de notification personnalisée absente"
       );
       return;
