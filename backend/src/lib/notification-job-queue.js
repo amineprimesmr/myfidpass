@@ -397,8 +397,6 @@ async function runJob(job) {
       bodyMessage: job.body,
       triggerName: job.trigger_name,
       logTypePasskit: "passkit",
-      merchantUserId: job.merchant_user_id ?? null,
-      sendMerchantReceipt: true,
       touchMemberLastVisit: job.touch_member_last_visit === 1,
       existingBatchId: job.batch_id ?? null,
     });

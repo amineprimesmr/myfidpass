@@ -18,18 +18,12 @@ import {
   touchMemberLastVisit as dbTouchMemberLastVisit,
   setLastBroadcastMessage,
   bumpBusinessPassRefreshTimestamp,
-  getMerchantDeviceTokensForUser,
-  deleteMerchantPushDeviceByToken,
   deletePassRegistrationsByPushToken,
   mergeBusinessAssetsForPass,
 } from "../db.js";
 import { sendWebPush } from "../notifications.js";
 import { sendPassKitPushWaves } from "../passkit-push-waves.js";
-import {
-  sendMerchantAppAlert,
-  isLikelyInvalidMerchantPushTokenError,
-  isLikelyInvalidDeviceTokenApnsError,
-} from "../merchant-app-push.js";
+import { isLikelyInvalidDeviceTokenApnsError } from "../apns.js";
 import { addGoogleWalletNotificationMessageForMember } from "../google-wallet.js";
 import { syncNotificationTextsForCampaign } from "../lib/sync-notification-texts-for-campaign.js";
 import { businessHasCustomNotificationIcon } from "../lib/notification-icon-gate.js";
@@ -98,8 +92,6 @@ async function mapWithConcurrency(items, limit, mapper) {
  * @param {string} p.bodyMessage
  * @param {string} [p.triggerName]
  * @param {string} [p.logTypePasskit]
- * @param {string|null} [p.merchantUserId] — accusé APNs commerçant
- * @param {boolean} [p.sendMerchantReceipt]
  * @param {boolean} [p.allowTechnicalMembers] — auto-test : autorise la carte d'aperçu (`wallet-apercu.*`)
  */
 export async function deliverCustomerBroadcast({
@@ -111,8 +103,6 @@ export async function deliverCustomerBroadcast({
   bodyMessage,
   triggerName = "campaign_manual",
   logTypePasskit = "passkit",
-  merchantUserId = null,
-  sendMerchantReceipt = true,
   touchMemberLastVisit = true,
   allowTechnicalMembers = false,
   existingBatchId = null,
@@ -127,7 +117,6 @@ export async function deliverCustomerBroadcast({
       sentWebPush: 0,
       sentPassKit: 0,
       sentGoogleWallet: 0,
-      sentMerchantApp: 0,
       failed: 0,
       errors: [],
       batchId: null,
@@ -188,7 +177,6 @@ export async function deliverCustomerBroadcast({
       sentWebPush: 0,
       sentPassKit: 0,
       sentGoogleWallet: 0,
-      sentMerchantApp: 0,
       failed: 0,
       errors: [],
       batchId: null,
@@ -461,7 +449,6 @@ export async function deliverCustomerBroadcast({
   }
 
   const sent = sentWebPush + sentPassKit + sentGoogleWallet;
-  let sentMerchantApp = 0;
 
   const recipientsDistinct = touchedMemberIds.size;
   const deliveryStatus =
@@ -480,7 +467,6 @@ export async function deliverCustomerBroadcast({
     sentGoogleWallet,
     skippedGoogleWallet,
     failedGoogleWallet,
-    sentMerchantApp: 0,
     recipients_distinct: recipientsDistinct,
     distinct_recipients: recipientsDistinct,
     failed: errors.length,
@@ -496,61 +482,8 @@ export async function deliverCustomerBroadcast({
     body: bodyMessage,
   };
 
-  if (sendMerchantReceipt && merchantUserId) {
-    const tokens = getMerchantDeviceTokensForUser(merchantUserId);
-    const receiptTitle = "Campagne envoyée";
-    const receiptBody = "Notification envoyée";
-    for (const tok of tokens) {
-      // Toujours inclure l'URL avec ?v= pour cache-busting — l'endpoint sert logonotif si pas d'icône custom.
-      const merchantIconUrl = slug && apiBase
-        ? buildNotificationIconUrl(apiBase, slug, businessFresh, batchId)
-        : null;
-      const r = await sendMerchantAppAlert(tok, {
-        title: receiptTitle,
-        body: receiptBody,
-        category: "MYFIDPASS_CAMPAIGN",
-        data: {
-          myfidpass_action: "campaign_receipt",
-          batch_id: batchId,
-          business_id: business.id,
-          ...(merchantIconUrl ? { notification_icon_url: merchantIconUrl } : {}),
-        },
-      });
-      if (r.sent) {
-        sentMerchantApp++;
-        logNotification({
-          businessId: business.id,
-          memberId: null,
-          title: receiptTitle,
-          body: receiptBody,
-          type: "merchant_receipt",
-          batchId,
-          channel: "merchant_app",
-          triggerName: "merchant_receipt",
-          countsForMemberCooldown: 0,
-          status: "sent",
-        });
-      } else if (r.error) {
-        if (isLikelyInvalidMerchantPushTokenError({ message: r.error }, tok)) {
-          deleteMerchantPushDeviceByToken(tok);
-        }
-        logNotification({
-          businessId: business.id,
-          memberId: null,
-          title: receiptTitle,
-          body: receiptBody,
-          type: "merchant_receipt",
-          batchId,
-          channel: "merchant_app",
-          triggerName: "merchant_receipt",
-          countsForMemberCooldown: 0,
-          status: "failed",
-          errorDetail: r.error,
-        });
-      }
-    }
-    summary.sentMerchantApp = sentMerchantApp;
-  }
+  // Plus d'accusé push « Campagne envoyée » sur l'app commerçant : l'app affiche déjà
+  // le pop-up « Campagne lancée » + le suivi de livraison (NotificationDeliveryFollowUp).
 
   updateNotificationBatchSummary(batchId, summary);
 
@@ -566,7 +499,6 @@ export async function deliverCustomerBroadcast({
       sentGoogleWallet,
       skippedGoogleWallet,
       failedGoogleWallet,
-      sentMerchantApp,
       failed: errors.length,
       elapsedMs,
       // Métrique utile : nombre de subs invalides qui ont été GC pendant ce batch

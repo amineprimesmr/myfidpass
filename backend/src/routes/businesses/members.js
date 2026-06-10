@@ -547,54 +547,41 @@ router.post("/:memberId/redeem", async (req, res) => {
   }
 
   if (type === "points") {
-    let pointsToDeduct = 0;
-    const pointsParam = body.points != null ? Number(body.points) : null;
-    const tierIndex = body.tier_index != null ? Number(body.tier_index) : null;
-
-    if (Number.isInteger(pointsParam) && pointsParam > 0) {
-      pointsToDeduct = pointsParam;
-    } else if (Number.isInteger(tierIndex) && tierIndex >= 0) {
-      let tiers = business.points_reward_tiers;
-      if (typeof tiers === "string" && tiers.trim()) {
-        try { tiers = JSON.parse(tiers); } catch (_) { tiers = []; }
-      }
-      if (!Array.isArray(tiers) || tierIndex >= tiers.length) {
-        return res.status(400).json({ error: "Palier invalide.", code: "INVALID_TIER" });
-      }
-      const tier = tiers[tierIndex];
-      pointsToDeduct = Number(tier?.points) || 0;
-    }
-    if (pointsToDeduct <= 0) {
-      return res.status(400).json({
-        error: "Indiquez points (nombre à déduire) ou tier_index (palier).",
-        code: "REDEEM_POINTS_OR_TIER",
-      });
-    }
-    const current = Number(member.points) || 0;
-    if (current < pointsToDeduct) {
-      return res.status(400).json({
-        error: `Solde insuffisant (${current} pts). Nécessite ${pointsToDeduct} pts pour ce palier.`,
-        code: "NOT_ENOUGH_POINTS",
-      });
-    }
-    const updated = deductPoints(member.id, pointsToDeduct);
-    createTransaction({
-      businessId: business.id,
-      memberId: member.id,
-      type: "reward_redeem",
-      points: -pointsToDeduct,
-      metadata: { subtype: "points", points_deducted: pointsToDeduct },
+    const amountRaw = body.amount_eur ?? body.amountEur;
+    const amountEur = amountRaw != null && amountRaw !== "" ? Number(amountRaw) : undefined;
+    const result = executeMemberRewardRedeem(business, member, {
+      mode: "points",
+      tierIndex: body.tier_index != null ? Number(body.tier_index) : body.tierIndex,
+      points: body.points != null ? Number(body.points) : undefined,
+      amountEur: Number.isFinite(amountEur) ? amountEur : undefined,
       actorUserId: req.user?.id,
+      source: "member_redeem_points",
     });
+    if (!result.ok) {
+      return res.status(result.status).json({
+        error: result.error,
+        code: result.code,
+        points_required: result.points_required,
+        points_balance: result.points_balance,
+        min_purchase_eur: result.min_purchase_eur,
+      });
+    }
     await pushPassKitUpdateForMember(business.id, member.id, "redeem_points");
-    await syncGoogleWalletAfterMemberMutation(updated, business, req, "redeem_points");
+    await syncGoogleWalletAfterMemberMutation(
+      { ...member, points: result.new_points },
+      business,
+      req,
+      "redeem_points",
+    );
     return res.json({
       ok: true,
       type: "points",
-      points_deducted: pointsToDeduct,
-      previous_points: current,
-      new_points: updated.points,
-      message: "Récompense points utilisée.",
+      points_deducted: result.points_deducted,
+      previous_points: result.previous_points,
+      new_points: result.new_points,
+      reward_label: result.reward_label,
+      signup_cycle: result.signup_cycle === true,
+      message: result.message,
     });
   }
 

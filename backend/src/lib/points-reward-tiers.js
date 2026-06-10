@@ -3,6 +3,14 @@
 export const SIGNUP_REWARD_POINTS = 10;
 export const MAX_POINTS_REWARD_TIERS = 8;
 
+/** Montant minimum d'achat (€) pour utiliser un palier — null si non configuré. */
+export function parseMinPurchaseEur(raw) {
+  if (raw == null || raw === "") return null;
+  const n = Number(String(raw).replace(",", "."));
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return Math.round(n * 100) / 100;
+}
+
 /**
  * @param {unknown} raw
  * @returns {{ points: number; label: string; image_url?: string; imageUrl?: string }[]}
@@ -24,8 +32,11 @@ export function parsePointsRewardTiersRaw(raw) {
     const label = String(t.label ?? "").trim();
     if (Number.isNaN(points) || points < 0 || !label) continue;
     const img = t.image_url ?? t.imageUrl ?? t.image;
+    const minRaw = t.min_purchase_eur ?? t.minPurchaseEur ?? t.min_purchase;
+    const minPurchase = parseMinPurchaseEur(minRaw);
     const row = { points, label };
     if (typeof img === "string" && img.trim()) row.image_url = img.trim();
+    if (minPurchase != null) row.min_purchase_eur = minPurchase;
     out.push(row);
   }
   out.sort((a, b) => a.points - b.points);

@@ -6286,9 +6286,7 @@ function initAppDashboard(slug) {
           const pk = data.sentPassKit != null ? data.sentPassKit : 0;
           if (sent === 0) notifFeedbackEl.textContent = data.message || "Aucun appareil n'a reçu la notification.";
           else {
-            const ma = data.sentMerchantApp != null ? data.sentMerchantApp : 0;
             let msg = pk > 0 && wp > 0 ? `Notification envoyée à ${sent} appareil(s) (dont ${pk} Apple Wallet, ${wp} navigateur).` : pk > 0 ? `Notification envoyée à ${sent} appareil(s) (Apple Wallet).` : `Notification envoyée à ${sent} appareil(s).`;
-            if (ma > 0) msg += ` Accusé sur votre app : ${ma}.`;
             if (data.batch_id) msg += ` ID lot : ${data.batch_id.slice(0, 8)}…`;
             if (data.failed > 0 && data.errors?.length) msg += ` ${data.failed} échec(s).`;
             notifFeedbackEl.textContent = msg;

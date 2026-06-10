@@ -203,11 +203,14 @@ router.post("/reward-redeem", async (req, res) => {
     });
   }
   const redeemIntent = parsed.rewardRedeem;
+  const amountRaw = req.body?.amount_eur ?? req.body?.amountEur;
+  const amountEur = amountRaw != null && amountRaw !== "" ? Number(amountRaw) : undefined;
   const result = executeMemberRewardRedeem(business, member, {
     mode: redeemIntent.mode === "stamps" ? "stamps" : "points",
     tierIndex: redeemIntent.tierIndex,
     points: redeemIntent.points,
     stampThreshold: redeemIntent.stampThreshold,
+    amountEur: Number.isFinite(amountEur) ? amountEur : undefined,
     actorUserId: req.user?.id,
     source: "integration_reward_redeem",
   });

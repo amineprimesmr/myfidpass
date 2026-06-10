@@ -237,7 +237,6 @@ export function initDashboardPage() {
           const s = lb.summary || {};
           const w = s.sentWebPush != null ? s.sentWebPush : 0;
           const p = s.sentPassKit != null ? s.sentPassKit : 0;
-          const m = s.sentMerchantApp != null ? s.sentMerchantApp : 0;
           const trig = lb.trigger_name ? String(lb.trigger_name) : "envoi";
           let dstr = "";
           try {
@@ -245,7 +244,7 @@ export function initDashboardPage() {
           } catch (_) {
             dstr = "";
           }
-          lastBatchEl.textContent = `Dernier lot : ${trig} — Wallet ${p}, Web ${w}${m ? `, accusé app ${m}` : ""}${dstr ? ` · ${dstr}` : ""}`;
+          lastBatchEl.textContent = `Dernier lot : ${trig} — Wallet ${p}, Web ${w}${dstr ? ` · ${dstr}` : ""}`;
           lastBatchEl.classList.remove("hidden");
         } else {
           lastBatchEl.textContent = "";

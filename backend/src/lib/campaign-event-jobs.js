@@ -348,7 +348,6 @@ export async function runCampaignEventJobsCron({ limit = 50 } = {}) {
         "passkit",
         {
           triggerName,
-          sendMerchantReceipt: false,
           touchMemberLastVisit: false,
         }
       );

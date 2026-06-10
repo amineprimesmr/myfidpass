@@ -92,8 +92,6 @@ export const CAMPAIGN_SEGMENT_KEYS = [
 /**
  * @param {object} [options]
  * @param {string} [options.triggerName]
- * @param {string|null} [options.merchantUserId]
- * @param {boolean} [options.sendMerchantReceipt]
  */
 export async function deliverDashboardBroadcast(
   business,
@@ -107,8 +105,6 @@ export async function deliverDashboardBroadcast(
 ) {
   const {
     triggerName = "campaign_manual",
-    merchantUserId = null,
-    sendMerchantReceipt = true,
     touchMemberLastVisit = true,
     allowTechnicalMembers = false,
   } = options || {};
@@ -121,8 +117,6 @@ export async function deliverDashboardBroadcast(
     bodyMessage,
     triggerName,
     logTypePasskit,
-    merchantUserId,
-    sendMerchantReceipt,
     touchMemberLastVisit,
     allowTechnicalMembers,
   });
@@ -184,8 +178,6 @@ async function handleSelfTestBroadcast(req, res, business, { title, body }) {
     "passkit_self_test",
     {
       triggerName: "campaign_self_test",
-      merchantUserId: req.user?.id ?? null,
-      sendMerchantReceipt: false,
       touchMemberLastVisit: false,
       allowTechnicalMembers: true,
     },
@@ -231,7 +223,6 @@ export async function notifyHandler(req, res) {
       sentWebPush: 0,
       sentPassKit: 0,
       sentGoogleWallet: 0,
-      sentMerchantApp: 0,
       batch_id: null,
       message:
         "Aucun client ciblé. Les clients qui ajoutent la carte (Apple Wallet ou navigateur) pourront recevoir les notifications.",
@@ -261,7 +252,6 @@ export async function notifyHandler(req, res) {
     sentWebPush: null,
     sentPassKit: null,
     sentGoogleWallet: null,
-    sentMerchantApp: null,
     job_id: jobId,
     batch_id: batchId,
     total: totalDevices,
@@ -495,7 +485,6 @@ router.post("/send", async (req, res) => {
     sent_web_push: null,
     sent_pass_kit: null,
     sent_google_wallet: null,
-    sent_merchant_app: null,
     job_id: launched.length === 1 ? launched[0].job_id : null,
     batch_id: launched.length === 1 ? launched[0].batch_id : null,
     total: totalDevices,

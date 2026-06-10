@@ -232,7 +232,6 @@ export async function runCampaignAutomationCron() {
           "campaign_auto",
           {
             triggerName,
-            sendMerchantReceipt: false,
             // Ne pas mettre à jour last_visit_at : ce n’est pas une visite magasin, sinon les segments « inactifs » se vident à tort.
             touchMemberLastVisit: false,
           }

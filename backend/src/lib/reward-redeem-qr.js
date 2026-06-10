@@ -211,5 +211,15 @@ export function resolvePointsRewardFromQr(business, rewardRedeem) {
     resolvedTierIndex = 0;
   }
 
-  return { pointsRequired, label, tierIndex: resolvedTierIndex, qrPoints, imageUrl };
+  let minPurchaseEur = null;
+  const matchedTier =
+    (qrPoints > 0 ? tiers.find((t) => Math.max(0, Math.floor(Number(t?.points) || 0)) === qrPoints) : null) ??
+    (tierIndex != null && tierIndex < tiers.length ? tiers[tierIndex] : null);
+  if (matchedTier) {
+    const rawMin = matchedTier.min_purchase_eur ?? matchedTier.minPurchaseEur;
+    const n = Number(rawMin);
+    if (Number.isFinite(n) && n > 0) minPurchaseEur = Math.round(n * 100) / 100;
+  }
+
+  return { pointsRequired, label, tierIndex: resolvedTierIndex, qrPoints, imageUrl, minPurchaseEur };
 }

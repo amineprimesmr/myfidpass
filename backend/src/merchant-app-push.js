@@ -67,6 +67,3 @@ export function isLikelyInvalidMerchantPushTokenError(err, deviceToken) {
   if (kind === "apns") return isLikelyInvalidDeviceTokenApnsError(err);
   return false;
 }
-
-/** @deprecated Utiliser isLikelyInvalidMerchantPushTokenError(err, token) */
-export { isLikelyInvalidDeviceTokenApnsError };

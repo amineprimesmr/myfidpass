@@ -18,7 +18,6 @@ export function formatNotificationSendResult(data) {
   const pk = num(data.sentPassKit ?? data.sent_pass_kit ?? data.summary?.sentPassKit ?? data.summary?.sent_pass_kit);
   const gw = num(data.sentGoogleWallet ?? data.sent_google_wallet ?? data.summary?.sentGoogleWallet ?? data.summary?.sent_google_wallet);
   const failed = num(data.failed ?? data.summary?.failed);
-  const ma = num(data.sentMerchantApp ?? data.sent_merchant_app ?? data.summary?.sentMerchantApp ?? data.summary?.sent_merchant_app);
 
   if (sent === 0) {
     return data.message || "Aucun appareil n'a reçu la notification.";
@@ -32,7 +31,6 @@ export function formatNotificationSendResult(data) {
         : gw > 0 && wp === 0
           ? `Notification envoyée à ${sent} appareil(s) (Google Wallet).`
           : `Notification envoyée à ${sent} appareil(s).`;
-  if (ma > 0) msg += ` Accusé sur votre app : ${ma}.`;
   if (failed > 0) msg += ` ${failed} échec(s).`;
   return msg;
 }

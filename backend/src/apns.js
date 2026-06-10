@@ -30,7 +30,7 @@ import { connect as http2Connect } from "node:http2";
 import { createSecureContext } from "node:tls";
 import { loadCertificates } from "./pass/certs.js";
 
-const APNS_BUILD = "2026-05-28-passkit-cert-empty-payload";
+const APNS_BUILD = "2026-06-10-passkit-alert-priority10";
 
 /** En-tête PEM Apple Auth Key (.p8) : PKCS#8 « BEGIN PRIVATE KEY » ou legacy « BEGIN EC PRIVATE KEY ». */
 const PEM_APNS_AUTH_KEY = /-----BEGIN\s+(?:EC\s+)?PRIVATE KEY-----/;
@@ -323,12 +323,18 @@ export function sendPassKitUpdate(deviceToken, opts = {}) {
       return;
     }
 
+    // CRITIQUE — ne JAMAIS remettre `background` / priorité 5 ici :
+    // les push « background » sont soumis au budget système iOS (quelques-uns par heure
+    // et par appareil). Symptôme observé : la 1ʳᵉ campagne arrive instantanément, puis
+    // toutes les suivantes sont différées ou jetées silencieusement par l'iPhone alors
+    // qu'APNs répond 200 au serveur. Un push de mise à jour de pass déclenche une
+    // interaction visible (bannière changeMessage) → `alert` + priorité 10 immédiate.
     const req = session.request({
       ":method": "POST",
       ":path": `/3/device/${deviceToken}`,
       "apns-topic": creds.passTypeId,
-      "apns-push-type": "background",
-      "apns-priority": "5",
+      "apns-push-type": "alert",
+      "apns-priority": "10",
       "apns-expiration": String(Math.floor(Date.now() / 1000) + 86400),
     });
     let statusCode = 0;
@@ -472,10 +478,6 @@ export function sendMerchantAppAlert(deviceToken, payload) {
     // mutable-content = 1 permet à la Notification Service Extension de joindre l'icône
     if (typeof payload.data.notification_icon_url === "string" && payload.data.notification_icon_url) {
       opts.mutableContent = true;
-    }
-    // Regroupe les accusés campagne dans le centre de notifs (évite une pile à chaque envoi).
-    if (payload.data.myfidpass_action === "campaign_receipt" && payload.data.business_id) {
-      opts.collapseId = `mfp-campaign-receipt-${String(payload.data.business_id).slice(0, 64)}`;
     }
   }
   const note = new Notification(deviceToken, opts);
