@@ -240,25 +240,41 @@ async function performStripeMerchantSubscriptionUpgrade({ userId, targetSlots, p
   return updated;
 }
 
-function getTrialDaysForPlan(plan) {
-  const p = String(plan || "").toLowerCase();
-  if (p !== "annual") return STRIPE_SUBSCRIPTION_TRIAL_DAYS;
-  const raw = RAW_STRIPE_SUBSCRIPTION_TRIAL_DAYS_ANNUAL;
-  if (raw === undefined || raw === null || String(raw).trim() === "") {
-    return STRIPE_SUBSCRIPTION_TRIAL_DAYS;
-  }
-  return Math.max(0, parseInt(String(raw), 10) || 0);
+/**
+ * Jours d’essai Stripe sur les souscriptions créées par l’API.
+ * **Toujours 0** — le 1er mois à 1 € passe par coupon ; les longues offres (ex. 1 an gratuit) = code promo saisi manuellement sur Stripe.
+ */
+function stripeTrialDaysOnSubscription(_plan) {
+  return 0;
 }
 
+/** Cache process : coupons « 1er mois 1 € » par palier multi-commerces (2–5). */
+const firstMonthOneEuroCouponBySlots = new Map();
+
 /**
- * Jours d’essai Stripe réellement attachés à la souscription créée.
- * **Mensuel : toujours 0** — le premier cycle est une facture immédiate (coupon premier mois à 1 €), pas un SetupIntent à 0 €.
- * Annuel : selon `STRIPE_SUBSCRIPTION_TRIAL_DAYS_ANNUAL` / `STRIPE_SUBSCRIPTION_TRIAL_DAYS`.
+ * Coupon Stripe (once) ramenant la 1ʳᵉ facture mensuelle à 1 € pour le palier `slots` (1–5).
+ * @param {number} slots
+ * @returns {Promise<string|null>}
  */
-function stripeTrialDaysOnSubscription(plan) {
-  const p = String(plan || "").toLowerCase();
-  if (p === "monthly") return 0;
-  return getTrialDaysForPlan(plan);
+async function resolveFirstMonthOneEuroCouponId(slots) {
+  if (!stripe) return null;
+  const n = Math.min(5, Math.max(1, Math.floor(Number(slots) || 1)));
+  const envSlotKey = process.env[`STRIPE_COUPON_ID_FIRST_MONTH_1_EUR_SLOTS_${n}`];
+  if (envSlotKey && String(envSlotKey).trim()) return String(envSlotKey).trim();
+  if (n === 1 && STRIPE_COUPON_ID_FIRST_MONTH_1_EUR) return STRIPE_COUPON_ID_FIRST_MONTH_1_EUR;
+  if (firstMonthOneEuroCouponBySlots.has(n)) return firstMonthOneEuroCouponBySlots.get(n);
+  const monthlyCents = multiBusinessMonthlyTotalCents(n);
+  const amountOff = monthlyCents - 100;
+  if (amountOff <= 0) return null;
+  const coupon = await stripe.coupons.create({
+    amount_off: amountOff,
+    currency: "eur",
+    duration: "once",
+    name: `MyFidpass 1er mois 1€ (${n} comm.)`,
+    metadata: { purpose: "first_month_1eur", merchant_slots: String(n) },
+  });
+  firstMonthOneEuroCouponBySlots.set(n, coupon.id);
+  return coupon.id;
 }
 
 function buildStripeSubscriptionTrialConfig(plan) {
@@ -365,14 +381,9 @@ router.post("/create-checkout-session", requireAuth, async (req, res) => {
         ...buildStripeSubscriptionTrialConfig(plan),
       },
     };
-    if (plan === "monthly" && STRIPE_COUPON_ID_FIRST_MONTH_1_EUR) {
-      sessionPayload.discounts = [{ coupon: STRIPE_COUPON_ID_FIRST_MONTH_1_EUR }];
-    } else if (
-      plan === "annual" &&
-      STRIPE_COUPON_ID_ANNUAL_FIRST_1_EUR &&
-      getTrialDaysForPlan("annual") <= 0
-    ) {
-      sessionPayload.discounts = [{ coupon: STRIPE_COUPON_ID_ANNUAL_FIRST_1_EUR }];
+    if (plan === "monthly") {
+      const couponId = await resolveFirstMonthOneEuroCouponId(1);
+      if (couponId) sessionPayload.discounts = [{ coupon: couponId }];
     }
     const session = await stripe.checkout.sessions.create(sessionPayload);
     return res.json({ url: session.url });
@@ -511,7 +522,6 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
 
   const planIdForMetadata = slots > 1 ? "pro" : "starter";
   const billingModeMeta = slots > 1 ? "unified_multi" : "unified_single";
-  const useCatalogPrice = slots === 1;
   const priceId = plan === "annual" ? PRICE_ID_ANNUAL : PRICE_ID_MONTHLY;
 
   try {
@@ -613,16 +623,9 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
     };
 
     subscriptionParams.items = [buildSubscriptionLineItem(slots, plan)];
-    if (useCatalogPrice) {
-      if (plan === "monthly" && STRIPE_COUPON_ID_FIRST_MONTH_1_EUR) {
-        subscriptionParams.discounts = [{ coupon: STRIPE_COUPON_ID_FIRST_MONTH_1_EUR }];
-      } else if (
-        plan === "annual" &&
-        STRIPE_COUPON_ID_ANNUAL_FIRST_1_EUR &&
-        getTrialDaysForPlan("annual") <= 0
-      ) {
-        subscriptionParams.discounts = [{ coupon: STRIPE_COUPON_ID_ANNUAL_FIRST_1_EUR }];
-      }
+    if (plan === "monthly") {
+      const couponId = await resolveFirstMonthOneEuroCouponId(slots);
+      if (couponId) subscriptionParams.discounts = [{ coupon: couponId }];
     }
 
     const subscription = await stripe.subscriptions.create(subscriptionParams);

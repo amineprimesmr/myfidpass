@@ -95,11 +95,6 @@ export default function SaasProPaymentPage() {
   const isPaymentRoute =
     typeof window !== "undefined" &&
     /^\/(?:paiement|offre-pro|abonnement-pro|plan-pro)(?:\/checkout)?\/?$/i.test(window.location.pathname);
-  const initialPlanAnnual = (() => {
-    if (typeof window === "undefined") return false;
-    const planParam = new URLSearchParams(window.location.search).get("plan");
-    return String(planParam || "").toLowerCase() === "annual";
-  })();
   const initialCommerceSlots = (() => {
     if (typeof window === "undefined") return 1;
     const raw =
@@ -110,7 +105,6 @@ export default function SaasProPaymentPage() {
     if (!Number.isFinite(n)) return 1;
     return Math.min(5, Math.max(1, n));
   })();
-  const [annual, setAnnual] = useState(initialPlanAnnual);
   const [commerceSlots, setCommerceSlots] = useState(initialCommerceSlots);
   const [currentAllowedSlots, setCurrentAllowedSlots] = useState(1);
   const [usedBusinesses, setUsedBusinesses] = useState(0);
@@ -234,12 +228,6 @@ export default function SaasProPaymentPage() {
   }, [commerceSlots, minSelectableSlots]);
 
   useEffect(() => {
-    if (commerceSlots > 1 && annual) {
-      setAnnual(false);
-    }
-  }, [commerceSlots, annual]);
-
-  useEffect(() => {
     if (!isPaymentRoute) return;
     let cancelled = false;
     const from = isUpgradeFlow ? currentAllowedSlots : 1;
@@ -299,7 +287,7 @@ export default function SaasProPaymentPage() {
               Authorization: `Bearer ${bearer}`,
             },
             body: JSON.stringify({
-              plan: annual ? "annual" : "monthly",
+              plan: "monthly",
               save_card: saveCard,
               slots: commerceSlots,
             }),
@@ -529,7 +517,7 @@ export default function SaasProPaymentPage() {
         paymentRequestButtonElementRef.current = null;
       } catch (_) {}
     };
-  }, [isPaymentRoute, annual, saveCard, authHandoffTick, commerceSlots]);
+  }, [isPaymentRoute, saveCard, authHandoffTick, commerceSlots]);
 
   useEffect(() => {
     setElementsReady(Boolean(cardState.number && cardState.expiry && cardState.cvc));
@@ -538,27 +526,22 @@ export default function SaasProPaymentPage() {
   const billingTimeline = useMemo(() => {
     const now = new Date();
     const renewAnchor = new Date(now);
-    if (annual) renewAnchor.setFullYear(renewAnchor.getFullYear() + 1);
-    else renewAnchor.setMonth(renewAnchor.getMonth() + 1);
-    const renewSubtitle = annual
-      ? `Soit ${pricingQuote?.to_annual_label || "399 €"} facturés annuellement, sans engagement.`
-      : "Sans engagement, annulable à tout moment !";
-    const renewAmount = annual
-      ? `${pricingQuote?.to_annual_label || "399 €"} /an`
-      : `${pricingQuote?.to_monthly_label || "49,99 €"} /mois`;
+    renewAnchor.setMonth(renewAnchor.getMonth() + 1);
+    const renewSubtitle = "Sans engagement, annulable à tout moment !";
+    const renewAmount = `${pricingQuote?.to_monthly_label || "49,99 €"} /mois`;
 
     if (commerceSlots > 1) {
       if (isUpgradeFlow && pricingQuote?.is_upgrade) {
         return [
           {
             title: "Aujourd’hui",
-            subtitle: `${commerceSlots} commerces`,
-            amount: `+${pricingQuote.incremental_monthly_label}`,
+            subtitle: "Offre premier mois",
+            amount: "Payez 1€",
             icon: "lock",
           },
           {
             title: formatDateFr(renewAnchor),
-            subtitle: renewSubtitle,
+            subtitle: `${commerceSlots} commerces — ${renewSubtitle}`,
             amount: renewAmount,
             icon: "check",
           },
@@ -567,8 +550,8 @@ export default function SaasProPaymentPage() {
       return [
         {
           title: "Aujourd’hui",
-          subtitle: `${commerceSlots} commerces`,
-          amount: renewAmount,
+          subtitle: `Offre premier mois — ${commerceSlots} commerces`,
+          amount: "Payez 1€",
           icon: "lock",
         },
         {
@@ -606,11 +589,7 @@ export default function SaasProPaymentPage() {
         icon: "check",
       },
     ];
-  }, [annual, isUpgradeFlow, pricingQuote, commerceSlots]);
-
-  const priceLine = annual
-    ? { main: pricingQuote?.to_annual_label?.replace(" €", "€") || "399€", detail: "facturé annuellement" }
-    : { main: pricingQuote?.to_monthly_label?.replace(" €", "€") || "49,99€", detail: "par mois" };
+  }, [isUpgradeFlow, pricingQuote, commerceSlots]);
   const compareRows = expanded ? [...BASE_COMPARE, ...EXTRA_COMPARE] : BASE_COMPARE;
 
   const handlePay = async () => {
@@ -674,21 +653,10 @@ export default function SaasProPaymentPage() {
             </a>
           ) : null}
           <h1>DÉBLOQUEZ TOUT</h1>
-          {commerceSlots === 1 ? (
-            <p className="saas-pay-checkout-trust-lead">
-              {annual ? (
-                <>
-                  Le premier mois à <strong>1&nbsp;€</strong>, puis{" "}
-                  <strong>{pricingQuote?.to_annual_label || "399 €"}&nbsp;/&nbsp;an</strong>
-                </>
-              ) : (
-                <>
-                  Le premier mois à <strong>1&nbsp;€</strong>, puis{" "}
-                  <strong>{pricingQuote?.to_monthly_label || "49,99 €"}</strong> / mois
-                </>
-              )}
-            </p>
-          ) : null}
+          <p className="saas-pay-checkout-trust-lead">
+            Le premier mois à <strong>1&nbsp;€</strong>, puis{" "}
+            <strong>{pricingQuote?.to_monthly_label || "49,99 €"}</strong> / mois
+          </p>
           <div className="saas-pay-commerce-stepper" aria-label="Nombre de commerces">
             <button
               type="button"
@@ -731,61 +699,6 @@ export default function SaasProPaymentPage() {
             </p>
           </div>
         </header>
-
-        {commerceSlots === 1 ? (
-        <div className="saas-pay-billing saas-pay-billing--checkout">
-          <div className="saas-pay-billing-liquid">
-            <fieldset
-              ref={liquidGlassSwitcherRef}
-              className="switcher"
-              role="radiogroup"
-              aria-label="Facturation mensuelle ou annuelle"
-            >
-              <legend className="switcher__legend">Facturation mensuelle ou annuelle</legend>
-              <label className="switcher__option" title="Mensuel">
-                <input
-                  className="switcher__input"
-                  type="radio"
-                  name="saasBillingPeriodCheckout"
-                  value="monthly"
-                  checked={!annual}
-                  onChange={() => setAnnual(false)}
-                  aria-label="Mensuel"
-                  {...{ "c-option": "1" }}
-                />
-                <span className="switcher__text">Mensuel</span>
-              </label>
-              <label className="switcher__option" title="Annuel">
-                <input
-                  className="switcher__input"
-                  type="radio"
-                  name="saasBillingPeriodCheckout"
-                  value="annual"
-                  checked={annual}
-                  onChange={() => setAnnual(true)}
-                  aria-label="Annuel"
-                  {...{ "c-option": "2" }}
-                />
-                <span className="switcher__text">Annuel</span>
-              </label>
-              <svg className="switcher__filter" aria-hidden="true">
-                <defs>
-                  <filter id="saasBillingLiquidGoo">
-                    <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
-                    <feColorMatrix
-                      in="blur"
-                      mode="matrix"
-                      values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10"
-                      result="goo"
-                    />
-                    <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-                  </filter>
-                </defs>
-              </svg>
-            </fieldset>
-          </div>
-        </div>
-        ) : null}
 
         <section className="saas-pay-timeline">
           {billingTimeline.map((step, idx) => (
@@ -930,17 +843,13 @@ export default function SaasProPaymentPage() {
                   "Paiement en cours..."
                 ) : initializing ? (
                   "Chargement du module..."
-                ) : commerceSlots > 1 ? (
-                  <span className="saas-pay-continue-label">Continuer</span>
                 ) : (
                   <span className="saas-pay-continue-label">Commencer pour 1€</span>
                 )}
               </button>
-              {commerceSlots > 1 ? (
-                <p className="saas-pay-continue-foot">
-                  Puis {pricingQuote?.to_monthly_label || "49,99 €"}/mois sans engagement
-                </p>
-              ) : null}
+              <p className="saas-pay-continue-foot">
+                Puis {pricingQuote?.to_monthly_label || "49,99 €"}/mois sans engagement
+              </p>
             </>
           )}
         </section>

@@ -68,10 +68,22 @@ export function warmStripeJs() {
   void getStripeJs();
 }
 
-/** Payment Link Stripe unique pour le SaaS (checkout hébergé, code promo prérempli). */
+/** Payment Link Stripe (fallback legacy — préférer `/paiement` intégré). */
 export const STRIPE_SAAS_PAYMENT_LINK = "https://buy.stripe.com/7sYcN53Z72N88et4Cr8Zq01";
 
-/** Payment Link Stripe — abonnement annuel 399 €/an (surcharge possible via `VITE_STRIPE_ANNUAL_PAYMENT_LINK`). */
+/** @deprecated Ne plus préremplir de code promo — le 1 € 1er mois est appliqué côté API (coupon Stripe). */
+export const STRIPE_SAAS_PAYMENT_PROMO_CODE = "MYFID1EURO";
+
+/**
+ * URL checkout abonnement (alias → `/paiement` intégré).
+ * @param {string} [prefilledEmail]
+ * @returns {string}
+ */
+export function buildStripeSaasPaymentUrl(prefilledEmail) {
+  return resolveSaasSubscriptionPaymentUrl(prefilledEmail);
+}
+
+/** Payment Link Stripe — abonnement annuel (legacy, masqué dans l’app). */
 const RAW_STRIPE_ANNUAL_PAYMENT_LINK =
   typeof import.meta.env?.VITE_STRIPE_ANNUAL_PAYMENT_LINK === "string"
     ? import.meta.env.VITE_STRIPE_ANNUAL_PAYMENT_LINK.trim()
@@ -80,44 +92,17 @@ const RAW_STRIPE_ANNUAL_PAYMENT_LINK =
 export const STRIPE_ANNUAL_PAYMENT_LINK =
   RAW_STRIPE_ANNUAL_PAYMENT_LINK || "https://buy.stripe.com/fZufZh7bjbjEeCR4Cr8Zq03";
 
-/** Code promo prérempli sur le Payment Link annuel (optionnel). Ex. coupon 1er mois à 1 €. */
-const RAW_STRIPE_ANNUAL_PAYMENT_PROMO_CODE =
-  typeof import.meta.env?.VITE_STRIPE_ANNUAL_PAYMENT_PROMO_CODE === "string"
-    ? import.meta.env.VITE_STRIPE_ANNUAL_PAYMENT_PROMO_CODE.trim()
-    : "";
-
-export const STRIPE_ANNUAL_PAYMENT_PROMO_CODE = RAW_STRIPE_ANNUAL_PAYMENT_PROMO_CODE;
-
-export const STRIPE_SAAS_PAYMENT_PROMO_CODE = "MYFID1EURO";
+/** @deprecated Ne plus préremplir automatiquement — codes promo saisis manuellement sur Stripe. */
+export const STRIPE_ANNUAL_PAYMENT_PROMO_CODE = "";
 
 /**
- * URL de paiement abonnement / parcours payant : toujours ce lien + `prefilled_promo_code`, email optionnel.
- * @param {string} [prefilledEmail]
- * @returns {string}
- */
-export function buildStripeSaasPaymentUrl(prefilledEmail) {
-  try {
-    const u = new URL(STRIPE_SAAS_PAYMENT_LINK);
-    u.searchParams.set("prefilled_promo_code", STRIPE_SAAS_PAYMENT_PROMO_CODE);
-    const em = (prefilledEmail || "").trim();
-    if (em) u.searchParams.set("prefilled_email", em);
-    return u.toString();
-  } catch (_) {
-    return `${STRIPE_SAAS_PAYMENT_LINK}?prefilled_promo_code=${encodeURIComponent(STRIPE_SAAS_PAYMENT_PROMO_CODE)}`;
-  }
-}
-
-/**
- * URL Payment Link abonnement annuel (399 €/an), promo optionnelle.
+ * URL Payment Link abonnement annuel (legacy).
  * @param {string} [prefilledEmail]
  * @returns {string}
  */
 export function buildStripeAnnualPaymentUrl(prefilledEmail) {
   try {
     const u = new URL(STRIPE_ANNUAL_PAYMENT_LINK);
-    if (STRIPE_ANNUAL_PAYMENT_PROMO_CODE) {
-      u.searchParams.set("prefilled_promo_code", STRIPE_ANNUAL_PAYMENT_PROMO_CODE);
-    }
     const em = (prefilledEmail || "").trim();
     if (em) u.searchParams.set("prefilled_email", em);
     return u.toString();
@@ -126,7 +111,7 @@ export function buildStripeAnnualPaymentUrl(prefilledEmail) {
   }
 }
 
-/** WebView iOS (`?app_embed=1`) : page `/paiement` intégrée — pas le Payment Link hébergé. */
+/** WebView native (`?app_embed=1`) : checkout intégré `/paiement`. */
 export function isSaasPaymentEmbeddedInNativeApp() {
   if (typeof window === "undefined") return false;
   try {
@@ -136,20 +121,30 @@ export function isSaasPaymentEmbeddedInNativeApp() {
   }
 }
 
-/** SaaS navigateur (PC) → Payment Link Stripe ; embed app native → checkout intégré `/paiement`. */
+/** Toujours checkout intégré — le 1 € 1er mois est appliqué côté API, pas via Payment Link + promo auto. */
 export function subscriptionUsesExternalStripePaymentLink() {
-  return !isSaasPaymentEmbeddedInNativeApp();
+  return false;
 }
 
 /**
- * URL cible abonnement SaaS : Payment Link + MYFID1EURO (PC) ou `/paiement?app_embed=1` (iOS).
+ * URL cible abonnement SaaS : page `/paiement` (Payment Element + coupon 1 € côté API).
  * @param {string} [prefilledEmail]
  */
 export function resolveSaasSubscriptionPaymentUrl(prefilledEmail) {
-  if (subscriptionUsesExternalStripePaymentLink()) {
-    return buildStripeSaasPaymentUrl(prefilledEmail);
+  let path = buildPaymentPathWithAuthHandoff("/paiement");
+  const em = (prefilledEmail || "").trim();
+  if (!em) return path;
+  try {
+    const hashIdx = path.indexOf("#");
+    const pathWithoutHash = hashIdx >= 0 ? path.slice(0, hashIdx) : path;
+    const hash = hashIdx >= 0 ? path.slice(hashIdx) : "";
+    const u = new URL(pathWithoutHash, typeof window !== "undefined" ? window.location.origin : "https://www.myfidpass.fr");
+    u.searchParams.set("prefilled_email", em);
+    if (isSaasPaymentEmbeddedInNativeApp()) u.searchParams.set("app_embed", "1");
+    return `${u.pathname}${u.search}${hash}`;
+  } catch (_) {
+    return path;
   }
-  return buildPaymentPathWithAuthHandoff("/paiement?app_embed=1");
 }
 
 /**

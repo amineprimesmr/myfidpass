@@ -71,10 +71,10 @@ describe("config", () => {
     expect(typeof API_BASE).toBe("string");
   });
 
-  it("buildStripeSaasPaymentUrl includes prefilled_promo_code", () => {
+  it("buildStripeSaasPaymentUrl points to integrated checkout", () => {
     const u = buildStripeSaasPaymentUrl();
-    expect(u).toContain("prefilled_promo_code=MYFID1EURO");
-    expect(u.startsWith("https://buy.stripe.com/")).toBe(true);
+    expect(u).toContain("/paiement");
+    expect(u).not.toContain("prefilled_promo_code");
   });
 
   it("buildStripeSaasPaymentUrl adds prefilled_email when provided", () => {
@@ -87,7 +87,7 @@ describe("config", () => {
     expect(u.startsWith("https://buy.stripe.com/fZufZh7bjbjEeCR4Cr8Zq03")).toBe(true);
   });
 
-  it("subscriptionUsesExternalStripePaymentLink is true on SaaS web (Payment Link)", () => {
+  it("subscriptionUsesExternalStripePaymentLink is false (integrated checkout)", () => {
     globalThis.location = {
       hostname: "myfidpass.fr",
       origin: "https://www.myfidpass.fr",
@@ -95,7 +95,7 @@ describe("config", () => {
       search: "",
       hash: "",
     };
-    expect(subscriptionUsesExternalStripePaymentLink()).toBe(true);
+    expect(subscriptionUsesExternalStripePaymentLink()).toBe(false);
   });
 
   it("subscriptionUsesExternalStripePaymentLink is false in iOS embed (?app_embed=1)", () => {

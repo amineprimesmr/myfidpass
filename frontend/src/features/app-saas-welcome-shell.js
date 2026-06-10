@@ -5,8 +5,7 @@ import { initRouting } from "../router/index.js";
 import {
   buildPaymentPathWithAuthHandoff,
   warmStripeJs,
-  subscriptionUsesExternalStripePaymentLink,
-  redirectToStripeSaasPayment,
+  isSaasPaymentEmbeddedInNativeApp,
   resolveSaasSubscriptionPaymentUrl,
 } from "../config.js";
 
@@ -129,24 +128,22 @@ export function applySaaSFrcMessaging(opts) {
   }
 }
 
-/** Page de paiement : Payment Link Stripe (1er mois 1 €) ou fallback SPA `/paiement`. */
+/** Page de paiement intégrée `/paiement` (1 € 1er mois via coupon API). */
 export function navigateToSaaSPaymentPage() {
-  if (subscriptionUsesExternalStripePaymentLink()) {
-    redirectToStripeSaasPayment();
-    return;
-  }
   warmStripeJs();
   let path = buildPaymentPathWithAuthHandoff("/paiement");
-  const hashIdx = path.indexOf("#");
-  const pathWithoutHash = hashIdx >= 0 ? path.slice(0, hashIdx) : path;
-  const hash = hashIdx >= 0 ? path.slice(hashIdx) : "";
-  try {
-    const u = new URL(pathWithoutHash || "/paiement", window.location.origin);
-    u.searchParams.set("app_embed", "1");
-    path = `${u.pathname}${u.search}${hash}`;
-  } catch (_) {
-    const sep = pathWithoutHash.includes("?") ? "&" : "?";
-    path = `${pathWithoutHash}${sep}app_embed=1${hash}`;
+  if (isSaasPaymentEmbeddedInNativeApp()) {
+    const hashIdx = path.indexOf("#");
+    const pathWithoutHash = hashIdx >= 0 ? path.slice(0, hashIdx) : path;
+    const hash = hashIdx >= 0 ? path.slice(hashIdx) : "";
+    try {
+      const u = new URL(pathWithoutHash || "/paiement", window.location.origin);
+      u.searchParams.set("app_embed", "1");
+      path = `${u.pathname}${u.search}${hash}`;
+    } catch (_) {
+      const sep = pathWithoutHash.includes("?") ? "&" : "?";
+      path = `${pathWithoutHash}${sep}app_embed=1${hash}`;
+    }
   }
   try {
     history.pushState({}, "", path);

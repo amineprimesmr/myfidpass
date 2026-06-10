@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import { getLandingPricingCheckoutUrl } from "./fintap-pricing-urls.js";
 
 describe("fintap-pricing-urls", () => {
-  it("retourne le Payment Link Stripe mensuel avec promo 1er mois à 1 €", () => {
+  it("retourne la page checkout intégrée /paiement", () => {
     const url = getLandingPricingCheckoutUrl();
-    expect(url).toContain("prefilled_promo_code=MYFID1EURO");
-    expect(url.startsWith("https://buy.stripe.com/")).toBe(true);
+    expect(url).toContain("/paiement");
+    expect(url).not.toContain("prefilled_promo_code");
   });
 });
