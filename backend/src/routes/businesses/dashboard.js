@@ -47,7 +47,10 @@ import { postMemberPointsRemove } from "./member-points-remove-handler.js";
 import { patchMemberProfile } from "./member-patch-handler.js";
 import { normalizeLocationRadiusForStorage } from "../../locationRadiusLimits.js";
 import { normalizeFlyerPrefsPut } from "../../lib/flyer-prefs.js";
-import { mergeCampaignAutomationJson } from "../../lib/campaign-automation-cron.js";
+import {
+  mergeCampaignAutomationJson,
+  stripToPerimeterOnlyAutomationConfig,
+} from "../../lib/campaign-automation-cron.js";
 import {
   businessAllowsWalletCustomerAlerts,
   campaignAutomationConfigWithIconGate,
@@ -241,7 +244,9 @@ router.get("/settings", (req, res) => {
     notification_change_message: business.notification_change_message ?? undefined,
     campaign_automation: campaignAutomationConfigWithIconGate(
       business,
-      mergeCampaignAutomationJson(business.campaign_automation_json ?? "")
+      stripToPerimeterOnlyAutomationConfig(
+        mergeCampaignAutomationJson(business.campaign_automation_json ?? "")
+      )
     ),
     has_stamp_icon: Number(business.asset_stamp_icon_present) === 1,
     stamp_icon_url:
@@ -634,11 +639,15 @@ router.patch("/settings", async (req, res) => {
     if (campaign_automation_in === null) {
       updates.campaign_automation_json = null;
     } else if (typeof campaign_automation_in === "object") {
-      const merged = mergeCampaignAutomationJson(JSON.stringify(campaign_automation_in));
+      const merged = stripToPerimeterOnlyAutomationConfig(
+        mergeCampaignAutomationJson(JSON.stringify(campaign_automation_in))
+      );
       updates.campaign_automation_json = JSON.stringify(campaignAutomationConfigWithIconGate(business, merged));
     } else if (typeof campaign_automation_in === "string") {
       const t = campaign_automation_in.trim();
-      const merged = t ? mergeCampaignAutomationJson(t) : null;
+      const merged = t
+        ? stripToPerimeterOnlyAutomationConfig(mergeCampaignAutomationJson(t))
+        : null;
       updates.campaign_automation_json = merged
         ? JSON.stringify(campaignAutomationConfigWithIconGate(business, merged))
         : null;

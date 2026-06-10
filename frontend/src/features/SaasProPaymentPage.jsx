@@ -105,6 +105,11 @@ export default function SaasProPaymentPage() {
     if (!Number.isFinite(n)) return 1;
     return Math.min(5, Math.max(1, n));
   })();
+  const billingPlanFromUrl = (() => {
+    if (typeof window === "undefined") return "monthly";
+    const p = String(new URLSearchParams(window.location.search).get("plan") || "monthly").toLowerCase();
+    return p === "annual" ? "annual" : "monthly";
+  })();
   const [commerceSlots, setCommerceSlots] = useState(initialCommerceSlots);
   const [currentAllowedSlots, setCurrentAllowedSlots] = useState(1);
   const [usedBusinesses, setUsedBusinesses] = useState(0);
@@ -180,6 +185,9 @@ export default function SaasProPaymentPage() {
     }
     return 1;
   })();
+
+  const effectiveBillingPlan = commerceSlots > 1 ? "monthly" : billingPlanFromUrl;
+  const isAnnualCheckout = effectiveBillingPlan === "annual";
 
   useEffect(() => {
     if (!isPaymentRoute) return;
@@ -287,7 +295,7 @@ export default function SaasProPaymentPage() {
               Authorization: `Bearer ${bearer}`,
             },
             body: JSON.stringify({
-              plan: "monthly",
+              plan: effectiveBillingPlan,
               save_card: saveCard,
               slots: commerceSlots,
             }),
@@ -517,7 +525,7 @@ export default function SaasProPaymentPage() {
         paymentRequestButtonElementRef.current = null;
       } catch (_) {}
     };
-  }, [isPaymentRoute, saveCard, authHandoffTick, commerceSlots]);
+  }, [isPaymentRoute, saveCard, authHandoffTick, commerceSlots, effectiveBillingPlan]);
 
   useEffect(() => {
     setElementsReady(Boolean(cardState.number && cardState.expiry && cardState.cvc));
@@ -525,9 +533,24 @@ export default function SaasProPaymentPage() {
 
   const billingTimeline = useMemo(() => {
     const now = new Date();
+    const renewSubtitle = "Sans engagement, annulable à tout moment !";
+
+    if (isAnnualCheckout && commerceSlots === 1 && !isUpgradeFlow) {
+      const renewAnchor = new Date(now);
+      renewAnchor.setFullYear(renewAnchor.getFullYear() + 1);
+      return [
+        { title: "Aujourd’hui", subtitle: "Offre première année", amount: "Payez 1€", icon: "lock" },
+        {
+          title: formatDateFr(renewAnchor),
+          subtitle: renewSubtitle,
+          amount: `${pricingQuote?.to_annual_label || "399,00 €"} /an`,
+          icon: "check",
+        },
+      ];
+    }
+
     const renewAnchor = new Date(now);
     renewAnchor.setMonth(renewAnchor.getMonth() + 1);
-    const renewSubtitle = "Sans engagement, annulable à tout moment !";
     const renewAmount = `${pricingQuote?.to_monthly_label || "49,99 €"} /mois`;
 
     if (commerceSlots > 1) {
@@ -589,7 +612,7 @@ export default function SaasProPaymentPage() {
         icon: "check",
       },
     ];
-  }, [isUpgradeFlow, pricingQuote, commerceSlots]);
+  }, [isUpgradeFlow, pricingQuote, commerceSlots, isAnnualCheckout]);
   const compareRows = expanded ? [...BASE_COMPARE, ...EXTRA_COMPARE] : BASE_COMPARE;
 
   const handlePay = async () => {
@@ -654,8 +677,17 @@ export default function SaasProPaymentPage() {
           ) : null}
           <h1>DÉBLOQUEZ TOUT</h1>
           <p className="saas-pay-checkout-trust-lead">
-            Le premier mois à <strong>1&nbsp;€</strong>, puis{" "}
-            <strong>{pricingQuote?.to_monthly_label || "49,99 €"}</strong> / mois
+            {isAnnualCheckout ? (
+              <>
+                Le premier mois à <strong>1&nbsp;€</strong>, puis{" "}
+                <strong>{pricingQuote?.to_annual_label || "399,00 €"}</strong> / an
+              </>
+            ) : (
+              <>
+                Le premier mois à <strong>1&nbsp;€</strong>, puis{" "}
+                <strong>{pricingQuote?.to_monthly_label || "49,99 €"}</strong> / mois
+              </>
+            )}
           </p>
           <div className="saas-pay-commerce-stepper" aria-label="Nombre de commerces">
             <button
@@ -848,7 +880,9 @@ export default function SaasProPaymentPage() {
                 )}
               </button>
               <p className="saas-pay-continue-foot">
-                Puis {pricingQuote?.to_monthly_label || "49,99 €"}/mois sans engagement
+                {isAnnualCheckout
+                  ? `Puis ${pricingQuote?.to_annual_label || "399,00 €"}/an sans engagement`
+                  : `Puis ${pricingQuote?.to_monthly_label || "49,99 €"}/mois sans engagement`}
               </p>
             </>
           )}

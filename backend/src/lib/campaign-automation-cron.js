@@ -167,10 +167,31 @@ export function mergeCampaignAutomationJson(raw) {
   }
 }
 
+/** Ne conserve que `locationEntry` (périmètre Wallet) — retire toutes les automatisations serveur. */
+export function stripToPerimeterOnlyAutomationConfig(config) {
+  const merged =
+    config && typeof config === "object"
+      ? { ...config, rules: { ...(config.rules || {}) } }
+      : mergeCampaignAutomationJson("");
+  const loc = merged.rules?.locationEntry;
+  merged.rules =
+    loc && typeof loc === "object"
+      ? {
+          locationEntry: {
+            enabled: !!loc.enabled,
+            message: String(loc.message ?? "").trim().slice(0, 200),
+          },
+        }
+      : {};
+  return merged;
+}
+
 /**
  * @returns {{ businesses: number, rulesRun: number, sentTotal: number, errors: string[] }}
  */
 export async function runCampaignAutomationCron() {
+  /** Automatisations campagnes désactivées — produit : envoi manuel + périmètre Wallet uniquement. */
+  return { businesses: 0, rulesRun: 0, sentTotal: 0, errors: [], disabled: true };
   const apiBase = (process.env.PUBLIC_API_URL || process.env.API_URL || "https://api.myfidpass.fr").replace(/\/$/, "");
   const rows = db.prepare("SELECT * FROM businesses").all();
   let rulesRun = 0;

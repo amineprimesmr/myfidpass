@@ -438,36 +438,16 @@ app.use((err, req, res, next) => {
  * doublons d'envoi de campagne / mail / push). Le TTL est calé sur 5× la durée estimée du job.
  */
 
-/** Campagnes auto Wallet : exécution dans le processus, toutes les 24 h. */
+/** Campagnes auto Wallet — désactivées (manuel + périmètre uniquement). */
 function scheduleCampaignAutomationLoop() {
   if (process.env.NODE_ENV === "test") return;
-  const DAY_MS = 24 * 60 * 60 * 1000;
-  const LOCK_TTL_MS = 60 * 60 * 1000; // 1h — un run typique dure < 10 min
-  const run = () => {
-    withCronLock("campaign-automation", LOCK_TTL_MS, () => runCampaignAutomationCron())
-      .catch((err) => logger.error({ err }, "[campaign-automation] job failed"));
-  };
-  setTimeout(() => {
-    run();
-    setInterval(run, DAY_MS);
-  }, 120_000);
-  logger.info("[campaign-automation] planifié : 1er passage dans ~2 min, puis toutes les 24 h (verrou distribué)");
+  logger.info("[campaign-automation] désactivé — envoi manuel et périmètre Wallet uniquement");
 }
 
-/** Campaign event jobs: exécution interne, toutes ~1 min. */
+/** Campaign event jobs — désactivés. */
 function scheduleCampaignEventJobsLoop() {
   if (process.env.NODE_ENV === "test") return;
-  const MIN_MS = 60 * 1000;
-  const LOCK_TTL_MS = 5 * 60 * 1000; // 5 min — un run dépasse rarement 30 s
-  const run = () => {
-    withCronLock("campaign-event-jobs", LOCK_TTL_MS, () => runCampaignEventJobsCron({ limit: 50 }))
-      .catch((err) => logger.error({ err }, "[campaign-event-jobs] job failed"));
-  };
-  setTimeout(() => {
-    run();
-    setInterval(run, MIN_MS);
-  }, 60_000);
-  logger.info("[campaign-event-jobs] planifié : 1er passage dans ~1 min, puis toutes les 1 min (verrou distribué)");
+  logger.info("[campaign-event-jobs] désactivé — envoi manuel et périmètre Wallet uniquement");
 }
 
 /** Google Business Profile : pull avis + push APNs nouveaux avis, toutes les 10 min. */

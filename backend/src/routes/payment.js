@@ -277,6 +277,35 @@ async function resolveFirstMonthOneEuroCouponId(slots) {
   return coupon.id;
 }
 
+/** Cache process : coupons « 1re facture annuelle 1 € » par palier multi-commerces (2–5). */
+const annualFirstOneEuroCouponBySlots = new Map();
+
+/**
+ * Coupon Stripe (once) ramenant la 1ʳᵉ facture annuelle à 1 € pour le palier `slots` (1–5).
+ * @param {number} slots
+ * @returns {Promise<string|null>}
+ */
+async function resolveAnnualFirstOneEuroCouponId(slots) {
+  if (!stripe) return null;
+  const n = Math.min(5, Math.max(1, Math.floor(Number(slots) || 1)));
+  const envSlotKey = process.env[`STRIPE_COUPON_ID_ANNUAL_FIRST_1_EUR_SLOTS_${n}`];
+  if (envSlotKey && String(envSlotKey).trim()) return String(envSlotKey).trim();
+  if (n === 1 && STRIPE_COUPON_ID_ANNUAL_FIRST_1_EUR) return STRIPE_COUPON_ID_ANNUAL_FIRST_1_EUR;
+  if (annualFirstOneEuroCouponBySlots.has(n)) return annualFirstOneEuroCouponBySlots.get(n);
+  const annualCents = multiBusinessAnnualTotalCents(n);
+  const amountOff = annualCents - 100;
+  if (amountOff <= 0) return null;
+  const coupon = await stripe.coupons.create({
+    amount_off: amountOff,
+    currency: "eur",
+    duration: "once",
+    name: `MyFidpass 1re année 1€ (${n} comm.)`,
+    metadata: { purpose: "annual_first_1eur", merchant_slots: String(n) },
+  });
+  annualFirstOneEuroCouponBySlots.set(n, coupon.id);
+  return coupon.id;
+}
+
 function buildStripeSubscriptionTrialConfig(plan) {
   const days = stripeTrialDaysOnSubscription(plan);
   if (days <= 0) return {};
@@ -383,6 +412,9 @@ router.post("/create-checkout-session", requireAuth, async (req, res) => {
     };
     if (plan === "monthly") {
       const couponId = await resolveFirstMonthOneEuroCouponId(1);
+      if (couponId) sessionPayload.discounts = [{ coupon: couponId }];
+    } else {
+      const couponId = await resolveAnnualFirstOneEuroCouponId(1);
       if (couponId) sessionPayload.discounts = [{ coupon: couponId }];
     }
     const session = await stripe.checkout.sessions.create(sessionPayload);
@@ -625,6 +657,9 @@ router.post("/create-embedded-subscription", requireAuth, async (req, res) => {
     subscriptionParams.items = [buildSubscriptionLineItem(slots, plan)];
     if (plan === "monthly") {
       const couponId = await resolveFirstMonthOneEuroCouponId(slots);
+      if (couponId) subscriptionParams.discounts = [{ coupon: couponId }];
+    } else {
+      const couponId = await resolveAnnualFirstOneEuroCouponId(slots);
       if (couponId) subscriptionParams.discounts = [{ coupon: couponId }];
     }
 

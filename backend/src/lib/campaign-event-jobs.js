@@ -101,6 +101,8 @@ function enqueueRuleForMembers({ businessId, ruleId, title, message, eventType, 
  * @param {number} [p.newBalance]
  */
 export function scheduleMemberCampaignEvents({ business, memberId, triggers, previousBalance, newBalance }) {
+  /** Événements auto (first_scan, reward_unlocked, etc.) désactivés. */
+  return 0;
   if (!business?.id || !memberId) return 0;
   if (!businessHasCustomNotificationIcon(business)) return 0;
 
@@ -278,6 +280,7 @@ function requeueJobForLater(jobId, delayMinutes, reason) {
  * Exécute les jobs event dus (loop scheduler).
  */
 export async function runCampaignEventJobsCron({ limit = 50 } = {}) {
+  return { processed: 0, sent: 0, errors: [], disabled: true };
   const allBusinesses = db.prepare("SELECT id, campaign_automation_json FROM businesses").all();
   for (const b of allBusinesses) {
     try {

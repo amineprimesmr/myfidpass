@@ -64,9 +64,7 @@ router.post("/matches/:matchId/result", async (req, res) => {
 
   const entries = getMatchPredictionEntriesForMatch(req.business.id, req.params.matchId);
   const winners = entries.filter((entry) => Number(entry.points_awarded) > 0);
-  await Promise.allSettled(
-    winners.map((entry) => pushPassKitUpdateForMember(req.business.id, entry.member_id, "match_prediction")),
-  );
+  /** Push auto aux gagnants désactivé — pas de notification client automatique. */
   return res.json({ ...result, winners_count: winners.length });
 });
 
