@@ -4,7 +4,7 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { randomUUID } from "crypto";
-import { executeMemberRewardRedeem } from "../../lib/member-reward-redeem.js";
+import { executeMemberRewardRedeem, getMemberProgramRewardsUsage } from "../../lib/member-reward-redeem.js";
 import { getMemberForBusinessOrGroup } from "../../lib/loyalty-group-resolve.js";
 import {
   createMember,
@@ -310,6 +310,7 @@ router.get("/:memberId", (req, res) => {
     birth_date: member.birth_date || null,
     profile_ticket_eligible: businessUsesTicketBonuses(business.id),
     profile_bonus_claimed: Number(member.profile_ticket_bonus_granted) === 1,
+    rewards_usage: getMemberProgramRewardsUsage(business, member),
     /** PassKit : au moins un appareil enregistré (ajout Apple Wallet effectif côté iOS). */
     apple_wallet_registered: memberHasAppleWalletRegistration(member.id),
     /**

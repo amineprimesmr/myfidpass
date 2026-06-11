@@ -5,6 +5,7 @@ import {
   stampCycleDisplayBalance,
   STAMP_START_GAME_THRESHOLD,
 } from "../lib/tier-progress.js";
+import { isProgramRewardTierUsed } from "../lib/member-rewards-usage.js";
 
 /** Images par défaut : `public/assets/gift/gift1.png` … `gift5.png` (rotation par palier). */
 const DEFAULT_GIFT_COUNT = 5;
@@ -32,32 +33,43 @@ function unlockedIconSvg() {
  * @param {(s: string) => string} esc
  * @param {string} displayImageUrl URL finale (perso ou gift1…5)
  */
-function renderRewardCard(t, unlocked, costLine, esc, displayImageUrl, tierIndex) {
-  const aria = unlocked
-    ? `${t.label}, ${costLine}, palier atteint, ouvrir pour utiliser`
-    : `${t.label}, ${costLine}, à débloquer`;
+function renderRewardCard(t, unlocked, used, costLine, esc, displayImageUrl, tierIndex) {
+  const aria = used
+    ? `${t.label}, récompense utilisée`
+    : unlocked
+      ? `${t.label}, ${costLine}, palier atteint, ouvrir pour utiliser`
+      : `${t.label}, ${costLine}, à débloquer`;
   const labelEnc = encodeURIComponent(t.label);
   const costEnc = encodeURIComponent(costLine);
-  const visual = `<img class="fid-reward-card__img" src="${esc(displayImageUrl)}" alt="" decoding="async" loading="lazy" />`;
+  const visual = `<img class="fid-reward-card__img${used ? " fid-reward-card__img--used" : ""}" src="${esc(displayImageUrl)}" alt="" decoding="async" loading="lazy" />`;
 
-  const mod = unlocked ? "fid-reward-card--unlocked" : "fid-reward-card--locked";
+  let mod = unlocked ? "fid-reward-card--unlocked" : "fid-reward-card--locked";
+  if (used) mod = "fid-reward-card--used";
 
-  return `          <li class="fid-reward-card ${mod}" role="listitem">
-            <button type="button" class="fid-reward-card__surface" data-fid-reward-trigger
+  const costInner = used
+    ? `<span class="fid-reward-card__cost-text fid-reward-card__cost-text--used">Récompense utilisée</span>`
+    : `<span class="fid-reward-card__cost-icon" aria-hidden="true">${unlocked ? unlockedIconSvg() : lockIconSvg()}</span>
+                <span class="fid-reward-card__cost-text">${esc(costLine)}</span>`;
+
+  const triggerAttrs = used
+    ? `type="button" class="fid-reward-card__surface fid-reward-card__surface--used" disabled aria-disabled="true"`
+    : `type="button" class="fid-reward-card__surface" data-fid-reward-trigger
               data-reward-unlocked="${unlocked ? "1" : "0"}"
               data-reward-tier-index="${String(typeof t.dbTierIndex === "number" && t.dbTierIndex >= 0 ? t.dbTierIndex : tierIndex)}"
               data-reward-points="${String(t.threshold)}"
               data-reward-threshold="${String(t.threshold)}"
               data-reward-label="${labelEnc}"
-              data-reward-costline="${costEnc}"
+              data-reward-costline="${costEnc}"`;
+
+  return `          <li class="fid-reward-card ${mod}" role="listitem">
+            <button ${triggerAttrs}
               aria-label="${esc(aria)}">
               <div class="fid-reward-card__visual">
                 ${visual}
               </div>
-              <h3 class="fid-reward-card__title">${esc(t.label)}</h3>
+              <h3 class="fid-reward-card__title${used ? " fid-reward-card__title--used" : ""}">${esc(t.label)}</h3>
               <p class="fid-reward-card__cost">
-                <span class="fid-reward-card__cost-icon" aria-hidden="true">${unlocked ? unlockedIconSvg() : lockIconSvg()}</span>
-                <span class="fid-reward-card__cost-text">${esc(costLine)}</span>
+                ${costInner}
               </p>
             </button>
           </li>`;
@@ -99,15 +111,21 @@ ${tiers
     const unlocked = isStamps
       ? isStampTierUnlocked(t.threshold, balance, business, tiers)
       : balance >= t.threshold;
+    const used = isProgramRewardTierUsed(
+      member?.rewards_usage ?? member?.rewardsUsage,
+      t,
+      programType,
+      balance,
+    );
     const costNum = esc(String(t.threshold));
     const costLine = isStamps
       ? t.threshold === STAMP_START_GAME_THRESHOLD || t.isStartGame
         ? "Début du jeu"
         : `${costNum} ${unitEsc}`
       : `${costNum} points`;
-    const tier = /** @type {{ threshold: number; label: string; imageUrl?: string }} */ (t);
+    const tier = /** @type {{ threshold: number; label: string; imageUrl?: string; isStartGame?: boolean }} */ (t);
     const displayImageUrl = tier.imageUrl || defaultGiftImageUrl(tierIndex);
-    return renderRewardCard(tier, unlocked, costLine, esc, displayImageUrl, tierIndex);
+    return renderRewardCard(tier, unlocked, used, costLine, esc, displayImageUrl, tierIndex);
   })
   .join("\n")}
         </ul>`;

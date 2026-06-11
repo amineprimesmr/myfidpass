@@ -75,6 +75,23 @@ describe("renderRewardsStepMarkup", () => {
     expect(html).toContain("Viennoiserie");
     expect(html).toContain("Menu offert");
     expect(html).toContain("5 tampons");
-    expect(html).toContain("10 tampons");
+  it("affiche « Récompense utilisée » sur le palier début du jeu tampons", () => {
+    const html = renderRewardsStepMarkup(idEsc, {
+      business: {
+        required_stamps: 10,
+        start_game_reward_label: "Boisson offerte",
+        stamp_reward_label: "Menu offert",
+      },
+      member: {
+        points: 3,
+        rewards_usage: { stamp_start_game_used: true },
+      },
+      programType: "stamps",
+      balanceUnit: "tampons",
+    });
+    expect(html).toContain("fid-reward-card--used");
+    expect(html).toContain("Récompense utilisée");
+    expect(html).toContain("fid-reward-card__title--used");
+    expect(html).not.toContain("data-fid-reward-trigger");
   });
 });

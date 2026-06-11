@@ -281,6 +281,38 @@
   padding: 0.35rem 0 0.15rem;
 }
 
+.fid-reward-card--used .fid-reward-card__surface,
+.fid-reward-card__surface--used {
+  cursor: default;
+  border-color: rgba(148, 163, 184, 0.35);
+  background: rgba(248, 250, 252, 0.92);
+  box-shadow: none;
+}
+
+.fid-reward-card--used .fid-reward-card__surface:hover,
+.fid-reward-card__surface--used:hover {
+  transform: none;
+  border-color: rgba(148, 163, 184, 0.35);
+  box-shadow: none;
+}
+
+.fid-reward-card__title--used {
+  text-decoration: line-through;
+  text-decoration-color: rgba(100, 116, 139, 0.75);
+  color: rgba(100, 116, 139, 0.92);
+}
+
+.fid-reward-card__img--used {
+  opacity: 0.45;
+  filter: grayscale(0.85);
+}
+
+.fid-reward-card__cost-text--used {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fid-reward-card__surface {
     transition: none;

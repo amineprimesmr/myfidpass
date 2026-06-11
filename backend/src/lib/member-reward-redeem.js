@@ -4,10 +4,58 @@
 import { deductPoints, resetMemberPoints, createTransaction } from "../db.js";
 import { getDb } from "../db/connection.js";
 import { normalizeStampBalance } from "./stamps-cycle-math.js";
-import { resolvePointsRewardFromQr, resolveStampRewardFromQr, stampCycleSize } from "./reward-redeem-qr.js";
+import {
+  resolvePointsRewardFromQr,
+  resolveStampRewardFromQr,
+  stampCycleSize,
+  STAMP_START_GAME_QR_THRESHOLD,
+} from "./reward-redeem-qr.js";
 import { SIGNUP_REWARD_POINTS } from "./points-reward-tiers.js";
 
 const db = getDb();
+
+/** Utilisations d’un palier tampon (metadata `stamp_threshold`, ex. 0 = début du jeu). */
+export function countStampThresholdRedemptions(memberId, businessId, stampThreshold) {
+  const th = Math.floor(Number(stampThreshold));
+  if (!Number.isFinite(th)) return 0;
+  const row = db
+    .prepare(
+      `SELECT COUNT(*) AS c FROM transactions
+       WHERE member_id = ? AND business_id = ? AND type = 'reward_redeem'
+         AND json_valid(metadata) = 1
+         AND json_extract(metadata, '$.subtype') = 'stamps'
+         AND CAST(json_extract(metadata, '$.stamp_threshold') AS INTEGER) = ?`,
+    )
+    .get(memberId, businessId, th);
+  return Math.max(0, Number(row?.c) || 0);
+}
+
+/** État d’usage pour la page client (carte récompenses). */
+export function getMemberProgramRewardsUsage(business, member) {
+  const balance = Math.max(0, Math.floor(Number(member?.points) || 0));
+  const signupCyclesRedeemed = countSignupCycleRedemptions(member.id, business.id);
+  return {
+    stamp_start_game_used:
+      countStampThresholdRedemptions(
+        member.id,
+        business.id,
+        STAMP_START_GAME_QR_THRESHOLD,
+      ) > 0,
+    signup_cycles_redeemed: signupCyclesRedeemed,
+    signup_tier_used: isSignupPointsTierConsumed(balance, signupCyclesRedeemed),
+  };
+}
+
+/** Palier 10 pts : consommé quand toutes les « utilisations » du cycle courant sont épuisées. */
+export function isSignupPointsTierConsumed(balance, signupCyclesRedeemed) {
+  const pts = Math.max(0, Math.floor(Number(balance) || 0));
+  const redeemed = Math.max(0, Math.floor(Number(signupCyclesRedeemed) || 0));
+  if (redeemed <= 0) return false;
+  const allowance =
+    pts >= SIGNUP_REWARD_POINTS ? Math.floor(pts / SIGNUP_REWARD_POINTS) : 0;
+  if (allowance <= 0) return true;
+  return redeemed >= allowance;
+}
 
 /** Nombre de récompenses « cycle 10 pts » déjà utilisées (solde conservé après usage). */
 export function countSignupCycleRedemptions(memberId, businessId) {
@@ -72,6 +120,50 @@ export function executeMemberRewardRedeem(business, member, opts) {
       stampThreshold: opts.stampThreshold ?? opts.points ?? null,
     });
     const balance = normalizeStampBalance(member.points, cycleN);
+
+    if (resolved.isStartGame || resolved.stampThreshold === STAMP_START_GAME_QR_THRESHOLD) {
+      if (
+        countStampThresholdRedemptions(
+          member.id,
+          business.id,
+          STAMP_START_GAME_QR_THRESHOLD,
+        ) > 0
+      ) {
+        return {
+          ok: false,
+          status: 400,
+          code: "REWARD_ALREADY_USED",
+          error: "Cette récompense a déjà été utilisée.",
+          points_required: 0,
+          points_balance: balance,
+        };
+      }
+      createTransaction({
+        businessId: business.id,
+        memberId: member.id,
+        type: "reward_redeem",
+        points: 0,
+        metadata: {
+          subtype: "stamps",
+          stamp_threshold: STAMP_START_GAME_QR_THRESHOLD,
+          start_game: true,
+          source,
+          reward_label: resolved.label,
+        },
+        actorUserId,
+      });
+      return {
+        ok: true,
+        type: "stamps",
+        previous_points: balance,
+        new_points: balance,
+        points_deducted: 0,
+        reward_label: resolved.label,
+        start_game: true,
+        message: `Récompense utilisée : ${resolved.label}.`,
+      };
+    }
+
     const cost = resolved.pointsRequired;
     if (balance < cost) {
       return {

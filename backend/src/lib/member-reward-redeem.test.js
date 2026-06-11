@@ -11,7 +11,27 @@ describe("executeMemberRewardRedeem signup cycle", () => {
     ]),
     start_game_reward_label: "Boisson offerte",
     program_type: "points",
+    required_stamps: 10,
   };
+
+  it("début du jeu tampons : enregistre l’usage sans débit", () => {
+    const member = { id: "mem-stamp-0", points: 3 };
+    const first = executeMemberRewardRedeem(business, member, {
+      mode: "stamps",
+      stampThreshold: 0,
+      source: "test",
+    });
+    expect(first.ok).toBe(true);
+    expect(first.points_deducted).toBe(0);
+    expect(first.new_points).toBe(3);
+    const second = executeMemberRewardRedeem(business, member, {
+      mode: "stamps",
+      stampThreshold: 0,
+      source: "test",
+    });
+    expect(second.ok).toBe(false);
+    expect(second.code).toBe("REWARD_ALREADY_USED");
+  });
 
   it("palier 10 pts : utilise la récompense sans vider le solde", () => {
     const member = { id: "mem-1", points: 10 };

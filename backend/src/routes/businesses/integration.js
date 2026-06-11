@@ -16,13 +16,15 @@ import { pushPassKitAfterMemberBalanceChange } from "../../lib/wallet-reward-tie
 import { scheduleMemberCampaignEvents } from "../../lib/campaign-event-jobs.js";
 import { syncGoogleWalletObjectForMember } from "../../google-wallet.js";
 import { ensureOperationalSubscription, getApiBase } from "./shared.js";
+import { executeMemberRewardRedeem, countSignupCycleRedemptions, countStampThresholdRedemptions } from "../../lib/member-reward-redeem.js";
 import {
   parseMerchantScanCode,
   resolvePointsRewardFromQr,
   resolveStampRewardFromQr,
   stampCycleSize,
+  STAMP_START_GAME_QR_THRESHOLD,
 } from "../../lib/reward-redeem-qr.js";
-import { executeMemberRewardRedeem } from "../../lib/member-reward-redeem.js";
+import { SIGNUP_REWARD_POINTS } from "../../lib/points-reward-tiers.js";
 import {
   computeRawPointsForCredit,
   enforceScanSecurityLimits,
@@ -42,6 +44,23 @@ function resolveRewardRedeemPreview(business, member, rewardRedeem) {
     const cycleN = stampCycleSize(business);
     const balance = normalizeStampBalance(member.points, cycleN);
     const resolved = resolveStampRewardFromQr(business, rewardRedeem);
+    if (resolved.isStartGame || resolved.stampThreshold === STAMP_START_GAME_QR_THRESHOLD) {
+      const used =
+        countStampThresholdRedemptions(
+          member.id,
+          business.id,
+          STAMP_START_GAME_QR_THRESHOLD,
+        ) > 0;
+      return {
+        mode: "stamps",
+        label: resolved.label,
+        tier_index: resolved.tierIndex ?? 0,
+        points_required: 0,
+        points_balance: balance,
+        eligible: !used,
+        already_used: used,
+      };
+    }
     return {
       mode: "stamps",
       label: resolved.label,
@@ -54,6 +73,12 @@ function resolveRewardRedeemPreview(business, member, rewardRedeem) {
   const resolved = resolvePointsRewardFromQr(business, rewardRedeem);
   const balance = Number(member.points) || 0;
   const pointsRequired = resolved.pointsRequired;
+  let eligible = balance >= pointsRequired && pointsRequired > 0;
+  if (pointsRequired === SIGNUP_REWARD_POINTS) {
+    const redeemCount = countSignupCycleRedemptions(member.id, business.id);
+    const allowance = Math.floor(balance / SIGNUP_REWARD_POINTS);
+    eligible = balance >= pointsRequired && allowance > redeemCount;
+  }
   return {
     mode: "points",
     tier_index: resolved.tierIndex ?? rewardRedeem.tierIndex ?? 0,
@@ -61,7 +86,7 @@ function resolveRewardRedeemPreview(business, member, rewardRedeem) {
     tier_image_url: resolved.imageUrl ?? null,
     points_required: pointsRequired,
     points_balance: balance,
-    eligible: balance >= pointsRequired && pointsRequired > 0,
+    eligible,
   };
 }
 
