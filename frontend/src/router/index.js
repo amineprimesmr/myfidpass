@@ -17,6 +17,11 @@ import { matchSeoContentRoute } from "../features/seo-route-match.js";
 import { syncSmartAppBanner } from "../smart-app-banner.js";
 import { FINTAP_SCROLL_TO_COMMERCE_EVENT } from "../landing-cinematic/fintap-hero-scroll-lerp.js";
 import { parseCheckoutSessionId } from "../features/post-purchase-app-modal.js";
+import {
+  MERCHANT_APP_DOWNLOAD_PATH,
+  MERCHANT_WEB_APP_FROZEN,
+  MERCHANT_WEB_APP_FROZEN_BANNER,
+} from "../constants/merchant-product.js";
 
 export function getRoute() {
   let path = window.location.pathname.replace(/\/$/, "");
@@ -133,7 +138,10 @@ export function triggerRouteViewEnter(el) {
 export function updateAuthNavLinks() {
   const isLoggedIn = !!getAuthToken();
   const label = isLoggedIn ? "Mon espace" : "Se connecter";
-  const landingHref = isLoggedIn ? "/app" : "/creer-ma-carte?mode=login&redirect=/app";
+  const merchantHome = MERCHANT_WEB_APP_FROZEN ? MERCHANT_APP_DOWNLOAD_PATH : "/app";
+  const landingHref = isLoggedIn
+    ? merchantHome
+    : `/creer-ma-carte?mode=login&redirect=${encodeURIComponent(merchantHome)}`;
   document.querySelectorAll(".landing-nav-login-link, .landing-menu-drawer-login").forEach((a) => {
     a.textContent = label;
     a.href = landingHref;
@@ -141,7 +149,9 @@ export function updateAuthNavLinks() {
   const builderLogin = document.getElementById("builder-header-login");
   if (builderLogin) {
     builderLogin.textContent = label;
-    builderLogin.href = isLoggedIn ? "/app" : "/creer-ma-carte?mode=login&redirect=/creer-ma-carte";
+    builderLogin.href = isLoggedIn
+      ? merchantHome
+      : "/creer-ma-carte?mode=login&redirect=/creer-ma-carte";
   }
 }
 

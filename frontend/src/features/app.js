@@ -1,5 +1,6 @@
 /**
- * Page app (/app) : espace pro, sidebar, dashboard, caisse, notifications, profil, personnaliser, engagement.
+ * Page app (/app) : espace pro commerçant (legacy web).
+ * GEL PRODUIT : nouvelles features commerçant → apps iOS/Android uniquement (MERCHANT_WEB_APP_FROZEN).
  * Dérogation : fichier > 400 lignes, à découper en sous-modules (app/notifications.js, app/caisse.js, etc.). REFONTE-REGLES.md.
  */
 import {
@@ -72,6 +73,11 @@ import { initAppDesktopTopbar } from "./app-desktop-topbar.js";
 import { initAppSettings } from "./app-settings.js";
 import { applyEngagementStatsFromSettings, wireEngagementStatsSection } from "./app-engagement-stats.js";
 import { openImageCropModalFromFile } from "./image-crop-modal.js";
+import {
+  MERCHANT_APP_DOWNLOAD_PATH,
+  MERCHANT_WEB_APP_FROZEN,
+  MERCHANT_WEB_APP_FROZEN_BANNER,
+} from "../constants/merchant-product.js";
 
 const ACTIVE_BUSINESS_SLUG_STORAGE_KEY = "fidpass_active_business_slug";
 
@@ -282,7 +288,20 @@ window.addEventListener("fidpass-merchant-setup-updated", () => {
   if (d && typeof d === "object") updateMerchantTrialSubscribePillFromDetail(d);
 });
 
+function mountMerchantWebFrozenBanner() {
+  if (!MERCHANT_WEB_APP_FROZEN) return;
+  if (document.getElementById("merchant-web-frozen-banner")) return;
+  const bar = document.createElement("div");
+  bar.id = "merchant-web-frozen-banner";
+  bar.setAttribute("role", "status");
+  bar.style.cssText =
+    "position:sticky;top:0;z-index:9999;padding:10px 14px;background:#1e3a5f;color:#fff;font-size:14px;line-height:1.4;text-align:center;";
+  bar.innerHTML = `${MERCHANT_WEB_APP_FROZEN_BANNER} <a href="${MERCHANT_APP_DOWNLOAD_PATH}" style="color:#93c5fd;font-weight:600;margin-left:6px;">Télécharger l’app</a>`;
+  document.body.prepend(bar);
+}
+
 function initAppPage() {
+  mountMerchantWebFrozenBanner();
   const appUrl = new URL(window.location.href);
   const fromLandingOnboarding = appUrl.searchParams.get("fromLandingOnboarding") === "1";
   const authOverlayDone = appUrl.searchParams.get("authOverlayDone") === "1";
