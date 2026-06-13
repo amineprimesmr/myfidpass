@@ -286,9 +286,33 @@ export function getSeoByRoute(route) {
     if (page === "integration-caisse-fidelite-wallet") {
       return {
         ...indexable,
-        title: "Integration caisse: fidelite wallet (API) | MyFidPass",
+        title: "Integration caisse et borne: API fidelite wallet | MyFidPass",
         description:
-          "Documentation pour integrer une caisse ou une borne a MyFidPass: crediter des points et synchroniser la fidelite avec Apple Wallet / Google Wallet.",
+          "Portail developpeurs MyFidpass : integrer caisse et borne (Innovorder, etc.), crediter des points Apple Wallet / Google Wallet via API REST.",
+      };
+    }
+    if (page === "developers") {
+      return {
+        ...indexable,
+        title: "Developpeurs MyFidpass — API caisse, borne et partenaires",
+        description:
+          "Portail developpeurs et integrateurs : documentation API, OpenAPI, partenariat Innovorder, pilote NBK Rennes.",
+      };
+    }
+    if (page === "developers-api") {
+      return {
+        ...indexable,
+        title: "API MyFidpass — integration caisse et borne (REST)",
+        description:
+          "Documentation API MyFidpass : lookup, scan, reward-redeem, authentification X-Dashboard-Token, exemples cURL et JavaScript.",
+      };
+    }
+    if (page === "developers-partenaires-innovorder") {
+      return {
+        ...indexable,
+        title: "Partenariat Innovorder × MyFidpass — integration borne fidélité",
+        description:
+          "Guide partenariat Innovorder : spec borne Wallet, pilote NBK Rennes, email type pour l equipe integrations Innovorder.",
       };
     }
     if (page === "carte-fidelite-qr-code") {

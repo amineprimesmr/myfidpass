@@ -876,7 +876,7 @@ export default function SaasProPaymentPage() {
                 ) : initializing ? (
                   "Chargement du module..."
                 ) : (
-                  <span className="saas-pay-continue-label">Commencer pour 1€</span>
+                  <span className="saas-pay-continue-label">Essayer pour 1€</span>
                 )}
               </button>
               <p className="saas-pay-continue-foot">

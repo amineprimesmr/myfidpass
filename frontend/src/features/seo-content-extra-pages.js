@@ -165,34 +165,40 @@ export const SEO_EXTRA_CONTENT_PAGES = {
     },
   },
   "integration-caisse-fidelite-wallet": {
-    title: "Integration caisse: crediter des points vers Apple Wallet / Google Wallet",
+    title: "Integration caisse et borne: crediter des points vers Apple Wallet / Google Wallet",
     intro:
-      "Pour automatiser la fidelite, votre caisse ou votre borne peut appeler une API pour crediter des points apres un achat. Myfidpass fournit une documentation technique pour integrateurs.",
+      "Automatisez la fidelite depuis votre caisse ou votre borne de commande. MyFidpass expose une API REST documentee pour les integrateurs et editeurs (Innovorder, Tabesto, Zelty…).",
     sections: [
       {
-        heading: "Qui fait l'integration",
+        heading: "Documentation developpeurs",
         paragraphs: [
-          "Le commercant transmet un lien documentation + token a son installateur caisse. L'integrateur branche l'API sans compte Fidpass supplementaire.",
+          "Portail complet : endpoints, exemples, OpenAPI et guide partenariat Innovorder (pilote NBK Rennes).",
         ],
         items: [
-          "API HTTP securisee",
-          "Flux idempotent recommande",
-          "Test sur environnement reel",
+          "<a href=\"/developers\">Portail developpeurs MyFidpass</a>",
+          "<a href=\"/developers/api\">Documentation API</a>",
+          "<a href=\"/developers/partenaires/innovorder\">Partenariat Innovorder</a>",
         ],
       },
       {
-        heading: "Alternative sans integration",
+        heading: "Pour le commercant",
         paragraphs: [
-          "Si vous ne voulez pas toucher a la caisse au debut, utilisez le mode scanner depuis l'espace commercant.",
+          "Transmettez a votre installateur le lien documentation + votre token dashboard (slug + X-Dashboard-Token). Aucun compte supplementaire requis pour l'integrateur.",
+        ],
+      },
+      {
+        heading: "Sans integration technique",
+        paragraphs: [
+          "Utilisez l'application MyFidpass en mode scanner a la caisse : compatible avec toute borne (Innovorder, etc.) des le premier jour.",
         ],
       },
     ],
     cta: {
-      heading: "Obtenir la documentation",
-      text: "Depuis l'espace commercant, copiez le lien d'integration pour votre prestataire.",
+      heading: "Demarrer",
+      text: "Developpeurs et partenaires : accedez au portail technique.",
       links: [
+        { href: "/developers", label: "Portail developpeurs" },
         { href: "/creer-ma-carte", label: "Creer ma carte" },
-        { href: "/solution-carte-fidelite-digitale", label: "Retour solution" },
       ],
     },
   },

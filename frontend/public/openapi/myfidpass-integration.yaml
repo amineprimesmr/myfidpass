@@ -1,0 +1,101 @@
+openapi: 3.1.0
+info:
+  title: MyFidpass Integration API
+  version: "1.0"
+  description: |
+    API d'intégration caisse / borne / logiciel métier pour MyFidpass.
+    Carte fidélité Apple Wallet et Google Wallet — le QR encode l'UUID membre.
+servers:
+  - url: https://api.myfidpass.fr
+    description: Production
+
+paths:
+  /api/businesses/{slug}/integration/lookup:
+    get:
+      summary: Consulter un membre (sans créditer)
+      tags: [integration]
+      security: [{ dashboardToken: [] }]
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+        - name: barcode
+          in: query
+          required: true
+          description: UUID lu sur le QR Wallet du client
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Membre trouvé
+        "404":
+          description: MEMBER_NOT_FOUND
+
+  /api/businesses/{slug}/integration/scan:
+    post:
+      summary: Scan + crédit points (recommandé bornes / caisses)
+      tags: [integration]
+      security: [{ dashboardToken: [] }]
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [barcode]
+              properties:
+                barcode:
+                  type: string
+                  description: UUID membre (QR Wallet)
+                amount_eur:
+                  type: number
+                  description: Montant ticket en euros
+                visit:
+                  type: boolean
+                  description: "true = un passage (tampons / points visite)"
+                points:
+                  type: integer
+                  description: Points à ajouter directement
+      responses:
+        "200":
+          description: Points crédités
+        "400":
+          description: BARCODE_MISSING | NO_POINTS_SPECIFIED
+        "404":
+          description: MEMBER_NOT_FOUND
+
+  /api/businesses/{slug}/integration/reward-redeem:
+    post:
+      summary: Valider une récompense (QR « utiliser en magasin »)
+      tags: [integration]
+      security: [{ dashboardToken: [] }]
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [barcode]
+              properties:
+                barcode: { type: string }
+                amount_eur: { type: number }
+      responses:
+        "200":
+          description: Récompense utilisée
+
+components:
+  securitySchemes:
+    dashboardToken:
+      type: apiKey
+      in: header
+      name: X-Dashboard-Token

@@ -1,6 +1,7 @@
 import { renderComparativeSeoPage } from "./seo-content-comparative-pages.js";
 import { renderSeoExtraPage } from "./seo-content-extra-pages.js";
 import { renderLocalCarteFideliteDigitalePage } from "./seo-local-pages.js";
+import { getDeveloperPortalPageHtml } from "./developer-portal-pages.js";
 
 function wrapSeoPage({ title, intro, sections, cta }) {
   const sectionsHtml = sections
@@ -164,6 +165,7 @@ const SEO_CONTENT_PAGES = {
           "Apple Wallet + Google Wallet",
           "Lien unique par commerce et QR code",
           "Dashboard simple pour l'equipe terrain",
+          "<a href=\"/developers\">API caisse et borne (portail developpeurs)</a>",
         ],
       },
     ],
@@ -346,6 +348,9 @@ export function getSeoContentPageHtml(pageSlug, route) {
   if (pageSlug === "local-carte-fidelite-digitale") {
     return renderLocalCarteFideliteDigitalePage(route?.citySlug || "");
   }
+
+  const devPortal = getDeveloperPortalPageHtml(pageSlug);
+  if (devPortal) return devPortal;
 
   const page = SEO_CONTENT_PAGES[pageSlug];
   if (page) return wrapSeoPage(page);

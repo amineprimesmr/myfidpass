@@ -61,6 +61,7 @@ export function getContactPageHtml() {
           <option value="commerce">Je suis commerçant — question technique ou facturation</option>
           <option value="client">Je suis client — carte Wallet, QR code ou points</option>
           <option value="partenariat">Partenariat ou presse</option>
+          <option value="integration">Intégration caisse / borne (Innovorder, etc.)</option>
           <option value="autre">Autre</option>
         </select>
       </div>
@@ -83,6 +84,11 @@ export function getContactPageHtml() {
       <h2>Vous êtes client</h2>
       <p>Problème avec la carte d’un magasin : indiquez le <strong>nom du commerce</strong> dans votre message.</p>
       <p class="contact-audience-card__note">MyFidPass fournit la technologie au commerce ; chaque enseigne gère ses offres.</p>
+    </section>
+    <section class="contact-audience-card">
+      <h2>Intégrateur ou éditeur caisse</h2>
+      <p>Documentation API, OpenAPI et guide partenariat Innovorder (pilote NBK Rennes).</p>
+      <a class="contact-audience-card__link" href="/developers">Portail développeurs →</a>
     </section>
   </div>
 

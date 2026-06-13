@@ -73,6 +73,11 @@ export function getRoute() {
   if (path === "/contact") return { type: "contact" };
   if (path === "/get" || path === "/telecharger") return { type: "get-app" };
   if (path === "/merci" || path === "/paiement/merci") return { type: "post-payment-thanks" };
+  if (path === "/developers") return { type: "seo-content", page: "developers" };
+  if (path === "/developers/api") return { type: "seo-content", page: "developers-api" };
+  if (path === "/developers/partenaires/innovorder") {
+    return { type: "seo-content", page: "developers-partenaires-innovorder" };
+  }
   const seoRoute = matchSeoContentRoute(path);
   if (seoRoute) return seoRoute;
   if (path === "") {
